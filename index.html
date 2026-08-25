@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GainForward · RateGain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+</head>
+<body>
+
+<div id="toast-region" class="toast-region" aria-live="polite"></div>
+
+<div id="login-screen" class="login-screen hidden">
+  <div class="login-card">
+    <svg width="40" height="40" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="ms-grad-login" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#8E6EFA"/>
+          <stop offset="1" stop-color="#401E86"/>
+        </linearGradient>
+      </defs>
+      <circle cx="32" cy="32" r="32" fill="url(#ms-grad-login)"/>
+      <g transform="rotate(-28 32 32)">
+        <ellipse cx="32" cy="32" rx="19" ry="9.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.6"/>
+        <circle cx="51" cy="32" r="4.4" fill="#FFFFFF"/>
+      </g>
+      <circle cx="32" cy="32" r="7" fill="#FFFFFF"/>
+    </svg>
+    <h1>GainForward</h1>
+    <p class="login-sub">Sign in with the demo credentials you were given.</p>
+    <form id="form-login" class="form-stack">
+      <label>Username<input type="text" id="login-username" name="username" autocomplete="username" required /></label>
+      <label>Password<input type="password" name="password" autocomplete="current-password" required /></label>
+      <p id="login-error" class="login-error"></p>
+      <button type="submit" class="btn btn-primary" style="width:100%">Sign in</button>
+    </form>
+    <p class="login-note">This is a prototype demo, not a production account system — please don't reuse a real password here.</p>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <svg width="28" height="28" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="ms-grad-header" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#8E6EFA"/>
+          <stop offset="1" stop-color="#401E86"/>
+        </linearGradient>
+      </defs>
+      <circle cx="32" cy="32" r="32" fill="url(#ms-grad-header)"/>
+      <g transform="rotate(-28 32 32)">
+        <ellipse cx="32" cy="32" rx="19" ry="9.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.6"/>
+        <circle cx="51" cy="32" r="4.4" fill="#FFFFFF"/>
+      </g>
+      <circle cx="32" cy="32" r="7" fill="#FFFFFF"/>
+    </svg>
+    <div class="brand-text">
+      <span class="brand-name">GainForward</span>
+      <span class="brand-sub">by RateGain</span>
+    </div>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="Primary">
+    <button class="tab-btn is-active" data-tab="home" role="tab" aria-selected="true">Home</button>
+    <button class="tab-btn" data-tab="directory" role="tab" aria-selected="false">Directory</button>
+    <button class="tab-btn" data-tab="journey" role="tab" aria-selected="false">My Journey</button>
+    <button class="tab-btn" data-tab="insights" role="tab" aria-selected="false">Insights</button>
+    <button class="tab-btn" data-tab="admin" role="tab" aria-selected="false">Admin · PD Console</button>
+  </nav>
+
+  <div class="topbar-actions">
+    <button id="btn-data-source" class="btn btn-ghost btn-sm" title="Configure AI employee-data source">
+      <span id="data-source-dot" class="status-dot status-dot--seed"></span> Data source
+    </button>
+    <div class="avatar-menu">
+      <button id="user-avatar-btn" class="avatar" aria-haspopup="true" aria-expanded="false">JD</button>
+      <div id="user-menu" class="dropdown hidden">
+        <div class="dropdown-header">
+          <div class="avatar avatar--sm" id="dropdown-avatar">JD</div>
+          <div>
+            <div class="dropdown-name" id="dropdown-name">John Doe</div>
+            <div class="dropdown-role" id="dropdown-role">Profile not set up yet</div>
+          </div>
+        </div>
+        <button class="dropdown-item" data-action="view-profile">My profile</button>
+        <button class="dropdown-item" data-action="open-settings">Data source settings</button>
+        <button class="dropdown-item dropdown-item--muted" data-action="sign-out">Sign out (demo)</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===================== HOME ===================== -->
+  <section id="tab-home" class="tab-panel">
+    <div class="hero">
+      <h1 id="home-greeting">What would you like to do?</h1>
+      <p class="hero-sub">Everyone has something to learn. Everyone has something to contribute.</p>
+      <div class="hero-actions">
+        <button class="cta-card" data-action="open-become-mentor-role">
+          <span class="cta-icon">🌱</span>
+          <span class="cta-title">I want to become a Mentor</span>
+          <span class="cta-desc">Why you'd mentor, what you bring, and your time</span>
+        </button>
+        <button class="cta-card" data-action="open-become-mentee-role">
+          <span class="cta-icon">🧭</span>
+          <span class="cta-title">I want to become a Mentee</span>
+          <span class="cta-desc">What you want to learn, and your goal</span>
+        </button>
+        <button class="cta-card" data-action="open-resources">
+          <span class="cta-icon">📚</span>
+          <span class="cta-title">Learning Resources</span>
+          <span class="cta-desc">FAQs, best-practice tips, and LinkedIn Learning picks</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="home-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Top Mentors</h2>
+          <button class="link-btn" data-action="goto-directory">View all</button>
+        </div>
+        <div id="top-mentors-list" class="mentor-list"></div>
+      </div>
+
+      <div class="panel-stack">
+        <div class="panel">
+          <div class="panel-head"><h2>Your Active Journey</h2></div>
+          <div id="active-journey-card"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Your Growth Profile</h2></div>
+          <div id="growth-profile-card"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DIRECTORY ===================== -->
+  <section id="tab-directory" class="tab-panel hidden">
+    <div class="panel-head panel-head--page">
+      <h2>Directory</h2>
+      <p class="muted">Search by name, goal, or skill. Every card shows a live match score against your profile.</p>
+    </div>
+
+    <div class="filter-bar">
+      <input id="directory-search" type="search" placeholder="Search name, skill, or goal…" />
+      <select id="filter-department"><option value="">All departments</option></select>
+      <select id="filter-geo"><option value="">All regions</option></select>
+      <select id="filter-format">
+        <option value="">Any format</option>
+        <option value="mentor">Mentor</option>
+        <option value="mentee">Mentee</option>
+        <option value="peer">Peer</option>
+        <option value="reverse">Reverse mentoring</option>
+      </select>
+    </div>
+
+    <div id="directory-grid" class="directory-grid"></div>
+  </section>
+
+  <!-- ===================== MY JOURNEY ===================== -->
+  <section id="tab-journey" class="tab-panel hidden">
+    <div class="panel-head panel-head--page">
+      <h2>My Journey</h2>
+      <p class="muted" id="journey-subtitle">Once you're matched, your conversations and progress will show up here.</p>
+    </div>
+
+    <div id="journey-empty" class="panel hidden">
+      <p>You don't have an active mentoring journey yet. Head to <strong>Find a Mentor</strong> or <strong>Become a Mentor</strong> to start one.</p>
+      <p class="muted small">Once matched, you'll meet every two weeks across five short conversations over 12 weeks — most pairs see real value after just four conversations and one thing tried at work.</p>
+    </div>
+
+    <div id="journey-cleanup" class="panel hidden">
+      <div class="panel-head"><h2>Calendar cleanup</h2></div>
+      <p class="muted small">Your last relationship ended with meetings still on the calendar — these were cancelled automatically here, but you'll still need to clear them from your actual calendar.</p>
+      <div id="journey-cleanup-list" class="session-log"></div>
+    </div>
+
+    <div id="journey-content" class="hidden">
+      <div class="panel">
+        <div class="stage-tracker" id="stage-tracker"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Upcoming meetings</h2>
+          <div class="panel-head-actions">
+            <button class="btn btn-secondary btn-sm" data-action="open-nudge" data-id="">Send a nudge</button>
+            <button class="btn btn-primary btn-sm" data-action="open-schedule-meeting">Schedule a conversation</button>
+          </div>
+        </div>
+        <div id="upcoming-meetings-list" class="session-log"></div>
+      </div>
+
+      <div class="home-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Conversation log</h2>
+            <button class="btn btn-secondary btn-sm" data-action="open-log-session">Log a past conversation</button>
+          </div>
+          <div id="session-log-list" class="session-log"></div>
+        </div>
+        <div class="panel-stack">
+          <div class="panel">
+            <div class="panel-head"><h2>Midpoint pulse</h2></div>
+            <p class="muted small">A quick, private check-in — not a performance review.</p>
+            <p class="muted small" id="pulse-status"></p>
+            <button id="btn-open-pulse" class="btn btn-secondary btn-sm" data-action="open-pulse">Complete pulse check</button>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Final reflection</h2></div>
+            <p class="muted small" id="reflection-status"></p>
+            <button id="btn-open-reflection" class="btn btn-secondary btn-sm" disabled>Complete final reflection</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== INSIGHTS ===================== -->
+  <section id="tab-insights" class="tab-panel hidden">
+    <div class="panel-head panel-head--page">
+      <h2>Insights</h2>
+    </div>
+
+    <div class="kpi-section">
+      <h3>Adoption</h3>
+      <div id="kpi-adoption" class="kpi-row"></div>
+    </div>
+    <div class="kpi-section">
+      <h3>Relationship quality</h3>
+      <div id="kpi-relationship" class="kpi-row"></div>
+    </div>
+    <div class="kpi-section">
+      <h3>Learning impact</h3>
+      <div id="kpi-learning" class="kpi-row"></div>
+    </div>
+
+    <div class="home-grid">
+      <div class="panel">
+        <div class="panel-head"><h2>Cohort by department</h2></div>
+        <div id="chart-department" class="bar-chart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Cohort by region</h2></div>
+        <div id="chart-region" class="bar-chart"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ADMIN / PD CONSOLE ===================== -->
+  <section id="tab-admin" class="tab-panel hidden">
+    <div class="panel-head panel-head--page">
+      <h2>Admin · PD Console</h2>
+      <p class="muted">Review incoming match requests, manage participant status, and track the pilot's go/no-go decisions.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Matching queue</h2></div>
+      <div id="matching-queue" class="matching-queue"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Roster</h2>
+        <input id="roster-search" type="search" placeholder="Search roster…" class="roster-search" />
+      </div>
+      <div class="table-scroll">
+        <table class="roster-table">
+          <thead>
+            <tr><th>Name</th><th>Department</th><th>Region</th><th>Format</th><th>Status</th><th>Journey</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="roster-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Recent nudges</h2></div>
+      <div id="nudge-log-list" class="session-log"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Decision gates</h2></div>
+      <div id="decision-gates" class="decision-gates"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===================== MODALS ===================== -->
+<div id="modal-backdrop" class="modal-backdrop hidden"></div>
+
+<div id="modal-become-mentor" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2 id="profile-modal-title">Share your profile</h2>
+    <button class="modal-close" id="profile-modal-close" data-action="close-modal">✕</button>
+  </div>
+  <p class="muted small" id="profile-modal-intro">5–7 minutes. You can offer to mentor, be mentored, or both.</p>
+  <form id="form-become-mentor" class="modal-body">
+    <div class="form-row">
+      <label>Full name<input type="text" name="fullName" required /></label>
+      <label>Work email<input type="email" name="email" required /></label>
+    </div>
+    <div class="form-row">
+      <label>Department<input type="text" name="department" required /></label>
+      <label>Region
+        <select name="geography" required>
+          <option value="APAC">APAC</option>
+          <option value="EMEA">EMEA</option>
+          <option value="LATAM">LATAM</option>
+          <option value="NA">NA</option>
+        </select>
+      </label>
+    </div>
+    <label>I want to learn (up to 3, comma-separated)<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting" /></label>
+    <label>I can offer (up to 5, comma-separated)<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching" /></label>
+    <label>My goal — one concise, time-bound outcome<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" /></label>
+    <div class="form-row">
+      <label>Preferred format
+        <select name="preferredFormat" required>
+          <option value="mentee">Mentee</option>
+          <option value="mentor">Mentor</option>
+          <option value="peer">Peer</option>
+          <option value="reverse">Reverse mentoring</option>
+        </select>
+      </label>
+      <label>AI confidence
+        <select name="aiConfidence">
+          <option>Beginner</option>
+          <option>Familiar</option>
+          <option>Practitioner</option>
+          <option>Advanced</option>
+        </select>
+      </label>
+    </div>
+    <div class="form-row">
+      <label>Preferred cadence
+        <select name="frequency">
+          <option>Bi-weekly</option>
+          <option>Monthly</option>
+        </select>
+      </label>
+      <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+    </div>
+    <label>Anything that helps us match you (optional)<input type="text" name="matchNote" placeholder="e.g. Prefer someone outside my function" /></label>
+    <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand participation is voluntary and confidential, and I can request a no-fault rematch at any time.</label>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="profile-modal-cancel" data-action="close-modal">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="profile-modal-submit">Submit profile</button>
+    </div>
+  </form>
+</div>
+
+<div id="modal-become-mentor-role" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2>I want to become a Mentor</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <p class="muted small">Three quick questions — this adds to your existing profile.</p>
+  <form id="form-become-mentor-role" class="modal-body form-stack">
+    <label>Why do you want to mentor?<textarea name="purpose" rows="3" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned" required></textarea></label>
+    <label>What skills do you bring?<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching (up to 5, comma-separated)" required /></label>
+    <label>How much time can you allocate?
+      <select name="frequency" required>
+        <option value="Bi-weekly">Bi-weekly</option>
+        <option value="Monthly">Monthly</option>
+      </select>
+    </label>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+      <button type="submit" class="btn btn-primary">Become a mentor</button>
+    </div>
+  </form>
+</div>
+
+<div id="modal-become-mentee-role" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2>I want to become a Mentee</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <p class="muted small">Four quick questions — this adds to your existing profile.</p>
+  <form id="form-become-mentee-role" class="modal-body form-stack">
+    <label>What do you want to learn?<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting (up to 3, comma-separated)" required /></label>
+    <label>My level of understanding or skill
+      <select name="skillLevel" required>
+        <option value="Beginner">Beginner</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="Advanced">Advanced</option>
+      </select>
+    </label>
+    <label>How much time can I allot?
+      <select name="frequency" required>
+        <option value="Bi-weekly">Bi-weekly</option>
+        <option value="Monthly">Monthly</option>
+      </select>
+    </label>
+    <label>What is my goal?<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" required /></label>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+      <button type="submit" class="btn btn-primary">Become a mentee</button>
+    </div>
+  </form>
+</div>
+
+<div id="modal-resources" class="modal modal--wide hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2>Learning resources</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <div class="resource-tabs" id="resource-tabs"></div>
+  <div id="resource-panel" class="modal-body resource-panel"></div>
+</div>
+
+<div id="modal-nudge" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2>Send a nudge</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <div class="modal-body">
+    <p class="muted small" id="nudge-to-line"></p>
+    <label>Message
+      <textarea id="nudge-message" rows="6"></textarea>
+    </label>
+    <p class="muted small">This opens an email draft in your own mail app, addressed to them — nothing sends automatically, and nothing leaves this browser until you hit send there.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btn-send-nudge" data-action="send-nudge">Open email draft</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-match" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2>Match score</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <div id="match-modal-body" class="modal-body"></div>
+</div>
+
+<div id="modal-log-session" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2>Log a session</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <form id="form-log-session" class="modal-body">
+    <label>Stage
+      <select name="stage" id="log-session-stage" required></select>
+    </label>
+    <label>Date<input type="date" name="date" required /></label>
+    <label>Notes<textarea name="notes" rows="4" placeholder="What did you cover? Any real workplace application?"></textarea></label>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+      <button type="submit" class="btn btn-primary">Save session</button>
+    </div>
+  </form>
+</div>
+
+<div id="modal-schedule-meeting" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2>Schedule a conversation</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <div class="modal-body">
+    <div id="schedule-step-form">
+      <p class="muted small" id="schedule-with-line"></p>
+      <form id="form-schedule-meeting" class="form-stack">
+        <label>Which conversation
+          <select name="stage" id="schedule-stage-select" required></select>
+        </label>
+        <div class="form-row">
+          <label>Date<input type="date" name="date" required /></label>
+          <label>Time<input type="time" name="time" required /></label>
+        </div>
+        <label>Duration
+          <select name="duration">
+            <option value="30">30 minutes</option>
+            <option value="45" selected>45 minutes</option>
+            <option value="60">60 minutes</option>
+          </select>
+        </label>
+        <p class="muted small">This builds a calendar invite for both of you, with reminders one day and 30 minutes before.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create invite</button>
+        </div>
+      </form>
+    </div>
+    <div id="schedule-step-result" class="hidden">
+      <p class="muted small" id="schedule-result-summary"></p>
+      <div class="calendar-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-add-google">Add to Google Calendar</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-add-outlook">Add to Outlook</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-download-ics">Download .ics</button>
+      </div>
+      <p class="muted small" id="schedule-result-note"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" data-action="close-modal">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-pulse" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2>Midpoint pulse check</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <form id="form-pulse" class="modal-body">
+    <label>My relationship feels productive
+      <select name="q1">
+        <option value="5">5 — Strongly agree</option>
+        <option value="4">4</option>
+        <option value="3">3 — Neutral</option>
+        <option value="2">2</option>
+        <option value="1">1 — Strongly disagree</option>
+      </select>
+    </label>
+    <label>We meet as often as agreed
+      <select name="q2">
+        <option value="5">5 — Strongly agree</option>
+        <option value="4">4</option>
+        <option value="3">3 — Neutral</option>
+        <option value="2">2</option>
+        <option value="1">1 — Strongly disagree</option>
+      </select>
+    </label>
+    <label>I feel comfortable being open with my partner
+      <select name="q3">
+        <option value="5">5 — Strongly agree</option>
+        <option value="4">4</option>
+        <option value="3">3 — Neutral</option>
+        <option value="2">2</option>
+        <option value="1">1 — Strongly disagree</option>
+      </select>
+    </label>
+    <label>I'm making progress on my learning goal
+      <select name="q4">
+        <option value="5">5 — Strongly agree</option>
+        <option value="4">4</option>
+        <option value="3">3 — Neutral</option>
+        <option value="2">2</option>
+        <option value="1">1 — Strongly disagree</option>
+      </select>
+    </label>
+    <label>Do you want to continue this relationship?
+      <select name="continuation">
+        <option value="yes">Yes</option>
+        <option value="maybe">Maybe</option>
+        <option value="no">No</option>
+      </select>
+    </label>
+    <label>Anything else PD should know? (optional)<textarea name="openText" rows="3"></textarea></label>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+      <button type="submit" class="btn btn-primary">Submit pulse</button>
+    </div>
+  </form>
+</div>
+
+<div id="modal-reflection" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2>Final reflection</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <form id="form-reflection" class="modal-body">
+    <label>What did you set out to learn?<textarea name="setOutToLearn" rows="2" required></textarea></label>
+    <label>What did you actually learn?<textarea name="whatLearned" rows="2" required></textarea></label>
+    <label>What did your mentor/partner learn from you?<textarea name="whatPartnerLearned" rows="2"></textarea></label>
+    <label class="checkbox-row"><input type="checkbox" name="appliedInWorkplace" /> I applied this learning to a real workplace situation</label>
+    <label>Would you continue this relationship informally?
+      <select name="wouldContinue"><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select>
+    </label>
+    <label>Would you recommend GainForward to a colleague?
+      <select name="wouldRecommend"><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select>
+    </label>
+    <label>What would you change before this scales?<textarea name="whatToChange" rows="2"></textarea></label>
+    <label>Next step
+      <select name="nextStep">
+        <option value="continue">Continue informally</option>
+        <option value="end">End the formal relationship</option>
+        <option value="contributor">Become a peer-learning contributor</option>
+      </select>
+    </label>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+      <button type="submit" class="btn btn-primary">Submit reflection</button>
+    </div>
+  </form>
+</div>
+
+<div id="modal-settings" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2>Employee data source</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <p class="muted small modal-body-lead">
+    Point GainForward at your own employee-data API. Until this is configured, the directory runs on the demo roster below.
+  </p>
+  <form id="form-settings" class="modal-body">
+    <label>Provider
+      <select name="provider">
+        <option value="custom">Custom REST / internal HRIS API</option>
+        <option value="anthropic">Anthropic-backed service</option>
+        <option value="other">Other</option>
+      </select>
+    </label>
+    <label>Endpoint URL<input type="url" name="endpoint" placeholder="https://your-service.example.com/api/employees" /></label>
+    <label>API key<input type="password" name="apiKey" placeholder="Paste key — stored only in this browser" autocomplete="off" /></label>
+    <label class="checkbox-row"><input type="checkbox" name="enabled" /> Use this source instead of the demo roster</label>
+    <p class="security-note">⚠️ Prototype only: the key is stored in this browser's local storage so the demo can call your endpoint directly. Before deploying beyond a prototype, proxy this call through a backend so the key never reaches the browser.</p>
+    <div id="settings-test-result" class="settings-test-result"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-action="clear-settings">Clear</button>
+      <button type="button" id="btn-test-connection" class="btn btn-secondary">Test connection</button>
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+  </form>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/matching.js"></script>
+<script src="js/api.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

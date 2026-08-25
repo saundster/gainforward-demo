@@ -1,0 +1,232 @@
+<title>GainForward Questionnaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --purple-deep: #401E86;
+    --purple: #8012FF;
+    --lavender: #F4EEFF;
+    --lavender-100: #ECE1FF;
+    --gray-dark: #4B4B4A;
+    --gray-muted: #6E6E6D;
+    --rule: #D9D2EE;
+    --bg: #FFFFFF;
+    --card-bg: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --purple-deep: #C9B3FF;
+      --purple: #B48CFF;
+      --lavender: #241A3D;
+      --lavender-100: #2E2250;
+      --gray-dark: #E4E0EE;
+      --gray-muted: #A79FC2;
+      --rule: #3A2F5C;
+      --bg: #17112A;
+      --card-bg: #1D1735;
+    }
+  }
+  :root[data-theme="dark"] {
+    --purple-deep: #C9B3FF;
+    --purple: #B48CFF;
+    --lavender: #241A3D;
+    --lavender-100: #2E2250;
+    --gray-dark: #E4E0EE;
+    --gray-muted: #A79FC2;
+    --rule: #3A2F5C;
+    --bg: #17112A;
+    --card-bg: #1D1735;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--gray-dark);
+    font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+  }
+  .sheet { max-width: 700px; margin: 0 auto; padding: 0 24px 80px; }
+
+  .masthead {
+    background: linear-gradient(135deg, var(--purple), var(--purple-deep));
+    color: #fff;
+    margin: 0 -24px 32px;
+    padding: 40px 24px 28px;
+    border-radius: 0 0 20px 20px;
+  }
+  .masthead .brand { font-weight: 800; font-size: 1.3rem; letter-spacing: -0.01em; }
+  .masthead .brand-sub { opacity: 0.75; font-size: 0.85rem; margin-top: 2px; }
+  .masthead h1 { font-size: 1.6rem; font-weight: 800; margin: 18px 0 6px; text-wrap: balance; }
+  .masthead p { margin: 0; font-size: 0.92rem; opacity: 0.88; max-width: 56ch; }
+
+  .intro {
+    font-size: 0.95rem;
+    color: var(--gray-dark);
+    max-width: 65ch;
+  }
+  .intro .note {
+    color: var(--gray-muted);
+    font-style: italic;
+    font-size: 0.85rem;
+    margin-top: 10px;
+  }
+
+  .section-banner {
+    background: var(--lavender);
+    color: var(--purple-deep);
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 10px 16px;
+    border-radius: 10px;
+    margin: 36px 0 20px;
+  }
+
+  .q { margin: 0 0 22px; }
+  .q-head { display: flex; gap: 10px; align-items: baseline; font-weight: 700; font-size: 0.98rem; }
+  .q-num { color: var(--purple); flex-shrink: 0; }
+  .q-hint { display: block; font-weight: 400; font-style: italic; color: var(--gray-muted); font-size: 0.82rem; margin-top: 4px; }
+
+  .answer-rule {
+    border: none;
+    border-bottom: 1px solid var(--rule);
+    height: 30px;
+    margin-top: 10px;
+  }
+
+  .options { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-top: 10px; }
+  .option { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--gray-dark); }
+  .option .mark {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 1.6px solid var(--purple); flex-shrink: 0;
+  }
+
+  .consent {
+    background: var(--card-bg);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 16px 18px;
+    font-style: italic;
+    font-size: 0.9rem;
+    margin: 10px 0 14px;
+  }
+
+  .footnote {
+    border-top: 1px solid var(--rule);
+    margin-top: 44px;
+    padding-top: 18px;
+    color: var(--gray-muted);
+    font-size: 0.82rem;
+    font-style: italic;
+  }
+
+  @media print {
+    .masthead { border-radius: 0; }
+  }
+</style>
+
+<div class="sheet">
+  <div class="masthead">
+    <div class="brand">GainForward</div>
+    <div class="brand-sub">RateGain Mentorship &amp; Peer Learning Ecosystem — pilot</div>
+    <h1>Participant Profile Questionnaire</h1>
+    <p>The profile every participant completes to join GainForward — once at sign-up, and any time after to update.</p>
+  </div>
+
+  <p class="intro">
+    There is one form for everyone: mentors and mentees answer the same questions. What differs is emphasis — a mentor leans on "what you can offer," a mentee on "what you want to learn" — and the one format question below, not a separate track. This mirrors the pilot's skill-first design: expertise and curiosity matter more than title or tenure.
+  </p>
+  <p class="intro note">In the product, this is the mandatory setup screen shown the first time someone opens GainForward, and the "My profile" screen from then on.</p>
+
+  <div class="section-banner">Section 1 — About you</div>
+
+  <div class="q"><div class="q-head"><span class="q-num">1.</span> Full name</div><hr class="answer-rule" /></div>
+  <div class="q"><div class="q-head"><span class="q-num">2.</span> Work email</div><hr class="answer-rule" /></div>
+  <div class="q"><div class="q-head"><span class="q-num">3.</span> Department / function</div><hr class="answer-rule" /></div>
+  <div class="q">
+    <div class="q-head"><span class="q-num">4.</span> Region</div>
+    <div class="options">
+      <span class="option"><span class="mark"></span>APAC</span>
+      <span class="option"><span class="mark"></span>EMEA</span>
+      <span class="option"><span class="mark"></span>LATAM</span>
+      <span class="option"><span class="mark"></span>NA</span>
+    </div>
+  </div>
+
+  <div class="section-banner">Section 2 — What you want to learn</div>
+
+  <div class="q">
+    <div class="q-head"><span class="q-num">5.</span> What do you want to learn?
+      <span class="q-hint">Up to 3 areas — e.g. "Executive communication, Revenue forecasting"</span>
+    </div>
+    <hr class="answer-rule" />
+  </div>
+  <div class="q">
+    <div class="q-head"><span class="q-num">6.</span> Your goal
+      <span class="q-hint">One concise, time-bound outcome — e.g. "Present forecasts to leadership within 12 weeks"</span>
+    </div>
+    <hr class="answer-rule" />
+  </div>
+
+  <div class="section-banner">Section 3 — What you can offer</div>
+
+  <div class="q">
+    <div class="q-head"><span class="q-num">7.</span> What can you offer or teach others?
+      <span class="q-hint">Up to 5 skills or topics — no obligation attached, this is just visibility</span>
+    </div>
+    <hr class="answer-rule" />
+  </div>
+
+  <div class="section-banner">Section 4 — How you'd like to participate</div>
+
+  <div class="q">
+    <div class="q-head"><span class="q-num">8.</span> Preferred format</div>
+    <div class="options">
+      <span class="option"><span class="mark"></span>Mentor</span>
+      <span class="option"><span class="mark"></span>Mentee</span>
+      <span class="option"><span class="mark"></span>Peer</span>
+      <span class="option"><span class="mark"></span>Reverse mentoring</span>
+    </div>
+  </div>
+  <div class="q">
+    <div class="q-head"><span class="q-num">9.</span> AI confidence
+      <span class="q-hint">How comfortable are you using AI tools day-to-day?</span>
+    </div>
+    <div class="options">
+      <span class="option"><span class="mark"></span>Beginner</span>
+      <span class="option"><span class="mark"></span>Familiar</span>
+      <span class="option"><span class="mark"></span>Practitioner</span>
+      <span class="option"><span class="mark"></span>Advanced</span>
+    </div>
+  </div>
+  <div class="q">
+    <div class="q-head"><span class="q-num">10.</span> Preferred cadence</div>
+    <div class="options">
+      <span class="option"><span class="mark"></span>Bi-weekly</span>
+      <span class="option"><span class="mark"></span>Monthly</span>
+    </div>
+  </div>
+  <div class="q"><div class="q-head"><span class="q-num">11.</span> Time zone</div><hr class="answer-rule" /></div>
+
+  <div class="section-banner">Section 5 — Matching preferences <span style="font-weight:400; opacity:0.75;">(optional)</span></div>
+
+  <div class="q">
+    <div class="q-head"><span class="q-num">12.</span> Anything that helps us match you well?
+      <span class="q-hint">e.g. "prefer someone outside my function," language, or a scheduling constraint</span>
+    </div>
+    <hr class="answer-rule" />
+  </div>
+
+  <div class="section-banner">Section 6 — Consent</div>
+
+  <div class="q">
+    <div class="q-head"><span class="q-num">13.</span> Acknowledgement</div>
+    <div class="consent">"I understand participation is voluntary and confidential, and I can request a no-fault rematch at any time."</div>
+    <div class="options"><span class="option"><span class="mark"></span>I agree</span></div>
+  </div>
+
+  <p class="footnote">
+    Fields intentionally left out of this pilot: employee ID, job title, manager name, and past performance ratings. The program is designed to be skill-first and age-neutral — matching runs on stated goals and expertise, not hierarchy or tenure.
+  </p>
+</div>

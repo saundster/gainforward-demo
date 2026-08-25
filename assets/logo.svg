@@ -1,0 +1,14 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GainForward logo">
+  <defs>
+    <linearGradient id="ms-grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8E6EFA"/>
+      <stop offset="1" stop-color="#401E86"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="32" fill="url(#ms-grad)"/>
+  <g transform="rotate(-28 32 32)">
+    <ellipse cx="32" cy="32" rx="19" ry="9.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.6"/>
+    <circle cx="51" cy="32" r="4.4" fill="#FFFFFF"/>
+  </g>
+  <circle cx="32" cy="32" r="7" fill="#FFFFFF"/>
+</svg>

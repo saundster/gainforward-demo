@@ -1,0 +1,6 @@
+# Local-only dev helper (Windows test server) — not needed for deployment
+_devserver.ps1
+
+# OS junk
+.DS_Store
+Thumbs.db
