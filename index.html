@@ -267,11 +267,11 @@
   <section id="tab-admin" class="tab-panel hidden">
     <div class="panel-head panel-head--page">
       <h2>Admin · PD Console</h2>
-      <p class="muted">Review incoming match requests, manage participant status, and track the pilot's go/no-go decisions.</p>
+      <p class="muted">Connections form automatically — review them here, manage participant status, and track the pilot's go/no-go decisions.</p>
     </div>
 
     <div class="panel">
-      <div class="panel-head"><h2>Matching queue</h2></div>
+      <div class="panel-head"><h2>Active connections</h2></div>
       <div id="matching-queue" class="matching-queue"></div>
     </div>
 
@@ -328,11 +328,19 @@
         </select>
       </label>
     </div>
-    <p class="muted small hidden" id="profile-extended-hint">You'll set what you want to learn or offer next, from Home — "I want to become a Mentor" or "I want to become a Mentee".</p>
     <div id="profile-extended-fields" class="form-stack">
       <label>I want to learn (up to 3, comma-separated)<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting" /></label>
-      <label>I can offer (up to 5, comma-separated)<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching" /></label>
+      <label>My level of understanding or skill
+        <select name="skillLevel">
+          <option value="">Not sure yet</option>
+          <option value="Beginner">Beginner</option>
+          <option value="Intermediate">Intermediate</option>
+          <option value="Advanced">Advanced</option>
+        </select>
+      </label>
       <label>My goal — one concise, time-bound outcome<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" /></label>
+      <label>I can offer (up to 5, comma-separated)<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching" /></label>
+      <label>Why would you want to mentor someone? (optional)<textarea name="purpose" rows="2" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned"></textarea></label>
       <div class="form-row">
         <label>Preferred format
           <select name="preferredFormat">

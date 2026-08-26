@@ -149,8 +149,10 @@ function openProfileModal({ onboarding }) {
   form.department.value = me.department || "";
   if (me.geography) form.geography.value = me.geography;
   form.learningGoals.value = (me.learningGoals || []).join(", ");
+  form.skillLevel.value = me.skillLevel || "";
   form.offeredSkills.value = (me.offeredSkills || []).join(", ");
   form.goalStatement.value = me.goalStatement || "";
+  form.purpose.value = me.purpose || "";
   if (me.preferredFormat) form.preferredFormat.value = me.preferredFormat;
   if (me.aiConfidence) form.aiConfidence.value = me.aiConfidence;
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
@@ -158,17 +160,15 @@ function openProfileModal({ onboarding }) {
   form.matchNote.value = me.matchNote || "";
   form.consentAck.checked = !!me.consentAck;
 
-  $("#profile-modal-title").textContent = onboarding ? "Welcome to GainForward" : "Your profile";
+  // Sign-up builds the full profile in one go — this is the only place all of
+  // this is asked, so there's nothing left to fill in piecemeal later.
+  $("#profile-modal-title").textContent = onboarding ? "Welcome to GainForward — let's build your profile" : "Your profile";
   $("#profile-modal-intro").textContent = onboarding
-    ? "Just the basics for now — about 1 minute."
+    ? "This is what powers your matches — about 5–7 minutes."
     : "Update what you're learning, offering, and how you'd like to participate.";
   $("#profile-modal-close").classList.toggle("hidden", onboarding);
   $("#profile-modal-cancel").classList.toggle("hidden", onboarding);
-  $("#profile-modal-submit").textContent = onboarding ? "Continue" : "Save changes";
-  // Onboarding only collects identity — learning/offering specifics live in the
-  // dedicated "I want to become a..." flows, so they're not asked twice.
-  $("#profile-extended-fields").classList.toggle("hidden", onboarding);
-  $("#profile-extended-hint").classList.toggle("hidden", !onboarding);
+  $("#profile-modal-submit").textContent = onboarding ? "Create my profile" : "Save changes";
 
   openModal("modal-become-mentor");
 }
@@ -403,7 +403,7 @@ function renderDirectory() {
         <div class="chip-row">${skillsChips}</div>
         <div class="employee-card-footer">
           <button class="btn btn-secondary btn-sm" data-action="request-mentor" data-id="${e.id}">
-            ${existing ? "View request" : "View match & request"}
+            ${existing ? "View connection" : "View match & connect"}
           </button>
         </div>
       </div>`;
@@ -459,12 +459,15 @@ function openMatchModalFor(candidateId) {
           .join("")}
       </div>
     </details>
-    ${meBusy ? `<p class="muted small">Heads up: you already have an active journey. PD will need to close or rematch it before this one can be confirmed.</p>` : ""}
-    ${candidateBusy ? `<p class="muted small">${candidate.displayName} already has an active journey right now.</p>` : ""}
     ${
       existing
-        ? `<p class="muted small">Request status: <strong>${existing.status}</strong>.</p>`
-        : `<button class="btn btn-primary" id="btn-send-request">Send mentorship request</button>`
+        ? `<p class="muted small">You're already connected — head to My Journey to get started.</p>`
+        : meBusy
+        ? `<p class="muted small">You already have an active journey — you'll need a rematch before starting a new one.</p>`
+        : candidateBusy
+        ? `<p class="muted small">${candidate.displayName} already has an active journey right now.</p>`
+        : `<button class="btn btn-primary" id="btn-send-request">Connect now</button>
+           <p class="muted small" style="margin-top:6px">This connects you right away — no approval needed. People Development can review it anytime and step in if something looks off.</p>`
     }
   `;
 
@@ -473,23 +476,56 @@ function openMatchModalFor(candidateId) {
   if (sendBtn) sendBtn.addEventListener("click", () => sendRequest(candidateId, total, breakdown));
 }
 
+/** Connections form immediately on request — no admin approval gate. Admin can
+ * still review any active connection and end it (no-fault rematch) at any time;
+ * that's the guardrail, not a pre-approval step. */
 function sendRequest(candidateId, total, breakdown) {
   const candidate = getEmployeeById(candidateId);
+  const me = getCurrentUser();
+
+  const fromBusy = findActiveJourneyFor(CURRENT_USER_ID);
+  const toBusy = findActiveJourneyFor(candidateId);
+  if (fromBusy || toBusy) {
+    const busyName = fromBusy ? me.displayName : candidate.displayName;
+    toast(`${busyName} already has an active journey. They'd need a rematch first — this pilot runs one relationship at a time.`, "error");
+    return;
+  }
+
+  const relationshipType =
+    candidate.preferredFormat === "peer" ? "Peer Learning" : candidate.preferredFormat === "reverse" ? "Reverse Mentoring" : "1:1 Mentoring";
+
   const request = {
     id: uid("req"),
     fromId: CURRENT_USER_ID,
     toId: candidateId,
     score: total,
     breakdown,
-    checklist: matchQualityAnswerDefaults(getCurrentUser(), candidate),
-    status: "pending",
+    checklist: matchQualityAnswerDefaults(me, candidate),
+    status: "accepted",
     createdAt: new Date().toISOString(),
   };
   requests.push(request);
+
+  journeys.push({
+    id: uid("j"),
+    participantA: CURRENT_USER_ID,
+    participantB: candidateId,
+    relationshipType,
+    formalStatus: "active",
+    startDate: new Date().toISOString().slice(0, 10),
+    sessions: [],
+    meetings: [],
+    pulse: null,
+    reflection: null,
+  });
+  if (candidate.menteeCount != null) candidate.menteeCount += 1;
+
   savePersisted(STORAGE.requests, requests);
-  toast(`Request sent to ${candidate.displayName}. It's now in the PD matching queue.`, "success");
+  savePersisted(STORAGE.journeys, journeys);
+  toast(`You're connected with ${candidate.displayName} — head to My Journey to schedule your first conversation.`, "success");
   closeAllModals();
   renderDirectory();
+  renderHome();
 }
 
 /* ---------------------------------------------------------------- */
@@ -966,38 +1002,48 @@ function renderInsights() {
 /* ---------------------------------------------------------------- */
 /* Admin · PD Console                                                 */
 /* ---------------------------------------------------------------- */
+/** Not a pre-approval gate — connections are already live by the time they show up
+ * here. This is PD's guardrail: review why the system paired two people, and end
+ * (no-fault rematch) a connection at any point if something looks off. */
 function renderMatchingQueue() {
-  const pending = requests.filter((r) => r.status === "pending");
   const container = $("#matching-queue");
-  if (!pending.length) {
-    container.innerHTML = `<p class="empty-state">No pending requests. New mentorship requests from the Directory will appear here.</p>`;
+  const activeJourneys = journeys.filter((j) => j.formalStatus === "active");
+
+  if (!activeJourneys.length) {
+    container.innerHTML = `<p class="empty-state">No active connections yet. New ones form automatically from the Directory and will show up here for review.</p>`;
     return;
   }
 
-  container.innerHTML = pending
-    .map((r) => {
-      const from = getEmployeeById(r.fromId);
-      const to = getEmployeeById(r.toId);
-      const allChecked = r.checklist.every((c) => c.checked);
-      const reasons = from && to ? matchReasons(from, to, r.breakdown) : [];
+  container.innerHTML = activeJourneys
+    .map((j) => {
+      const from = getEmployeeById(j.participantA);
+      const to = getEmployeeById(j.participantB);
+      const req = requests.find((r) => r.fromId === j.participantA && r.toId === j.participantB && r.status === "accepted");
+      const scored = req ? { total: req.score, breakdown: req.breakdown } : from && to ? computeMatchScore(from, to) : { total: 0, breakdown: [] };
+      const checklist = req ? req.checklist : from && to ? matchQualityAnswerDefaults(from, to) : [];
+      const reasons = from && to ? matchReasons(from, to, scored.breakdown) : [];
+      const checklistKey = req ? req.id : j.id;
+
       return `
       <div class="match-item">
         <div class="match-item-head">
-          <span class="match-item-pair">${from ? from.displayName : "?"} → ${to ? to.displayName : "?"}</span>
-          <span class="match-score-badge" title="${scoreVerdict(r.score)}">${r.score}% · ${scoreVerdict(r.score)}</span>
+          <span class="match-item-pair">${from ? from.displayName : "?"} ↔ ${to ? to.displayName : "?"}</span>
+          <span class="match-score-badge" title="${scoreVerdict(scored.total)}">${scored.total}% · ${scoreVerdict(scored.total)}</span>
         </div>
         <ul class="tip-list match-reasons">${reasons.map((rs) => `<li>${rs}</li>`).join("")}</ul>
-        <div class="checklist">
-          ${r.checklist
-            .map(
-              (c, i) => `
-            <label><input type="checkbox" data-checklist="${r.id}:${i}" ${c.checked ? "checked" : ""} /> ${c.question}</label>`
-            )
-            .join("")}
-        </div>
+        <details class="score-details">
+          <summary>Review checklist</summary>
+          <div class="checklist" style="margin-top:8px">
+            ${checklist
+              .map(
+                (c, i) => `
+              <label><input type="checkbox" data-checklist="${checklistKey}:${i}" ${c.checked ? "checked" : ""} /> ${c.question}</label>`
+              )
+              .join("")}
+          </div>
+        </details>
         <div class="match-actions">
-          <button class="btn btn-danger-outline btn-sm" data-action="reject-match" data-id="${r.id}">Reject</button>
-          <button class="btn btn-primary btn-sm" data-action="confirm-match" data-id="${r.id}" ${allChecked ? "" : "disabled"}>Confirm match</button>
+          <button class="btn btn-danger-outline btn-sm" data-action="rematch" data-id="${j.id}">End connection (rematch)</button>
         </div>
       </div>`;
     })
@@ -1007,63 +1053,11 @@ function renderMatchingQueue() {
     box.addEventListener("change", (e) => {
       const [reqId, idx] = e.target.dataset.checklist.split(":");
       const req = requests.find((r) => r.id === reqId);
+      if (!req) return;
       req.checklist[Number(idx)].checked = e.target.checked;
       savePersisted(STORAGE.requests, requests);
-      renderMatchingQueue();
     });
   });
-}
-
-function confirmMatch(requestId) {
-  const req = requests.find((r) => r.id === requestId);
-  if (!req) return;
-  const from = getEmployeeById(req.fromId);
-  const to = getEmployeeById(req.toId);
-
-  const fromBusy = findActiveJourneyFor(req.fromId);
-  const toBusy = findActiveJourneyFor(req.toId);
-  if (fromBusy || toBusy) {
-    const busyName = fromBusy ? from.displayName : to.displayName;
-    toast(`${busyName} already has an active journey. Rematch or close it first — this pilot runs one relationship at a time.`, "error");
-    return;
-  }
-
-  req.status = "accepted";
-  const relationshipType =
-    to.preferredFormat === "peer"
-      ? "Peer Learning"
-      : to.preferredFormat === "reverse"
-      ? "Reverse Mentoring"
-      : "1:1 Mentoring";
-
-  journeys.push({
-    id: uid("j"),
-    participantA: req.fromId,
-    participantB: req.toId,
-    relationshipType,
-    formalStatus: "active",
-    startDate: new Date().toISOString().slice(0, 10),
-    sessions: [],
-    meetings: [],
-    pulse: null,
-    reflection: null,
-  });
-  if (to.menteeCount != null) to.menteeCount += 1;
-
-  savePersisted(STORAGE.requests, requests);
-  savePersisted(STORAGE.journeys, journeys);
-  toast(`Match confirmed: ${from.displayName} ↔ ${to.displayName}.`, "success");
-  renderMatchingQueue();
-  renderAdmin();
-}
-
-function rejectMatch(requestId) {
-  const req = requests.find((r) => r.id === requestId);
-  if (!req) return;
-  req.status = "declined";
-  savePersisted(STORAGE.requests, requests);
-  toast("Request declined.");
-  renderMatchingQueue();
 }
 
 function renderRoster() {
@@ -1297,40 +1291,52 @@ async function refreshEmployeeSource() {
 }
 
 /** Identity comes from the demo login, not the seed data — inject the logged-in persona here. */
+/** All 5 demo personas are always real, visible employees — not just the one
+ * currently logged in — so admin/roster/journeys involving any of them render
+ * correctly regardless of who's actually signed in on this browser. */
 function ensureCurrentUser() {
   const activeId = localStorage.getItem(STORAGE.activeDemoUser);
-  const account = DEMO_ACCOUNTS.find((a) => a.id === activeId);
   const overrides = loadPersisted(STORAGE.overrides, {});
 
-  const current = account
-    ? { id: account.id, isCurrentUser: true, ...account.employee, ...(overrides[account.id] || {}) }
-    : {
-        id: CURRENT_USER_ID || "u-unknown",
-        isCurrentUser: true,
-        profileComplete: false,
-        fullName: "You",
-        displayName: "You",
-        avatarInitials: "YOU",
-        email: "",
-        department: "—",
-        geography: "—",
-        careerLevel: "—",
-        tenureBand: "—",
-        learningGoals: [],
-        offeredSkills: [],
-        goalStatement: "",
-        purpose: "",
-        skillLevel: "",
-        preferredFormat: "",
-        engagementStatus: "available",
-        rating: null,
-        menteeCount: 0,
-        consentAck: false,
-      };
+  DEMO_ACCOUNTS.forEach((account) => {
+    employees = employees.filter((e) => e.id !== account.id);
+    employees.unshift({
+      id: account.id,
+      isCurrentUser: account.id === activeId,
+      ...account.employee,
+      ...(overrides[account.id] || {}),
+    });
+  });
+
+  let current = employees.find((e) => e.isCurrentUser);
+  if (!current) {
+    current = {
+      id: CURRENT_USER_ID || "u-unknown",
+      isCurrentUser: true,
+      profileComplete: false,
+      fullName: "You",
+      displayName: "You",
+      avatarInitials: "YOU",
+      email: "",
+      department: "—",
+      geography: "—",
+      careerLevel: "—",
+      tenureBand: "—",
+      learningGoals: [],
+      offeredSkills: [],
+      goalStatement: "",
+      purpose: "",
+      skillLevel: "",
+      preferredFormat: "",
+      engagementStatus: "available",
+      rating: null,
+      menteeCount: 0,
+      consentAck: false,
+    };
+    employees.unshift(current);
+  }
 
   CURRENT_USER_ID = current.id;
-  employees = employees.filter((e) => e.id !== current.id);
-  employees.unshift(current);
 }
 
 /* ---------------------------------------------------------------- */
@@ -1479,12 +1485,6 @@ function wireEvents() {
         if (meeting?.cancelIcs) downloadICS(meeting.cancelFilename, meeting.cancelIcs);
         break;
       }
-      case "confirm-match":
-        confirmMatch(el.dataset.id);
-        break;
-      case "reject-match":
-        rejectMatch(el.dataset.id);
-        break;
       case "rematch":
         triggerRematch(el.dataset.id);
         break;
@@ -1530,6 +1530,7 @@ function wireEvents() {
     const initials = parts.map((p) => p[0]?.toUpperCase() || "").join("").slice(0, 2) || "??";
     const displayName = parts.length > 1 ? `${parts[0][0]}. ${parts[parts.length - 1]}` : fullName;
     const wasOnboarding = isOnboarding;
+    const me = getCurrentUser();
 
     const fields = {
       fullName,
@@ -1541,32 +1542,26 @@ function wireEvents() {
       geography: fd.get("geography"),
       consentAck: fd.get("consentAck") === "on",
       profileComplete: true,
+      learningGoals: fd
+        .get("learningGoals")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 3),
+      skillLevel: fd.get("skillLevel"),
+      offeredSkills: fd
+        .get("offeredSkills")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 5),
+      goalStatement: fd.get("goalStatement").trim(),
+      purpose: fd.get("purpose").trim(),
+      preferredFormat: fd.get("preferredFormat"),
+      aiConfidence: fd.get("aiConfidence"),
+      availability: { ...me.availability, frequency: fd.get("frequency"), timezone: fd.get("timezone").trim() || "—" },
+      matchNote: fd.get("matchNote").trim(),
     };
-
-    // The extended fields are hidden (and meaningless at their default value)
-    // during onboarding — only apply them when this is a real "My profile" edit.
-    if (!wasOnboarding) {
-      const me = getCurrentUser();
-      Object.assign(fields, {
-        learningGoals: fd
-          .get("learningGoals")
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-          .slice(0, 3),
-        offeredSkills: fd
-          .get("offeredSkills")
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-          .slice(0, 5),
-        goalStatement: fd.get("goalStatement").trim(),
-        preferredFormat: fd.get("preferredFormat"),
-        aiConfidence: fd.get("aiConfidence"),
-        availability: { ...me.availability, frequency: fd.get("frequency"), timezone: fd.get("timezone").trim() || "—" },
-        matchNote: fd.get("matchNote").trim(),
-      });
-    }
 
     saveCurrentUserProfile(fields);
     isOnboarding = false;
