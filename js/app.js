@@ -149,8 +149,10 @@ function openProfileModal({ onboarding }) {
   form.department.value = me.department || "";
   if (me.geography) form.geography.value = me.geography;
   form.learningGoals.value = (me.learningGoals || []).join(", ");
+  form.learningSkillCategory.value = me.learningSkillCategory || "";
   form.skillLevel.value = me.skillLevel || "";
   form.offeredSkills.value = (me.offeredSkills || []).join(", ");
+  form.mentorSkillCategory.value = me.mentorSkillCategory || "";
   form.goalStatement.value = me.goalStatement || "";
   form.purpose.value = me.purpose || "";
   if (me.preferredFormat) form.preferredFormat.value = me.preferredFormat;
@@ -186,6 +188,7 @@ function openBecomeMentorRoleModal() {
   const me = getCurrentUser();
   const form = $("#form-become-mentor-role");
   form.purpose.value = me.purpose || "";
+  if (me.mentorSkillCategory) form.mentorSkillCategory.value = me.mentorSkillCategory;
   form.offeredSkills.value = (me.offeredSkills || []).join(", ");
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
   openModal("modal-become-mentor-role");
@@ -195,6 +198,7 @@ function openBecomeMenteeRoleModal() {
   const me = getCurrentUser();
   const form = $("#form-become-mentee-role");
   form.learningGoals.value = (me.learningGoals || []).join(", ");
+  if (me.learningSkillCategory) form.learningSkillCategory.value = me.learningSkillCategory;
   if (me.skillLevel) form.skillLevel.value = me.skillLevel;
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
   form.goalStatement.value = me.goalStatement || "";
@@ -1323,7 +1327,9 @@ function ensureCurrentUser() {
       careerLevel: "—",
       tenureBand: "—",
       learningGoals: [],
+      learningSkillCategory: "",
       offeredSkills: [],
+      mentorSkillCategory: "",
       goalStatement: "",
       purpose: "",
       skillLevel: "",
@@ -1549,12 +1555,14 @@ function wireEvents() {
         .filter(Boolean)
         .slice(0, 3),
       skillLevel: fd.get("skillLevel"),
+      learningSkillCategory: fd.get("learningSkillCategory"),
       offeredSkills: fd
         .get("offeredSkills")
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean)
         .slice(0, 5),
+      mentorSkillCategory: fd.get("mentorSkillCategory"),
       goalStatement: fd.get("goalStatement").trim(),
       purpose: fd.get("purpose").trim(),
       preferredFormat: fd.get("preferredFormat"),
@@ -1580,6 +1588,7 @@ function wireEvents() {
     const me = getCurrentUser();
     saveCurrentUserProfile({
       purpose: fd.get("purpose").trim(),
+      mentorSkillCategory: fd.get("mentorSkillCategory"),
       offeredSkills: fd
         .get("offeredSkills")
         .split(",")
@@ -1611,6 +1620,7 @@ function wireEvents() {
         .filter(Boolean)
         .slice(0, 3),
       skillLevel: fd.get("skillLevel"),
+      learningSkillCategory: fd.get("learningSkillCategory"),
       availability: { ...me.availability, frequency: fd.get("frequency") },
       goalStatement: fd.get("goalStatement").trim(),
       preferredFormat: "mentee",

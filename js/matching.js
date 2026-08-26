@@ -30,6 +30,23 @@ function keywordOverlapScore(listA, listB) {
   return Math.min(1, hits / a.length);
 }
 
+/**
+ * Blends free-text goal/skill overlap with the structured skill-category
+ * dropdown (Technical / Behavioural / Leadership / Career Development).
+ * Category is the coarse, reliable commonality; free text is specific but
+ * fuzzy — together they're a much more accurate "do these two actually
+ * line up" signal than either alone.
+ */
+function goalFitScore(seeker, candidate) {
+  const textScore = keywordOverlapScore(seeker.learningGoals, candidate.offeredSkills);
+  const seekerCategory = seeker.learningSkillCategory;
+  const candidateCategory = candidate.mentorSkillCategory;
+
+  if (!seekerCategory || !candidateCategory) return textScore;
+  if (seekerCategory === candidateCategory) return Math.max(textScore, 0.75);
+  return textScore * 0.7;
+}
+
 function complementScore(seeker, candidate) {
   let score = 0.5;
   if (seeker.department !== candidate.department) score += 0.3;
@@ -66,7 +83,7 @@ function otherPreferenceScore(seeker, candidate) {
 function computeMatchScore(seeker, candidate) {
   const weights = PROGRAM_META.matchWeights;
   const rawScores = {
-    goal: keywordOverlapScore(seeker.learningGoals, candidate.offeredSkills),
+    goal: goalFitScore(seeker, candidate),
     complement: complementScore(seeker, candidate),
     format: formatScore(seeker, candidate),
     availability: availabilityScore(seeker, candidate),
@@ -92,9 +109,13 @@ function matchReasons(seeker, candidate, breakdown) {
   const reasons = [];
   const byKey = Object.fromEntries(breakdown.map((b) => [b.key, b.score]));
 
+  const sameCategory = seeker.learningSkillCategory && seeker.learningSkillCategory === candidate.mentorSkillCategory;
+  if (sameCategory) {
+    reasons.push(`Both focused on ${seeker.learningSkillCategory}`);
+  }
+
   if (byKey.goal >= 0.34) {
     const seekerGoals = (seeker.learningGoals || []).map(normalizeText);
-    const candidateSkills = (candidate.offeredSkills || []).map(normalizeText);
     const matchedSkill = candidate.offeredSkills?.find((skill) => {
       const s = normalizeText(skill);
       return seekerGoals.some((g) => s.includes(g) || g.includes(s) || g.split(/\s+/).some((w) => w.length > 3 && s.includes(w)));

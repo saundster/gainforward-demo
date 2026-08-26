@@ -330,6 +330,15 @@
     </div>
     <div id="profile-extended-fields" class="form-stack">
       <label>I want to learn (up to 3, comma-separated)<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting" /></label>
+      <label>Category of what I want to learn
+        <select name="learningSkillCategory">
+          <option value="">Not sure yet</option>
+          <option value="Technical Skills">Technical Skills</option>
+          <option value="Behavioural Skills">Behavioural Skills</option>
+          <option value="Leadership Skills">Leadership Skills</option>
+          <option value="Career Development">Career Development</option>
+        </select>
+      </label>
       <label>My level of understanding or skill
         <select name="skillLevel">
           <option value="">Not sure yet</option>
@@ -340,6 +349,15 @@
       </label>
       <label>My goal — one concise, time-bound outcome<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" /></label>
       <label>I can offer (up to 5, comma-separated)<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching" /></label>
+      <label>Category of what I can offer
+        <select name="mentorSkillCategory">
+          <option value="">Not applicable</option>
+          <option value="Technical Skills">Technical Skills</option>
+          <option value="Behavioural Skills">Behavioural Skills</option>
+          <option value="Leadership Skills">Leadership Skills</option>
+          <option value="Career Development">Career Development</option>
+        </select>
+      </label>
       <label>Why would you want to mentor someone? (optional)<textarea name="purpose" rows="2" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned"></textarea></label>
       <div class="form-row">
         <label>Preferred format
@@ -360,10 +378,11 @@
         </label>
       </div>
       <div class="form-row">
-        <label>Preferred cadence
+        <label>Time I can allocate
           <select name="frequency">
-            <option>Bi-weekly</option>
-            <option>Monthly</option>
+            <option value="1 hour weekly">1 hour, weekly</option>
+            <option value="1 hour bi-weekly">1 hour, bi-weekly</option>
+            <option value="1 hour monthly">1 hour, monthly</option>
           </select>
         </label>
         <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
@@ -383,14 +402,23 @@
     <h2>I want to become a Mentor</h2>
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
-  <p class="muted small">Three quick questions — this adds to your existing profile.</p>
+  <p class="muted small">A few quick questions — this adds to your existing profile.</p>
   <form id="form-become-mentor-role" class="modal-body form-stack">
-    <label>Why do you want to mentor?<textarea name="purpose" rows="3" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned" required></textarea></label>
-    <label>What skills do you bring?<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching (up to 5, comma-separated)" required /></label>
+    <label>Reason to become a Mentor<textarea name="purpose" rows="3" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned" required></textarea></label>
+    <label>Skill category
+      <select name="mentorSkillCategory" required>
+        <option value="Technical Skills">Technical Skills</option>
+        <option value="Behavioural Skills">Behavioural Skills</option>
+        <option value="Leadership Skills">Leadership Skills</option>
+        <option value="Career Development">Career Development</option>
+      </select>
+    </label>
+    <label>What skills do you want to mentor on?<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching (up to 5, comma-separated)" required /></label>
     <label>How much time can you allocate?
       <select name="frequency" required>
-        <option value="Bi-weekly">Bi-weekly</option>
-        <option value="Monthly">Monthly</option>
+        <option value="1 hour weekly">1 hour, weekly</option>
+        <option value="1 hour bi-weekly">1 hour, bi-weekly</option>
+        <option value="1 hour monthly">1 hour, monthly</option>
       </select>
     </label>
     <div class="modal-actions">
@@ -405,9 +433,17 @@
     <h2>I want to become a Mentee</h2>
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
-  <p class="muted small">Four quick questions — this adds to your existing profile.</p>
+  <p class="muted small">A few quick questions — this adds to your existing profile.</p>
   <form id="form-become-mentee-role" class="modal-body form-stack">
     <label>What do you want to learn?<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting (up to 3, comma-separated)" required /></label>
+    <label>Skill category
+      <select name="learningSkillCategory" required>
+        <option value="Technical Skills">Technical Skills</option>
+        <option value="Behavioural Skills">Behavioural Skills</option>
+        <option value="Leadership Skills">Leadership Skills</option>
+        <option value="Career Development">Career Development</option>
+      </select>
+    </label>
     <label>My level of understanding or skill
       <select name="skillLevel" required>
         <option value="Beginner">Beginner</option>
@@ -417,8 +453,9 @@
     </label>
     <label>How much time can I allot?
       <select name="frequency" required>
-        <option value="Bi-weekly">Bi-weekly</option>
-        <option value="Monthly">Monthly</option>
+        <option value="1 hour weekly">1 hour, weekly</option>
+        <option value="1 hour bi-weekly">1 hour, bi-weekly</option>
+        <option value="1 hour monthly">1 hour, monthly</option>
       </select>
     </label>
     <label>What is my goal?<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" required /></label>
