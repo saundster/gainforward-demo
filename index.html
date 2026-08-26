@@ -123,7 +123,7 @@
     <div class="home-grid">
       <div class="panel">
         <div class="panel-head">
-          <h2>Top Mentors</h2>
+          <h2>Recommended for you</h2>
           <button class="link-btn" data-action="goto-directory">View all</button>
         </div>
         <div id="top-mentors-list" class="mentor-list"></div>
@@ -174,7 +174,7 @@
 
     <div id="journey-empty" class="panel hidden">
       <p>You don't have an active mentoring journey yet. Head to <strong>Find a Mentor</strong> or <strong>Become a Mentor</strong> to start one.</p>
-      <p class="muted small">Once matched, you'll meet every two weeks across five short conversations over 12 weeks — most pairs see real value after just four conversations and one thing tried at work.</p>
+      <p class="muted small">Once matched, you'll meet every two weeks across five short conversations over 12 weeks. We recommend at least four conversations so you have time to try something at work before the cycle ends.</p>
     </div>
 
     <div id="journey-cleanup" class="panel hidden">
@@ -228,29 +228,37 @@
   <section id="tab-insights" class="tab-panel hidden">
     <div class="panel-head panel-head--page">
       <h2>Insights</h2>
-    </div>
-
-    <div class="kpi-section">
-      <h3>Adoption</h3>
-      <div id="kpi-adoption" class="kpi-row"></div>
-    </div>
-    <div class="kpi-section">
-      <h3>Relationship quality</h3>
-      <div id="kpi-relationship" class="kpi-row"></div>
-    </div>
-    <div class="kpi-section">
-      <h3>Learning impact</h3>
-      <div id="kpi-learning" class="kpi-row"></div>
-    </div>
-
-    <div class="home-grid">
-      <div class="panel">
-        <div class="panel-head"><h2>Cohort by department</h2></div>
-        <div id="chart-department" class="bar-chart"></div>
+      <div class="panel-head-actions">
+        <button class="btn btn-secondary btn-sm" data-action="export-excel">⬇ Excel</button>
+        <button class="btn btn-secondary btn-sm" data-action="export-pdf">⬇ PDF</button>
+        <button class="btn btn-secondary btn-sm" data-action="export-png">⬇ PNG</button>
       </div>
-      <div class="panel">
-        <div class="panel-head"><h2>Cohort by region</h2></div>
-        <div id="chart-region" class="bar-chart"></div>
+    </div>
+    <p id="export-status" class="muted small export-status"></p>
+
+    <div id="insights-report-area">
+      <div class="kpi-section">
+        <h3>Adoption</h3>
+        <div id="kpi-adoption" class="kpi-row"></div>
+      </div>
+      <div class="kpi-section">
+        <h3>Relationship quality</h3>
+        <div id="kpi-relationship" class="kpi-row"></div>
+      </div>
+      <div class="kpi-section">
+        <h3>Learning impact</h3>
+        <div id="kpi-learning" class="kpi-row"></div>
+      </div>
+
+      <div class="home-grid">
+        <div class="panel">
+          <div class="panel-head"><h2>Cohort by department</h2></div>
+          <div id="chart-department" class="bar-chart"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Cohort by region</h2></div>
+          <div id="chart-region" class="bar-chart"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -320,37 +328,40 @@
         </select>
       </label>
     </div>
-    <label>I want to learn (up to 3, comma-separated)<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting" /></label>
-    <label>I can offer (up to 5, comma-separated)<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching" /></label>
-    <label>My goal — one concise, time-bound outcome<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" /></label>
-    <div class="form-row">
-      <label>Preferred format
-        <select name="preferredFormat" required>
-          <option value="mentee">Mentee</option>
-          <option value="mentor">Mentor</option>
-          <option value="peer">Peer</option>
-          <option value="reverse">Reverse mentoring</option>
-        </select>
-      </label>
-      <label>AI confidence
-        <select name="aiConfidence">
-          <option>Beginner</option>
-          <option>Familiar</option>
-          <option>Practitioner</option>
-          <option>Advanced</option>
-        </select>
-      </label>
+    <p class="muted small hidden" id="profile-extended-hint">You'll set what you want to learn or offer next, from Home — "I want to become a Mentor" or "I want to become a Mentee".</p>
+    <div id="profile-extended-fields" class="form-stack">
+      <label>I want to learn (up to 3, comma-separated)<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting" /></label>
+      <label>I can offer (up to 5, comma-separated)<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching" /></label>
+      <label>My goal — one concise, time-bound outcome<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" /></label>
+      <div class="form-row">
+        <label>Preferred format
+          <select name="preferredFormat">
+            <option value="mentee">Mentee</option>
+            <option value="mentor">Mentor</option>
+            <option value="peer">Peer</option>
+            <option value="reverse">Reverse mentoring</option>
+          </select>
+        </label>
+        <label>Comfort using AI tools
+          <select name="aiConfidence">
+            <option>Beginner</option>
+            <option>Familiar</option>
+            <option>Practitioner</option>
+            <option>Advanced</option>
+          </select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Preferred cadence
+          <select name="frequency">
+            <option>Bi-weekly</option>
+            <option>Monthly</option>
+          </select>
+        </label>
+        <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+      </div>
+      <label>Anything that helps us match you (optional)<input type="text" name="matchNote" placeholder="e.g. Prefer someone outside my function" /></label>
     </div>
-    <div class="form-row">
-      <label>Preferred cadence
-        <select name="frequency">
-          <option>Bi-weekly</option>
-          <option>Monthly</option>
-        </select>
-      </label>
-      <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
-    </div>
-    <label>Anything that helps us match you (optional)<input type="text" name="matchNote" placeholder="e.g. Prefer someone outside my function" /></label>
     <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand participation is voluntary and confidential, and I can request a no-fault rematch at any time.</label>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" id="profile-modal-cancel" data-action="close-modal">Cancel</button>
@@ -513,8 +524,9 @@
     <h2>Midpoint pulse check</h2>
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
+  <p class="muted small modal-body-lead">People Development reviews these to catch issues early — not to grade you or your partner.</p>
   <form id="form-pulse" class="modal-body">
-    <label>My relationship feels productive
+    <label>This mentoring partnership feels productive
       <select name="q1">
         <option value="5">5 — Strongly agree</option>
         <option value="4">4</option>
@@ -550,14 +562,15 @@
         <option value="1">1 — Strongly disagree</option>
       </select>
     </label>
-    <label>Do you want to continue this relationship?
+    <label>Do you want to continue this partnership?
       <select name="continuation">
         <option value="yes">Yes</option>
         <option value="maybe">Maybe</option>
         <option value="no">No</option>
       </select>
     </label>
-    <label>Anything else PD should know? (optional)<textarea name="openText" rows="3"></textarea></label>
+    <label>Anything you'd like to share privately with the People Development team? (optional)<textarea name="openText" rows="3"></textarea></label>
+    <p class="privacy-note">Your mentoring partner will not see this response.</p>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
       <button type="submit" class="btn btn-primary">Submit pulse</button>
@@ -570,22 +583,24 @@
     <h2>Final reflection</h2>
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
+  <p class="muted small modal-body-lead">Your partner can see your answers to the first three questions — they're meant to close the loop together. The rest goes to People Development only.</p>
   <form id="form-reflection" class="modal-body">
     <label>What did you set out to learn?<textarea name="setOutToLearn" rows="2" required></textarea></label>
     <label>What did you actually learn?<textarea name="whatLearned" rows="2" required></textarea></label>
-    <label>What did your mentor/partner learn from you?<textarea name="whatPartnerLearned" rows="2"></textarea></label>
+    <label>What did you contribute or share with your partner?<textarea name="whatPartnerLearned" rows="2"></textarea></label>
     <label class="checkbox-row"><input type="checkbox" name="appliedInWorkplace" /> I applied this learning to a real workplace situation</label>
-    <label>Would you continue this relationship informally?
+    <label>Would you continue this partnership informally?
       <select name="wouldContinue"><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select>
     </label>
     <label>Would you recommend GainForward to a colleague?
       <select name="wouldRecommend"><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select>
     </label>
     <label>What would you change before this scales?<textarea name="whatToChange" rows="2"></textarea></label>
+    <p class="privacy-note">This and the previous question go to People Development only — your partner won't see them.</p>
     <label>Next step
       <select name="nextStep">
         <option value="continue">Continue informally</option>
-        <option value="end">End the formal relationship</option>
+        <option value="end">End the formal partnership</option>
         <option value="contributor">Become a peer-learning contributor</option>
       </select>
     </label>
@@ -625,10 +640,16 @@
   </form>
 </div>
 
+<!-- Print-only report layout, used by the PDF export (browser "Save as PDF"). -->
+<div id="print-report" class="print-report"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="js/data.js"></script>
 <script src="js/matching.js"></script>
 <script src="js/api.js"></script>
 <script src="js/calendar.js"></script>
+<script src="js/reports.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

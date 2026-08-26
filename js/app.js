@@ -160,11 +160,15 @@ function openProfileModal({ onboarding }) {
 
   $("#profile-modal-title").textContent = onboarding ? "Welcome to GainForward" : "Your profile";
   $("#profile-modal-intro").textContent = onboarding
-    ? "Before you dive in, tell us what you'd like to learn and what you can offer — takes about 5–7 minutes."
+    ? "Just the basics for now — about 1 minute."
     : "Update what you're learning, offering, and how you'd like to participate.";
   $("#profile-modal-close").classList.toggle("hidden", onboarding);
   $("#profile-modal-cancel").classList.toggle("hidden", onboarding);
-  $("#profile-modal-submit").textContent = onboarding ? "Create my profile" : "Save changes";
+  $("#profile-modal-submit").textContent = onboarding ? "Continue" : "Save changes";
+  // Onboarding only collects identity — learning/offering specifics live in the
+  // dedicated "I want to become a..." flows, so they're not asked twice.
+  $("#profile-extended-fields").classList.toggle("hidden", onboarding);
+  $("#profile-extended-hint").classList.toggle("hidden", !onboarding);
 
   openModal("modal-become-mentor");
 }
@@ -228,26 +232,28 @@ function renderHome() {
 
 function renderTopMentors() {
   const list = $("#top-mentors-list");
+  const me = getCurrentUser();
   const mentors = employees
-    .filter((e) => e.id !== CURRENT_USER_ID && e.rating)
-    .sort((a, b) => b.rating - a.rating)
+    .filter((e) => e.id !== CURRENT_USER_ID && e.preferredFormat === "mentor")
+    .map((e) => ({ employee: e, score: computeMatchScore(me, e).total }))
+    .sort((a, b) => b.score - a.score)
     .slice(0, 4);
 
   if (!mentors.length) {
-    list.innerHTML = `<p class="empty-state">No mentors have ratings yet.</p>`;
+    list.innerHTML = `<p class="empty-state">No mentors available yet.</p>`;
     return;
   }
 
   list.innerHTML = mentors
     .map(
-      (m) => `
+      ({ employee: m }) => `
     <div class="mentor-row">
       <div class="avatar">${m.avatarInitials}</div>
       <div class="mentor-row-info">
         <div class="mentor-row-name">${m.displayName}</div>
         <div class="mentor-row-meta">${m.department} · ${m.geography} · ${m.menteeCount} mentee${m.menteeCount === 1 ? "" : "s"}</div>
       </div>
-      <div class="rating">★ ${m.rating.toFixed(1)}</div>
+      ${m.rating ? `<div class="rating">★ ${m.rating.toFixed(1)}</div>` : ""}
       <button class="btn btn-secondary btn-sm" data-action="request-mentor" data-id="${m.id}">View match</button>
     </div>`
     )
@@ -421,6 +427,7 @@ function openMatchModalFor(candidateId) {
   matchModalTargetId = candidateId;
 
   const { total, breakdown } = computeMatchScore(me, candidate);
+  const reasons = matchReasons(me, candidate, breakdown);
   const existing = requests.find((r) => r.fromId === CURRENT_USER_ID && r.toId === candidateId && r.status !== "declined");
   const candidateBusy = findActiveJourneyFor(candidateId);
   const meBusy = findActiveJourneyFor(CURRENT_USER_ID);
@@ -433,22 +440,25 @@ function openMatchModalFor(candidateId) {
         <div class="mentor-row-name">${candidate.displayName}</div>
         <div class="mentor-row-meta">${candidate.department} · ${candidate.geography} · ${formatLabel(candidate.preferredFormat)}</div>
       </div>
-      <div class="match-score-badge">${total}%</div>
     </div>
     <p class="match-verdict">${scoreVerdict(total)}</p>
-    <div class="bar-chart" style="margin-top:6px">
-      ${breakdown
-        .map(
-          (b) => `
-        <div class="bar-row">
-          <span>${b.label}</span>
-          <div class="bar-track"><div class="bar-fill" style="width:${pct(b.score)}"></div></div>
-          <span>${pct(b.score)}</span>
-        </div>`
-        )
-        .join("")}
-    </div>
-    <p class="muted small">Your score blends five things: how well their expertise fits your learning goal, how different a perspective they bring, format fit, availability overlap, and your other stated preferences.</p>
+    <p class="muted small" style="margin:2px 0 -2px">Why we think so:</p>
+    <ul class="tip-list">${reasons.map((r) => `<li>${r}</li>`).join("")}</ul>
+    <details class="score-details">
+      <summary>Score breakdown (${total}%)</summary>
+      <div class="bar-chart" style="margin-top:10px">
+        ${breakdown
+          .map(
+            (b) => `
+          <div class="bar-row">
+            <span>${b.label}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct(b.score)}"></div></div>
+            <span>${pct(b.score)}</span>
+          </div>`
+          )
+          .join("")}
+      </div>
+    </details>
     ${meBusy ? `<p class="muted small">Heads up: you already have an active journey. PD will need to close or rematch it before this one can be confirmed.</p>` : ""}
     ${candidateBusy ? `<p class="muted small">${candidate.displayName} already has an active journey right now.</p>` : ""}
     ${
@@ -969,12 +979,14 @@ function renderMatchingQueue() {
       const from = getEmployeeById(r.fromId);
       const to = getEmployeeById(r.toId);
       const allChecked = r.checklist.every((c) => c.checked);
+      const reasons = from && to ? matchReasons(from, to, r.breakdown) : [];
       return `
       <div class="match-item">
         <div class="match-item-head">
           <span class="match-item-pair">${from ? from.displayName : "?"} → ${to ? to.displayName : "?"}</span>
           <span class="match-score-badge" title="${scoreVerdict(r.score)}">${r.score}% · ${scoreVerdict(r.score)}</span>
         </div>
+        <ul class="tip-list match-reasons">${reasons.map((rs) => `<li>${rs}</li>`).join("")}</ul>
         <div class="checklist">
           ${r.checklist
             .map(
@@ -1202,9 +1214,15 @@ function renderResourcePanel() {
       )
       .join("");
   } else if (key === "bestPractices" || key === "mentorTips" || key === "menteeTips") {
-    panel.innerHTML = `<ul class="tip-list">${RESOURCE_LIBRARY[key].map((tip) => `<li>${tip}</li>`).join("")}</ul>`;
+    const article = RESOURCE_LIBRARY[key];
+    panel.innerHTML = `
+      <p class="article-intro">${article.intro}</p>
+      ${article.sections
+        .map((s) => `<div class="article-section"><h4>${s.heading}</h4><p>${s.body}</p></div>`)
+        .join("")}`;
   } else if (key === "dos") {
     panel.innerHTML = `
+      <p class="article-intro">${RESOURCE_LIBRARY.dosDontsIntro}</p>
       <div class="dos-donts">
         <div class="dos-col">
           <h4 class="dos-heading dos-heading--do">Do</h4>
@@ -1216,9 +1234,11 @@ function renderResourcePanel() {
         </div>
       </div>`;
   } else if (key === "makingTheMost") {
-    panel.innerHTML = RESOURCE_LIBRARY.makingTheMost
-      .map((item) => `<div class="phase-tip"><span class="phase-tag">${item.phase}</span><span>${item.tip}</span></div>`)
-      .join("");
+    panel.innerHTML = `
+      <p class="article-intro">${RESOURCE_LIBRARY.makingTheMost.intro}</p>
+      ${RESOURCE_LIBRARY.makingTheMost.phases
+        .map((item) => `<div class="phase-tip"><span class="phase-tag">${item.phase}</span><span>${item.tip}</span></div>`)
+        .join("")}`;
   } else if (key === "linkedinCourses") {
     panel.innerHTML = `
       <p class="muted small">Commonly available through most LinkedIn Learning enterprise subscriptions — search the title in your LinkedIn Learning portal to confirm your access.</p>
@@ -1393,6 +1413,15 @@ function wireEvents() {
         renderResourceTabs();
         renderResourcePanel();
         break;
+      case "export-excel":
+        exportExcelReport();
+        break;
+      case "export-pdf":
+        exportPDFReport();
+        break;
+      case "export-png":
+        exportPNGReport();
+        break;
       case "open-resources":
         renderResources();
         openModal("modal-resources");
@@ -1510,26 +1539,34 @@ function wireEvents() {
       department: fd.get("department").trim(),
       division: fd.get("department").trim(),
       geography: fd.get("geography"),
-      learningGoals: fd
-        .get("learningGoals")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .slice(0, 3),
-      offeredSkills: fd
-        .get("offeredSkills")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .slice(0, 5),
-      goalStatement: fd.get("goalStatement").trim(),
-      preferredFormat: fd.get("preferredFormat"),
-      aiConfidence: fd.get("aiConfidence"),
-      availability: { frequency: fd.get("frequency"), timezone: fd.get("timezone").trim() || "—", windows: "" },
-      matchNote: fd.get("matchNote").trim(),
       consentAck: fd.get("consentAck") === "on",
       profileComplete: true,
     };
+
+    // The extended fields are hidden (and meaningless at their default value)
+    // during onboarding — only apply them when this is a real "My profile" edit.
+    if (!wasOnboarding) {
+      const me = getCurrentUser();
+      Object.assign(fields, {
+        learningGoals: fd
+          .get("learningGoals")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .slice(0, 3),
+        offeredSkills: fd
+          .get("offeredSkills")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .slice(0, 5),
+        goalStatement: fd.get("goalStatement").trim(),
+        preferredFormat: fd.get("preferredFormat"),
+        aiConfidence: fd.get("aiConfidence"),
+        availability: { ...me.availability, frequency: fd.get("frequency"), timezone: fd.get("timezone").trim() || "—" },
+        matchNote: fd.get("matchNote").trim(),
+      });
+    }
 
     saveCurrentUserProfile(fields);
     isOnboarding = false;

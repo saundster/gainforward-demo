@@ -527,33 +527,41 @@ const RESOURCE_LIBRARY = {
     },
   ],
 
-  bestPractices: [
-    "Match on specific goals and skills, not just seniority — the best pairings are about fit, not hierarchy.",
-    "Set ground rules in your very first conversation: cadence, confidentiality, and how you'll handle a reschedule.",
-    "Put a recurring slot on the calendar rather than \"find time when we can\" — momentum matters more than session length.",
-    "Treat it as a two-way exchange. Even senior mentors usually learn something back.",
-    "Check in on how the relationship itself is going, not just the topics — a quick pulse catches problems early.",
-    "Close the loop. A relationship that ends with a short reflection produces more value than one that just fades out.",
-  ],
+  bestPractices: {
+    intro: "These patterns show up again and again in mentoring programs that work — and in the ones that quietly fizzle out. None of this is unique to GainForward; it's what other companies' pilots (GitLab, HubSpot, Mastercard) and the broader research consistently point to.",
+    sections: [
+      { heading: "Match on fit, not hierarchy", body: "The instinct is to pair people by seniority — a director mentors an associate. But the strongest pairings match on a specific learning goal against a specific skill, regardless of title. A senior IC who's spent five years doing exactly the thing you're trying to learn is often a better match than a director three levels up who did it once, a decade ago." },
+      { heading: "Agree on ground rules in the first conversation", body: "Before diving into content, spend five minutes agreeing on three things: how often you'll meet, what happens if either of you needs to reschedule, and what's confidential. Pairs that skip this step often drift — not because the relationship failed, but because nobody actually owned making it happen." },
+      { heading: "Put it on the calendar, not on hope", body: "\"Let's find time\" is where most informal mentoring quietly dies. A recurring 30-minute slot, even if it sometimes gets moved, beats an open-ended intention every time. Momentum comes from cadence, not from any single conversation being perfect." },
+      { heading: "Treat it as an exchange, not a favor", body: "The mentee isn't the only one who's supposed to walk away with something. Mentors regularly report learning as much as they teach — a different vantage point on the business, a sharper way of explaining their own thinking, or just a reason to reflect on how they actually got good at something. If it only flows one direction, something's off." },
+      { heading: "Check the relationship, not just the topic", body: "It's easy to spend every session on content and never ask \"is this actually working for both of us?\" The midpoint pulse exists for exactly this reason — but you don't have to wait for it. A two-minute check-in early catches most problems before they become a reason to quietly stop showing up." },
+      { heading: "Close the loop deliberately", body: "Relationships that end with a short, explicit reflection — even an informal one — consistently produce more lasting value than ones that just taper off. It's the difference between \"we sort of stopped meeting\" and \"we did the thing, here's what came of it, here's what's next.\"" },
+    ],
+  },
 
-  mentorTips: [
-    "Listen more than you advise — ask what they've already tried before offering your own solution.",
-    "Share the reasoning behind your experience, not just the outcome — the \"why,\" not just \"what I'd do.\"",
-    "Keep what's shared confidential, especially anything about performance or workplace friction.",
-    "Let your mentee set the agenda. You're there to guide, not to direct.",
-    "Be honest about what you don't know — mentoring isn't the same as having every answer.",
-    "Give specific, evidence-based feedback rather than general encouragement.",
-    "Expect nothing in return. This isn't a two-way obligation.",
-  ],
+  mentorTips: {
+    intro: "Mentoring well is a specific skill, and it's different from managing or from simply being the expert in the room. Most of what goes wrong comes down to advising too early or too much.",
+    sections: [
+      { heading: "Listen before you advise", body: "The instinct when someone describes a problem is to jump straight to how you'd solve it. Resist it for a minute. Ask what they've already tried and what's made it hard — you'll often find the real question is different from the one they opened with, and your eventual advice will land better for it." },
+      { heading: "Share the reasoning, not just the answer", body: "\"Here's what I'd do\" is less useful than \"here's what I was weighing when I decided what to do.\" The reasoning is what your mentee can actually reuse in a different situation next month, when you're not in the room." },
+      { heading: "Guide, don't direct", body: "It's your mentee's goal, their career, their call on what to act on. Your job is to widen the range of options they can see and pressure-test the ones they're leaning toward — not to hand them a decision." },
+      { heading: "Confidentiality is the whole deal", body: "Anything shared about a specific colleague, a performance concern, or a workplace conflict stays with you. The moment a mentee suspects otherwise, the relationship stops being useful — they'll simply stop bringing you the real stuff." },
+      { heading: "It's fine to say \"I don't know\"", body: "Mentoring isn't a certification that you have every answer — it's a willingness to think something through with someone else. \"I haven't dealt with that, but here's how I'd think about it\" is a completely legitimate answer." },
+      { heading: "Expect nothing back", body: "This isn't a two-way obligation with a receipt. Most mentors report getting something out of it anyway — but if you go in expecting repayment, it'll show, and it'll change the dynamic." },
+    ],
+  },
 
-  menteeTips: [
-    "Come with a specific goal, not just \"I want general career advice\" — specificity gets you sharper help.",
-    "Own the relationship — schedule the sessions, set the agenda, and follow up afterward.",
-    "Do the work between sessions. A mentor can point the way; only you can walk it.",
-    "Ask the question behind the question — a bit of context helps your mentor give a better answer.",
-    "Be open to feedback that isn't what you expected to hear.",
-    "Respect your mentor's time — show up prepared, and reschedule early if you need to.",
-  ],
+  menteeTips: {
+    intro: "Mentees who get the most out of this program tend to do a few things differently — mostly around ownership. Your mentor can point the way; only you can walk it.",
+    sections: [
+      { heading: "Bring a specific goal, not a general request", body: "\"I want career advice\" is hard for anyone to act on. \"I want to get comfortable presenting financials to execs within 12 weeks\" gives your mentor something concrete to actually help with — and gives you both a way to know if it's working." },
+      { heading: "Own the logistics", body: "Schedule the sessions. Set the agenda. Send the follow-up. A mentor who has to chase you for the next meeting will quietly deprioritize it — not out of malice, just bandwidth. The relationships that last are the ones the mentee visibly drives." },
+      { heading: "Do the work in between", body: "The conversation itself is not the value — trying something and coming back with what happened is. If you leave a session with an idea and never test it, the next conversation just repeats the last one." },
+      { heading: "Give context, not just questions", body: "\"How do I get promoted?\" is hard to answer. \"I got told I need more executive presence, here's the specific feedback I got, here's what I've tried\" lets your mentor actually help instead of guessing." },
+      { heading: "Be willing to hear the answer you didn't want", body: "The most useful feedback is rarely the most comfortable. If every conversation just confirms what you already believed, you're probably not getting the full picture." },
+      { heading: "Respect the time you're being given", body: "Show up prepared. If you need to reschedule, do it early rather than as a no-show. Your mentor is choosing to spend time on this — most will keep choosing it if it feels respected." },
+    ],
+  },
 
   dos: [
     "Put a recurring slot on the calendar",
@@ -571,14 +579,18 @@ const RESOURCE_LIBRARY = {
     "Expect a mentor to have every answer",
     "Skip the first \"getting to know you\" conversation to save time — it's what makes the rest work",
   ],
+  dosDontsIntro: "A quick-reference version of everything in Best Practices and the mentor/mentee guides — pin this if you just want the short list.",
 
-  makingTheMost: [
-    { phase: "Before", tip: "Send a short agenda the day before — even three bullet points signals you're prepared and gives your partner time to think." },
-    { phase: "Start", tip: "Spend the first few minutes on rapport, not straight into business — trust is what makes the advice land." },
-    { phase: "End", tip: "Leave the last five minutes for \"what will I actually try before we next meet?\"" },
-    { phase: "After", tip: "Send a one-line follow-up on what you took away or tried — it closes the loop and builds momentum for next time." },
-    { phase: "Ongoing", tip: "Revisit your goal every few sessions — it's fine for it to evolve as you learn more about what you actually need." },
-  ],
+  makingTheMost: {
+    intro: "The difference between a mentoring relationship that sticks and one that fizzles is rarely the quality of the advice — it's usually these small mechanics around it.",
+    phases: [
+      { phase: "Before", tip: "Send a short agenda the day before — even three bullet points signals you're prepared and gives your partner time to think." },
+      { phase: "Start", tip: "Spend the first few minutes on rapport, not straight into business — trust is what makes the advice land." },
+      { phase: "End", tip: "Leave the last five minutes for \"what will I actually try before we next meet?\"" },
+      { phase: "After", tip: "Send a one-line follow-up on what you took away or tried — it closes the loop and builds momentum for next time." },
+      { phase: "Ongoing", tip: "Revisit your goal every few sessions — it's fine for it to evolve as you learn more about what you actually need." },
+    ],
+  },
 
   linkedinCourses: [
     { title: "Being a Good Mentor", instructor: "Ellen Ensher", note: "Building trust, structuring meetings, and giving feedback as a mentor.", url: "https://www.linkedin.com/learning/being-a-good-mentor" },

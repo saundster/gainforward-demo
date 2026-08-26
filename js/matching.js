@@ -83,6 +83,53 @@ function computeMatchScore(seeker, candidate) {
   return { total: Math.round(total * 100), breakdown };
 }
 
+/**
+ * Translates the numeric breakdown into plain-language reasons a person can
+ * actually evaluate — a raw percentage looks precise but isn't self-explaining.
+ * Returns up to 4 short strings, most-relevant first.
+ */
+function matchReasons(seeker, candidate, breakdown) {
+  const reasons = [];
+  const byKey = Object.fromEntries(breakdown.map((b) => [b.key, b.score]));
+
+  if (byKey.goal >= 0.34) {
+    const seekerGoals = (seeker.learningGoals || []).map(normalizeText);
+    const candidateSkills = (candidate.offeredSkills || []).map(normalizeText);
+    const matchedSkill = candidate.offeredSkills?.find((skill) => {
+      const s = normalizeText(skill);
+      return seekerGoals.some((g) => s.includes(g) || g.includes(s) || g.split(/\s+/).some((w) => w.length > 3 && s.includes(w)));
+    });
+    reasons.push(matchedSkill ? `Has experience in ${matchedSkill}, matching a stated learning goal` : "Some overlap between the stated learning goal and what's offered");
+  }
+
+  if (byKey.complement >= 0.8) {
+    const diffs = [];
+    if (seeker.department !== candidate.department) diffs.push("a different function");
+    if (seeker.geography !== candidate.geography) diffs.push("a different region");
+    reasons.push(diffs.length ? `Brings ${diffs.join(" and ")} — a genuinely different perspective` : "Brings a different perspective than your immediate team");
+  }
+
+  if (byKey.format === 1) {
+    reasons.push(`Looking for the same kind of relationship (${candidate.preferredFormat === "mentee" ? "mentor ↔ mentee" : candidate.preferredFormat})`);
+  }
+
+  if (byKey.availability >= 0.9) {
+    reasons.push("Compatible schedule and time zone");
+  } else if (byKey.availability >= 0.5) {
+    reasons.push("Same meeting cadence, though time zones don't fully overlap");
+  }
+
+  if (byKey.other === 1 && seeker.matchNote) {
+    reasons.push(`Matches a stated preference: "${seeker.matchNote}"`);
+  }
+
+  if (!reasons.length) {
+    reasons.push("Limited overlap with what you're looking for today — worth a look if you're open to a stretch");
+  }
+
+  return reasons.slice(0, 4);
+}
+
 function matchQualityAnswerDefaults(seeker, candidate) {
   // Pre-fills the objective checklist items PD can verify programmatically;
   // subjective items (e.g. "explain in one sentence why they should meet")
