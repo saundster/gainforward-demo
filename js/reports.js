@@ -71,7 +71,7 @@ function buildRequestRows() {
 function exportExcelReport() {
   const statusEl = $("#export-status");
   if (typeof XLSX === "undefined") {
-    statusEl.textContent = "Excel export library didn't load — check your connection and try again.";
+    statusEl.textContent = "Excel export library didn't load. Check your connection and try again.";
     return;
   }
   try {
@@ -101,7 +101,7 @@ function buildPrintReportHTML() {
     </table>`;
 
   return `
-    <h1>GainForward — Program Report</h1>
+    <h1>GainForward: Program Report</h1>
     <p class="print-meta">Generated ${new Date().toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" })}</p>
     <h2>Program scorecard</h2>
     ${table(["Category", "Metric", "Value", "Target"], kpiRows)}
@@ -123,7 +123,7 @@ function exportPDFReport() {
 function exportPNGReport() {
   const statusEl = $("#export-status");
   if (typeof html2canvas === "undefined") {
-    statusEl.textContent = "PNG export library didn't load — check your connection and try again.";
+    statusEl.textContent = "PNG export library didn't load. Check your connection and try again.";
     return;
   }
   statusEl.textContent = "Rendering snapshot…";

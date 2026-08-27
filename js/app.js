@@ -1,4 +1,4 @@
-/* GainForward — app logic (tabs, forms, matching, journeys, insights, admin). */
+/* GainForward: app logic (tabs, forms, matching, journeys, insights, admin). */
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -54,7 +54,7 @@ function daysBetween(fromStr, toDate) {
   const from = new Date(`${fromStr}T00:00:00`);
   return Math.floor((toDate - from) / (1000 * 60 * 60 * 24));
 }
-/** Real calendar window for a stage, given the journey's own start date — not a generic template. */
+/** Real calendar window for a stage, given the journey's own start date (not a generic template). */
 function stageDateRange(startDateStr, stage) {
   const from = addDays(startDateStr, (stage.weekStart - 1) * 7);
   const to = addDays(startDateStr, stage.weekEnd * 7 - 1);
@@ -181,11 +181,11 @@ function openProfileModal({ onboarding }) {
   form.matchNote.value = me.matchNote || "";
   form.consentAck.checked = !!me.consentAck;
 
-  // Sign-up builds the full profile in one go — this is the only place all of
+  // Sign-up builds the full profile in one go; this is the only place all of
   // this is asked, so there's nothing left to fill in piecemeal later.
-  $("#profile-modal-title").textContent = onboarding ? "Welcome to GainForward — let's build your profile" : "Your profile";
+  $("#profile-modal-title").textContent = onboarding ? "Welcome to GainForward, let's build your profile" : "Your profile";
   $("#profile-modal-intro").textContent = onboarding
-    ? "This is what powers your matches — about 5–7 minutes."
+    ? "This is what powers your matches (about 5–7 minutes)."
     : "Update what you're learning, offering, and how you'd like to participate.";
   $("#profile-modal-close").classList.toggle("hidden", onboarding);
   $("#profile-modal-cancel").classList.toggle("hidden", onboarding);
@@ -202,7 +202,7 @@ function renderUserChrome() {
   $("#dropdown-role").textContent = me.profileComplete ? `${me.department || "—"} · ${me.geography || "—"}` : "Profile not set up yet";
 }
 
-/** Focused add-on forms — layered on top of whatever base profile onboarding already collected. */
+/** Focused add-on forms, layered on top of whatever base profile onboarding already collected. */
 function openBecomeMentorRoleModal() {
   const me = getCurrentUser();
   const form = $("#form-become-mentor-role");
@@ -307,7 +307,7 @@ function renderActiveJourneyCard() {
   const journey = findActiveJourneyFor(CURRENT_USER_ID);
   if (!journey) {
     card.innerHTML = `
-      <p class="muted small">No active journey yet — start one from the Directory or by becoming a mentor.</p>
+      <p class="muted small">No active journey yet. Start one from the Directory or by becoming a mentor.</p>
       <button class="btn btn-primary btn-sm" data-action="goto-directory">Find a mentor</button>`;
     return;
   }
@@ -326,12 +326,12 @@ function renderActiveJourneyCard() {
   const nextAction = upcomingMeeting
     ? `Scheduled: ${meetingTimeLabel(upcomingMeeting.startISO)}`
     : completed === 0
-    ? `Schedule your first conversation — ${stage.label.toLowerCase()} is up first.`
+    ? `Schedule your first conversation: ${stage.label.toLowerCase()} is up first.`
     : completed >= 5
     ? journey.reflection
-      ? "All five conversations logged — reflection submitted."
-      : "All five conversations logged — complete your final reflection."
-    : `Next up: your ${stage.label.toLowerCase()} conversation — nothing on the calendar yet.`;
+      ? "All five conversations logged, reflection submitted."
+      : "All five conversations logged. Complete your final reflection."
+    : `Next up: your ${stage.label.toLowerCase()} conversation. Nothing on the calendar yet.`;
 
   card.innerHTML = `
     <div class="journey-summary">
@@ -357,7 +357,7 @@ function renderGrowthProfileCard() {
 
   if (!hasProfile) {
     card.innerHTML = `
-      <p class="muted small">You haven't shared what you want to learn or can offer yet — that's what powers your match scores.</p>
+      <p class="muted small">You haven't shared what you want to learn or can offer yet. That's what powers your match scores.</p>
       <div class="row-actions">
         <button class="btn btn-secondary btn-sm" data-action="open-become-mentor-role">Become a mentor</button>
         <button class="btn btn-secondary btn-sm" data-action="open-become-mentee-role">Become a mentee</button>
@@ -377,7 +377,7 @@ function renderGrowthProfileCard() {
       <div class="progress-track"><div class="progress-fill" style="width:${pct(progress)}"></div></div>
       <div class="progress-label"><span>Journey progress</span><span>${pct(progress)}</span></div>
     </div>`
-        : `<p class="muted small" style="margin-top:10px">No active journey yet — your progress will track here once you're matched.</p>`
+        : `<p class="muted small" style="margin-top:10px">No active journey yet. Your progress will track here once you're matched.</p>`
     }`;
 }
 
@@ -499,13 +499,13 @@ function openMatchModalFor(candidateId) {
     </details>
     ${
       existing
-        ? `<p class="muted small">You're already connected — head to My Journey to get started.</p>`
+        ? `<p class="muted small">You're already connected. Head to My Journey to get started.</p>`
         : meBusy
-        ? `<p class="muted small">You already have an active journey — you'll need a rematch before starting a new one.</p>`
+        ? `<p class="muted small">You already have an active journey. You'll need a rematch before starting a new one.</p>`
         : candidateBusy
         ? `<p class="muted small">${candidate.displayName} ${candidate.preferredFormat === "mentor" && candidate.menteeCapacity ? "is at capacity right now" : "already has an active journey right now"}.</p>`
         : `<button class="btn btn-primary" id="btn-send-request">Connect now</button>
-           <p class="muted small" style="margin-top:6px">This connects you right away — no approval needed. People Development can review it anytime and step in if something looks off.</p>`
+           <p class="muted small" style="margin-top:6px">This connects you right away, no approval needed. People Development can review it anytime and step in if something looks off.</p>`
     }
   `;
 
@@ -514,7 +514,7 @@ function openMatchModalFor(candidateId) {
   if (sendBtn) sendBtn.addEventListener("click", () => sendRequest(candidateId, total, breakdown));
 }
 
-/** Connections form immediately on request — no admin approval gate. Admin can
+/** Connections form immediately on request, no admin approval gate. Admin can
  * still review any active connection and end it (no-fault rematch) at any time;
  * that's the guardrail, not a pre-approval step. */
 function sendRequest(candidateId, total, breakdown) {
@@ -560,7 +560,7 @@ function sendRequest(candidateId, total, breakdown) {
 
   savePersisted(STORAGE.requests, requests);
   savePersisted(STORAGE.journeys, journeys);
-  toast(`You're connected with ${candidate.displayName} — head to My Journey to schedule your first conversation.`, "success");
+  toast(`You're connected with ${candidate.displayName}. Head to My Journey to schedule your first conversation.`, "success");
   closeAllModals();
   renderDirectory();
   renderHome();
@@ -594,7 +594,7 @@ function renderJourneyCleanup() {
         return `
         <div class="session-item">
           <div class="session-item-head"><span>${stage ? stage.label : m.stage} with ${partner ? partner.displayName : "your partner"}</span><span class="muted small">${meetingTimeLabel(m.startISO)}</span></div>
-          <div class="session-item-notes">Cancelled — still needs to be cleared from your real calendar.</div>
+          <div class="session-item-notes">Cancelled, still needs to be cleared from your real calendar.</div>
           <div class="match-actions" style="margin-top:8px">
             <button class="btn btn-ghost btn-sm" data-action="download-cancel-ics" data-id="${m.id}">Download cancellation (.ics)</button>
           </div>
@@ -632,7 +632,7 @@ function renderJourney() {
     `With ${partner ? partner.displayName : "your partner"} · Week ${weekNumber} of 12 · started ${formatDateShort(
       new Date(`${startDate}T00:00:00`)
     )}, wraps up around ${pilotEndDate(startDate)}.` +
-    (extraCount > 0 ? ` You also have ${extraCount} other active mentee${extraCount === 1 ? "" : "s"} — this shows the most recent.` : "");
+    (extraCount > 0 ? ` You also have ${extraCount} other active mentee${extraCount === 1 ? "" : "s"}; this shows the most recent.` : "");
 
   renderUpcomingMeetings(journey);
 
@@ -662,7 +662,7 @@ function renderJourney() {
       </div>`
         )
         .join("")
-    : `<p class="empty-state">No sessions logged yet — log your first conversation once you've met.</p>`;
+    : `<p class="empty-state">No sessions logged yet. Log your first conversation once you've met.</p>`;
 
   const pulseEligible = completed >= 2;
   const pulseBtn = $("#btn-open-pulse");
@@ -672,7 +672,7 @@ function renderJourney() {
     pulseBtn.textContent = "Update pulse check";
     pulseBtn.disabled = false;
   } else if (!pulseEligible) {
-    pulseStatus.textContent = `Unlocks after your 2nd conversation — ${completed} of 2 logged so far.`;
+    pulseStatus.textContent = `Unlocks after your 2nd conversation (${completed} of 2 logged so far).`;
     pulseBtn.textContent = "Complete pulse check";
     pulseBtn.disabled = true;
   } else {
@@ -685,13 +685,13 @@ function renderJourney() {
   const reflectionStatus = $("#reflection-status");
   reflectionBtn.disabled = completed < 4;
   if (journey.reflection) {
-    reflectionStatus.textContent = `Submitted${journey.reflection.submittedAt ? ` ${daysAgoLabel(journey.reflection.submittedAt)}` : ""} — you chose to ${OUTCOME_LABELS[journey.outcome] || "continue"}.`;
+    reflectionStatus.textContent = `Submitted${journey.reflection.submittedAt ? ` ${daysAgoLabel(journey.reflection.submittedAt)}` : ""}. You chose to ${OUTCOME_LABELS[journey.outcome] || "continue"}.`;
     reflectionBtn.textContent = "View final reflection";
   } else if (completed < 4) {
-    reflectionStatus.textContent = `${completed} of 4 conversations logged — ${4 - completed} more to unlock.`;
+    reflectionStatus.textContent = `${completed} of 4 conversations logged, ${4 - completed} more to unlock.`;
     reflectionBtn.textContent = "Complete final reflection";
   } else {
-    reflectionStatus.textContent = "Unlocked — ready when you are.";
+    reflectionStatus.textContent = "Unlocked, ready when you are.";
     reflectionBtn.textContent = "Complete final reflection";
   }
 }
@@ -723,7 +723,7 @@ function renderUpcomingMeetings(journey) {
     .slice(0, 3);
 
   if (!upcoming.length && !recentlyCancelled.length) {
-    container.innerHTML = `<p class="empty-state">Nothing scheduled yet — create an invite so it lands on both calendars.</p>`;
+    container.innerHTML = `<p class="empty-state">Nothing scheduled yet. Create an invite so it lands on both calendars.</p>`;
     return;
   }
 
@@ -733,7 +733,7 @@ function renderUpcomingMeetings(journey) {
     return `
       <div class="session-item">
         <div class="session-item-head"><span>${stage ? stage.label : m.stage} conversation</span><span class="muted small">${meetingTimeLabel(m.startISO)}</span></div>
-        <div class="session-item-notes">${isPast ? "This time has passed — log it in your conversation log, or cancel it below." : "Invite sent to both calendars."}</div>
+        <div class="session-item-notes">${isPast ? "This time has passed. Log it in your conversation log, or cancel it below." : "Invite sent to both calendars."}</div>
         <div class="match-actions" style="margin-top:8px">
           <button class="btn btn-danger-outline btn-sm" data-action="cancel-meeting" data-id="${m.id}">Cancel meeting</button>
         </div>
@@ -745,7 +745,7 @@ function renderUpcomingMeetings(journey) {
       const stage = PROGRAM_META.stages.find((s) => s.key === m.stage);
       return `
       <div class="session-item">
-        <div class="session-item-head"><span>${stage ? stage.label : m.stage} conversation — cancelled</span><span class="muted small">${meetingTimeLabel(m.startISO)}</span></div>
+        <div class="session-item-head"><span>${stage ? stage.label : m.stage} conversation (cancelled)</span><span class="muted small">${meetingTimeLabel(m.startISO)}</span></div>
         <div class="session-item-notes">Removed from GainForward. Download the cancellation file to also remove it from your calendar.</div>
         <div class="match-actions" style="margin-top:8px">
           <button class="btn btn-ghost btn-sm" data-action="download-cancel-ics" data-id="${m.id}">Download cancellation (.ics)</button>
@@ -757,7 +757,7 @@ function renderUpcomingMeetings(journey) {
   container.innerHTML = rows.join("");
 }
 
-/** Turns a scheduled meeting into a real CANCEL .ics — same UID, bumped SEQUENCE, per RFC 5545. */
+/** Turns a scheduled meeting into a real CANCEL .ics: same UID, bumped SEQUENCE, per RFC 5545. */
 function cancelMeeting(journey, meeting, reasonText) {
   if (!meeting || meeting.status !== "scheduled") return meeting;
   meeting.status = "cancelled";
@@ -784,7 +784,7 @@ function cancelMeeting(journey, meeting, reasonText) {
   return meeting;
 }
 
-/** Auto-cancels every not-yet-occurred meeting on a journey — called the instant a relationship ends. */
+/** Auto-cancels every not-yet-occurred meeting on a journey; called the instant a relationship ends. */
 function cancelUpcomingMeetings(journey, reasonText) {
   const now = new Date();
   const toCancel = (journey.meetings || []).filter((m) => m.status === "scheduled" && new Date(m.startISO) > now);
@@ -793,7 +793,7 @@ function cancelUpcomingMeetings(journey, reasonText) {
 }
 
 /* ---------------------------------------------------------------- */
-/* Nudges — manual email reminders for mentor, mentee, or PD          */
+/* Nudges: manual email reminders for mentor, mentee, or PD          */
 /* ---------------------------------------------------------------- */
 let pendingNudge = null;
 
@@ -827,17 +827,17 @@ function openNudgeModal({ toId }) {
   if (upcoming) {
     const stage = PROGRAM_META.stages.find((s) => s.key === upcoming.stage);
     subject = `Reminder: your ${stage ? stage.label : upcoming.stage} conversation`;
-    body = `Hi ${firstName},\n\nJust a quick reminder about our ${stage ? stage.label.toLowerCase() : upcoming.stage} conversation — ${meetingTimeLabel(upcoming.startISO)}. Let me know if the time still works.\n\n${me.fullName}`;
+    body = `Hi ${firstName},\n\nJust a quick reminder about our ${stage ? stage.label.toLowerCase() : upcoming.stage} conversation, ${meetingTimeLabel(upcoming.startISO)}. Let me know if the time still works.\n\n${me.fullName}`;
   } else if (journey) {
     subject = "Checking in on GainForward";
-    body = `Hi ${firstName},\n\nJust checking in on our mentoring journey — would you like to schedule our next conversation?\n\n${me.fullName}`;
+    body = `Hi ${firstName},\n\nJust checking in on our mentoring journey, would you like to schedule our next conversation?\n\n${me.fullName}`;
   } else {
-    subject = "GainForward — following up";
-    body = `Hi ${firstName},\n\nFollowing up on GainForward — let us know if there's anything you need to get started.\n\n${me.fullName}`;
+    subject = "GainForward: following up";
+    body = `Hi ${firstName},\n\nFollowing up on GainForward. Let us know if there's anything you need to get started.\n\n${me.fullName}`;
   }
 
   pendingNudge = { toId: recipientId, subject };
-  $("#nudge-to-line").textContent = recipient.email ? `To: ${recipient.displayName} · ${recipient.email}` : `${recipient.displayName} doesn't have an email on file yet — add one to their profile first.`;
+  $("#nudge-to-line").textContent = recipient.email ? `To: ${recipient.displayName} · ${recipient.email}` : `${recipient.displayName} doesn't have an email on file yet. Add one to their profile first.`;
   $("#nudge-message").value = body;
   $("#btn-send-nudge").disabled = !recipient.email;
   openModal("modal-nudge");
@@ -1044,7 +1044,7 @@ function renderInsights() {
 /* ---------------------------------------------------------------- */
 /* Admin · PD Console                                                 */
 /* ---------------------------------------------------------------- */
-/** Not a pre-approval gate — connections are already live by the time they show up
+/** Not a pre-approval gate; connections are already live by the time they show up
  * here. This is PD's guardrail: review why the system paired two people, and end
  * (no-fault rematch) a connection at any point if something looks off. */
 function renderMatchingQueue() {
@@ -1171,7 +1171,7 @@ function triggerRematch(journeyId) {
   savePersisted(STORAGE.journeys, journeys);
   toast(
     cancelledCount
-      ? `No-fault rematch recorded. ${cancelledCount} upcoming calendar invite${cancelledCount === 1 ? "" : "s"} cancelled automatically — download the cancellation file${cancelledCount === 1 ? "" : "s"} from My Journey to clear ${cancelledCount === 1 ? "it" : "them"} off your calendar.`
+      ? `No-fault rematch recorded. ${cancelledCount} upcoming calendar invite${cancelledCount === 1 ? "" : "s"} cancelled automatically. Download the cancellation file${cancelledCount === 1 ? "" : "s"} from My Journey to clear ${cancelledCount === 1 ? "it" : "them"} off your calendar.`
       : "No-fault rematch recorded. Both participants can now find a new match.",
     "success"
   );
@@ -1279,7 +1279,7 @@ function renderResourcePanel() {
         .join("")}`;
   } else if (key === "linkedinCourses") {
     panel.innerHTML = `
-      <p class="muted small">Available on Delta — search the title there to add it to your learning plan.</p>
+      <p class="muted small">Available on Delta. Search the title there to add it to your learning plan.</p>
       ${RESOURCE_LIBRARY.linkedinCourses
         .map(
           (c) => `
@@ -1304,8 +1304,8 @@ function updateDataSourceDot() {
     dataSourceInfo.source === "ai"
       ? "Live employee data connected"
       : dataSourceInfo.source === "seed-fallback"
-      ? `AI source failed (${dataSourceInfo.error || "unknown error"}) — showing demo roster`
-      : "Showing demo roster — configure your AI data source";
+      ? `AI source failed (${dataSourceInfo.error || "unknown error"}), showing demo roster`
+      : "Showing demo roster, configure your AI data source";
 }
 
 function openSettingsModal() {
@@ -1334,9 +1334,9 @@ async function refreshEmployeeSource() {
   populateFilterDropdowns();
 }
 
-/** Identity comes from the demo login, not the seed data — inject the logged-in persona here. */
-/** All 5 demo personas are always real, visible employees — not just the one
- * currently logged in — so admin/roster/journeys involving any of them render
+/** Identity comes from the demo login, not the seed data; inject the logged-in persona here. */
+/** All 5 demo personas are always real, visible employees, not just the one
+ * currently logged in, so admin/roster/journeys involving any of them render
  * correctly regardless of who's actually signed in on this browser. */
 function ensureCurrentUser() {
   const activeId = localStorage.getItem(STORAGE.activeDemoUser);
@@ -1544,7 +1544,7 @@ function wireEvents() {
         clearAIConfig();
         openSettingsModal();
         refreshEmployeeSource().then(renderHome);
-        toast("Data source cleared — back to the demo roster.");
+        toast("Data source cleared, back to the demo roster.");
         break;
     }
   });
@@ -1616,7 +1616,7 @@ function wireEvents() {
     saveCurrentUserProfile(fields);
     isOnboarding = false;
 
-    toast(wasOnboarding ? `Welcome, ${displayName} — your profile is set up.` : "Profile updated.", "success");
+    toast(wasOnboarding ? `Welcome, ${displayName}. Your profile is set up.` : "Profile updated.", "success");
     closeAllModals(true);
     populateFilterDropdowns();
     renderUserChrome();
@@ -1653,7 +1653,7 @@ function wireEvents() {
       engagementStatus: me.engagementStatus === "closed" ? "available" : me.engagementStatus,
       profileComplete: true,
     });
-    toast("You're set up as a mentor — you'll now show up in the Directory.", "success");
+    toast("You're set up as a mentor. You'll now show up in the Directory.", "success");
     closeAllModals();
     renderUserChrome();
     populateFilterDropdowns();
@@ -1690,7 +1690,7 @@ function wireEvents() {
       engagementStatus: me.engagementStatus === "closed" ? "available" : me.engagementStatus,
       profileComplete: true,
     });
-    toast("You're set up as a mentee — let's find you a mentor.", "success");
+    toast("You're set up as a mentee. Let's find you a mentor.", "success");
     closeAllModals();
     renderUserChrome();
     populateFilterDropdowns();
@@ -1735,7 +1735,7 @@ function wireEvents() {
     const meetingId = uid("meet");
     const calUid = `${meetingId}@gainforward.rategain.com`;
     const title = `GainForward: ${stage ? stage.label : stageKey} conversation`;
-    const description = `${stage ? stage.detail : ""}\n\nScheduled from GainForward — ${journey.relationshipType}.`;
+    const description = `${stage ? stage.detail : ""}\n\nScheduled from GainForward: ${journey.relationshipType}.`;
     const attendees = [
       { name: me.fullName, email: me.email },
       { name: partner?.fullName, email: partner?.email },
@@ -1748,7 +1748,7 @@ function wireEvents() {
       status: "CONFIRMED",
       title,
       description,
-      location: "Video call — link shared separately",
+      location: "Video call (link shared separately)",
       start,
       durationMins,
       organizer: { name: me.fullName, email: me.email },
@@ -1767,10 +1767,10 @@ function wireEvents() {
       outlookUrl: outlookWebLink({ title, description, location: "", start, durationMins, attendees }),
     };
 
-    $("#schedule-result-summary").textContent = `Invite ready for your ${stage ? stage.label.toLowerCase() : stageKey} conversation — ${meetingTimeLabel(start.toISOString())}.`;
+    $("#schedule-result-summary").textContent = `Invite ready for your ${stage ? stage.label.toLowerCase() : stageKey} conversation, ${meetingTimeLabel(start.toISOString())}.`;
     $("#schedule-result-note").textContent = partner?.email
-      ? `The .ics download carries reminders 1 day and 30 minutes before. The one-click Google/Outlook links use each calendar's own default reminder instead — they don't support custom alarms.`
-      : `We couldn't find an email for ${partner ? partner.displayName : "your partner"}, so only you're listed as an attendee — add them manually once it's on your calendar.`;
+      ? `The .ics download carries reminders 1 day and 30 minutes before. The one-click Google/Outlook links use each calendar's own default reminder instead; they don't support custom alarms.`
+      : `We couldn't find an email for ${partner ? partner.displayName : "your partner"}, so only you're listed as an attendee. Add them manually once it's on your calendar.`;
     $("#schedule-step-form").classList.add("hidden");
     $("#schedule-step-result").classList.remove("hidden");
 
@@ -1804,7 +1804,7 @@ function wireEvents() {
       submittedAt: new Date().toISOString().slice(0, 10),
     };
     savePersisted(STORAGE.journeys, journeys);
-    toast("Pulse check submitted — thanks for the honest signal.", "success");
+    toast("Pulse check submitted. Thanks for the honest signal.", "success");
     closeAllModals();
     renderJourney();
   });
@@ -1834,7 +1834,7 @@ function wireEvents() {
     savePersisted(STORAGE.journeys, journeys);
     toast(
       cancelledCount
-        ? `Final reflection submitted. ${cancelledCount} upcoming calendar invite${cancelledCount === 1 ? "" : "s"} cancelled automatically — download the cancellation file below to clear ${cancelledCount === 1 ? "it" : "them"} off your calendar.`
+        ? `Final reflection submitted. ${cancelledCount} upcoming calendar invite${cancelledCount === 1 ? "" : "s"} cancelled automatically. Download the cancellation file below to clear ${cancelledCount === 1 ? "it" : "them"} off your calendar.`
         : "Final reflection submitted. Thank you for closing the loop.",
       "success"
     );
@@ -1871,7 +1871,7 @@ function wireEvents() {
     try {
       const list = await fetchEmployeesFromAI(config);
       result.className = "settings-test-result ok";
-      result.textContent = `Connected — received ${list.length} employee record${list.length === 1 ? "" : "s"}.`;
+      result.textContent = `Connected: received ${list.length} employee record${list.length === 1 ? "" : "s"}.`;
     } catch (err) {
       result.className = "settings-test-result error";
       result.textContent = `Failed: ${err.message}`;
@@ -1894,7 +1894,7 @@ async function startApp() {
   ensureMeetingsField();
   renderUserChrome();
   renderHome();
-  // No forced profile gate — signing up happens when someone clicks "I want to
+  // No forced profile gate; signing up happens when someone clicks "I want to
   // become a Mentor/Mentee" on Home. Until then they can look around freely.
 }
 

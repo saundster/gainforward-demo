@@ -1,4 +1,4 @@
-/* GainForward — mock employee/participant dataset.
+/* GainForward: mock employee/participant dataset.
    Schema follows the SOP "Participant Profile" (Section 16) plus the roadmap
    extension fields called out for the AI-powered dashboard (division, tenure,
    geography, engagement status). Swap this seed for live data once the AI
@@ -13,7 +13,7 @@ const SEED_EMPLOYEES = [
     email: "arjun.kapoor@rategain.com",
     department: "Product",
     division: "Product & Engineering",
-    careerLevel: "L5 — Director",
+    careerLevel: "L5: Director",
     tenureBand: "5+ yrs",
     geography: "APAC",
     learningGoals: ["Board-level storytelling"],
@@ -42,7 +42,7 @@ const SEED_EMPLOYEES = [
     email: "sofia.meyer@rategain.com",
     department: "Revenue Management",
     division: "Revenue Management",
-    careerLevel: "L4 — Principal",
+    careerLevel: "L4: Principal",
     tenureBand: "5+ yrs",
     geography: "EMEA",
     learningGoals: ["Cross-cultural leadership"],
@@ -71,7 +71,7 @@ const SEED_EMPLOYEES = [
     email: "javier.alonso@rategain.com",
     department: "Data Science",
     division: "Product & Engineering",
-    careerLevel: "L4 — Principal",
+    careerLevel: "L4: Principal",
     tenureBand: "3-5 yrs",
     geography: "LATAM",
     learningGoals: ["People management"],
@@ -100,7 +100,7 @@ const SEED_EMPLOYEES = [
     email: "tariro.osei@rategain.com",
     department: "Customer Experience",
     division: "CX",
-    careerLevel: "L4 — Principal",
+    careerLevel: "L4: Principal",
     tenureBand: "5+ yrs",
     geography: "EMEA",
     learningGoals: ["Data storytelling"],
@@ -129,7 +129,7 @@ const SEED_EMPLOYEES = [
     email: "devika.nair@rategain.com",
     department: "MarTech",
     division: "MarTech",
-    careerLevel: "L2 — Associate",
+    careerLevel: "L2: Associate",
     tenureBand: "0-2 yrs",
     geography: "APAC",
     learningGoals: ["Campaign analytics", "Public speaking"],
@@ -157,7 +157,7 @@ const SEED_EMPLOYEES = [
     email: "lukas.fischer@rategain.com",
     department: "Engineering",
     division: "Product & Engineering",
-    careerLevel: "L3 — Senior",
+    careerLevel: "L3: Senior",
     tenureBand: "3-5 yrs",
     geography: "EMEA",
     learningGoals: ["Public speaking", "Cross-team collaboration"],
@@ -185,7 +185,7 @@ const SEED_EMPLOYEES = [
     email: "giulia.rossi@rategain.com",
     department: "Sales",
     division: "Commercial",
-    careerLevel: "L3 — Senior",
+    careerLevel: "L3: Senior",
     tenureBand: "3-5 yrs",
     geography: "EMEA",
     learningGoals: ["Revenue forecasting basics", "AI in sales workflows"],
@@ -213,7 +213,7 @@ const SEED_EMPLOYEES = [
     email: "mateo.castillo@rategain.com",
     department: "Data Science",
     division: "Product & Engineering",
-    careerLevel: "L2 — Associate",
+    careerLevel: "L2: Associate",
     tenureBand: "0-2 yrs",
     geography: "LATAM",
     learningGoals: ["ML model deployment", "People management"],
@@ -241,7 +241,7 @@ const SEED_EMPLOYEES = [
     email: "hannah.thompson@rategain.com",
     department: "People Development",
     division: "People & Culture",
-    careerLevel: "L4 — Principal",
+    careerLevel: "L4: Principal",
     tenureBand: "5+ yrs",
     geography: "NA",
     learningGoals: ["AI in people analytics"],
@@ -251,7 +251,7 @@ const SEED_EMPLOYEES = [
     menteeCapacity: 5,
     experience: "Owns the GainForward program design and SOP",
     goalStatement: "",
-    purpose: "PD lead — facilitates the ecosystem, matching and pulse checks",
+    purpose: "PD lead: facilitates the ecosystem, matching and pulse checks",
     interests: ["AI Maturity Pathway"],
     preferredFormat: "mentor",
     aiConfidence: "Practitioner",
@@ -271,7 +271,7 @@ const SEED_EMPLOYEES = [
     email: "kabir.singh@rategain.com",
     department: "Finance",
     division: "Finance",
-    careerLevel: "L3 — Senior",
+    careerLevel: "L3: Senior",
     tenureBand: "3-5 yrs",
     geography: "APAC",
     learningGoals: ["Cross-team collaboration", "Executive communication"],
@@ -299,7 +299,7 @@ const SEED_EMPLOYEES = [
     email: "ade.oyelaran@rategain.com",
     department: "Customer Experience",
     division: "CX",
-    careerLevel: "L2 — Associate",
+    careerLevel: "L2: Associate",
     tenureBand: "0-2 yrs",
     geography: "EMEA",
     learningGoals: ["Data storytelling", "Escalation management"],
@@ -327,7 +327,7 @@ const SEED_EMPLOYEES = [
     email: "jiwoo.park@rategain.com",
     department: "Product",
     division: "Product & Engineering",
-    careerLevel: "L2 — Associate",
+    careerLevel: "L2: Associate",
     tenureBand: "0-2 yrs",
     geography: "APAC",
     learningGoals: ["Product strategy", "Discovery frameworks"],
@@ -355,7 +355,7 @@ const SEED_EMPLOYEES = [
     email: "amara.diallo@rategain.com",
     department: "MarTech",
     division: "MarTech",
-    careerLevel: "L3 — Senior",
+    careerLevel: "L3: Senior",
     tenureBand: "3-5 yrs",
     geography: "EMEA",
     learningGoals: ["AI in marketing", "Revenue management"],
@@ -377,7 +377,7 @@ const SEED_EMPLOYEES = [
   },
 ];
 
-/* Demo login — this is a static, backend-free prototype, so these are NOT
+/* Demo login: this is a static, backend-free prototype, so these are NOT
    real secured accounts: the username/password check runs entirely in this
    client-side JS, visible to anyone who opens dev tools. They exist purely
    so a handful of testers can each land in a distinct, pre-built scenario
@@ -388,10 +388,10 @@ const DEMO_ACCOUNTS = [
     username: "mentor1",
     password: "Demo@2026",
     id: "demo-mentor-1",
-    scenario: "An experienced mentor with mentees already — good for exploring the Directory from the other side, and the Admin console's active connections.",
+    scenario: "An experienced mentor with mentees already: good for exploring the Directory from the other side, and the Admin console's active connections.",
     employee: {
       fullName: "Priya Nair", displayName: "P. Nair", avatarInitials: "PN", email: "priya.nair@demo.gainforward.app",
-      department: "Customer Experience", division: "CX", careerLevel: "L4 — Principal", tenureBand: "5+ yrs", geography: "EMEA",
+      department: "Customer Experience", division: "CX", careerLevel: "L4: Principal", tenureBand: "5+ yrs", geography: "EMEA",
       learningGoals: [], offeredSkills: ["Client escalation handling", "Coaching new CSMs"], mentorSkillCategory: "Behavioural Skills", menteeCapacity: 4,
       experience: "8 years leading enterprise CX for EMEA hotel groups",
       goalStatement: "", purpose: "I want to help newer CSMs build confidence handling tough accounts.", skillLevel: "",
@@ -404,10 +404,10 @@ const DEMO_ACCOUNTS = [
     username: "mentee1",
     password: "Demo@2026",
     id: "demo-mentee-1",
-    scenario: "A fresh mentee with no journey yet — good for exploring Directory search and instantly connecting from scratch.",
+    scenario: "A fresh mentee with no journey yet: good for exploring Directory search and instantly connecting from scratch.",
     employee: {
       fullName: "Sam Ortiz", displayName: "S. Ortiz", avatarInitials: "SO", email: "sam.ortiz@demo.gainforward.app",
-      department: "Sales", division: "Commercial", careerLevel: "L2 — Associate", tenureBand: "0-2 yrs", geography: "NA",
+      department: "Sales", division: "Commercial", careerLevel: "L2: Associate", tenureBand: "0-2 yrs", geography: "NA",
       learningGoals: ["Negotiation tactics", "Deal storytelling"], learningSkillCategory: "Behavioural Skills", offeredSkills: [],
       experience: "1.5 years in enterprise sales",
       goalStatement: "Close my first enterprise deal narrative with confidence.", purpose: "", skillLevel: "Beginner",
@@ -420,10 +420,10 @@ const DEMO_ACCOUNTS = [
     username: "mentee2",
     password: "Demo@2026",
     id: "demo-mentee-2",
-    scenario: "A mentee already partway through an active journey — good for exploring My Journey, calendar scheduling, nudges, and Insights with real data already in place.",
+    scenario: "A mentee already partway through an active journey: good for exploring My Journey, calendar scheduling, nudges, and Insights with real data already in place.",
     employee: {
       fullName: "Jordan Blake", displayName: "J. Blake", avatarInitials: "JB", email: "jordan.blake@demo.gainforward.app",
-      department: "MarTech", division: "MarTech", careerLevel: "L3 — Senior", tenureBand: "3-5 yrs", geography: "APAC",
+      department: "MarTech", division: "MarTech", careerLevel: "L3: Senior", tenureBand: "3-5 yrs", geography: "APAC",
       learningGoals: ["Executive communication", "Revenue forecasting"], learningSkillCategory: "Leadership Skills", offeredSkills: ["Campaign analytics"], mentorSkillCategory: "Technical Skills",
       experience: "Marketing automation, lifecycle campaigns",
       goalStatement: "Present forecasts to leadership with confidence within 12 weeks", purpose: "", skillLevel: "Intermediate",
@@ -436,10 +436,10 @@ const DEMO_ACCOUNTS = [
     username: "admin1",
     password: "Demo@2026",
     id: "demo-admin-1",
-    scenario: "The PD/program-admin persona — good for exploring the Admin console: active connections, roster, decision gates.",
+    scenario: "The PD/program-admin persona. Good for exploring the Admin console: active connections, roster, decision gates.",
     employee: {
       fullName: "Morgan Lee", displayName: "M. Lee", avatarInitials: "ML", email: "morgan.lee@demo.gainforward.app",
-      department: "People Development", division: "People & Culture", careerLevel: "L4 — Principal", tenureBand: "5+ yrs", geography: "NA",
+      department: "People Development", division: "People & Culture", careerLevel: "L4: Principal", tenureBand: "5+ yrs", geography: "NA",
       learningGoals: [], offeredSkills: ["Program facilitation", "Coaching"], mentorSkillCategory: "Leadership Skills", menteeCapacity: 3,
       experience: "Runs the GainForward program end to end",
       goalStatement: "", purpose: "I own the program design and review how connections are going.", skillLevel: "",
@@ -452,7 +452,7 @@ const DEMO_ACCOUNTS = [
     username: "newuser1",
     password: "Demo@2026",
     id: "demo-new-1",
-    scenario: "A brand-new employee who hasn't set up a profile yet — good for showing the mandatory onboarding screen and the two \"I want to become a...\" flows.",
+    scenario: "A brand-new employee who hasn't set up a profile yet: good for showing the mandatory onboarding screen and the two \"I want to become a...\" flows.",
     employee: {
       fullName: "", displayName: "", avatarInitials: "", email: "",
       department: "", division: "", careerLevel: "", tenureBand: "", geography: "",
@@ -465,7 +465,7 @@ const DEMO_ACCOUNTS = [
 ];
 
 // Matching-weight rationale, decision gates, KPI targets and pilot artefacts
-// straight from the SOP — kept as data so the Insights/Admin views render
+// straight from the SOP, kept as data so the Insights/Admin views render
 // their targets/labels from one source of truth instead of hardcoded markup.
 const PROGRAM_META = {
   cohortTarget: { min: 50, max: 75 },
@@ -510,41 +510,41 @@ const PROGRAM_META = {
     ],
   },
   decisionGates: [
-    { key: "gate0", label: "Gate 0 — Design", question: "Are hypotheses and boundaries clear?" },
-    { key: "gate1", label: "Gate 1 — Ready", question: "Enough participants and viable matches?" },
-    { key: "gate2", label: "Gate 2 — Midpoint", question: "Is the experience healthy enough to continue?" },
-    { key: "gate3", label: "Gate 3 — Close", question: "Did the program create enough value to justify continued investment?" },
+    { key: "gate0", label: "Gate 0: Design", question: "Are hypotheses and boundaries clear?" },
+    { key: "gate1", label: "Gate 1: Ready", question: "Enough participants and viable matches?" },
+    { key: "gate2", label: "Gate 2: Midpoint", question: "Is the experience healthy enough to continue?" },
+    { key: "gate3", label: "Gate 3: Close", question: "Did the program create enough value to justify continued investment?" },
   ],
 };
 
-/* Learning Resources — content for the tabbed resources modal.
+/* Learning Resources: content for the tabbed resources modal.
    LinkedIn Learning entries are real, existing courses (verified titles,
    instructors, and URLs) available to employees through Delta. */
 const RESOURCE_LIBRARY = {
   faqs: [
     {
       q: "How long does a mentoring relationship last?",
-      a: "The program is structured around a 12-week cycle, with five core conversations roughly every two weeks — but there's no fixed rule on hours. Depending on the cadence and hours each of you commits to, a relationship can run anywhere from about 2 hours to 12 hours in total over those 12 weeks. Many pairs choose to continue informally after that, on whatever cadence works for them.",
+      a: "The program is structured around a 12-week cycle, with five core conversations roughly every two weeks. But there's no fixed rule on hours. Depending on the cadence and hours each of you commits to, a relationship can run anywhere from about 2 hours to 12 hours in total over those 12 weeks. Many pairs choose to continue informally after that, on whatever cadence works for them.",
     },
     {
       q: "Is participation mandatory?",
-      a: "No — it's entirely voluntary. You can pause or end a connection at any time without needing to justify it.",
+      a: "No, it's entirely voluntary. You can pause or end a connection at any time without needing to justify it.",
     },
     {
       q: "What if my mentor or mentee and I aren't clicking?",
-      a: "Request a no-fault rematch from your Journey page. Nobody has to explain why — that's built into the program on purpose, not an exception to it.",
+      a: "Request a no-fault rematch from your Journey page. Nobody has to explain why: that's built into the program on purpose, not an exception to it.",
     },
     {
       q: "Can I be both a mentor and a mentee?",
-      a: "Yes. Plenty of people mentor in one area and are mentored in another — that's the whole idea behind \"everyone has something to learn, everyone has something to contribute.\"",
+      a: "Yes. Plenty of people mentor in one area and are mentored in another: that's the whole idea behind \"everyone has something to learn, everyone has something to contribute.\"",
     },
     {
       q: "Does this affect my performance review?",
-      a: "No. GainForward is explicitly not a performance-management tool — conversations here are confidential and separate from any formal review process, and won't be used to make career or promotion decisions.",
+      a: "No. GainForward is explicitly not a performance-management tool. Conversations here are confidential and separate from any formal review process, and won't be used to make career or promotion decisions.",
     },
     {
       q: "What if I don't have much time?",
-      a: "When you set up your profile, you choose your own cadence (weekly, bi-weekly, or monthly) and how many hours you can commit, from 1 up to 10. Most people find 30–60 minutes every two weeks is plenty — even four conversations plus one real workplace application counts as a meaningful cycle.",
+      a: "When you set up your profile, you choose your own cadence (weekly, bi-weekly, or monthly) and how many hours you can commit, from 1 up to 10. Most people find 30–60 minutes every two weeks is plenty; even four conversations plus one real workplace application counts as a meaningful cycle.",
     },
     {
       q: "Do I need my manager's approval to participate?",
@@ -552,43 +552,43 @@ const RESOURCE_LIBRARY = {
     },
     {
       q: "What happens after the 12 weeks end?",
-      a: "You and your partner decide together — continue informally, end the formal relationship, or become a peer-learning contributor sharing what you learned with others.",
+      a: "You and your partner decide together: continue informally, end the formal relationship, or become a peer-learning contributor sharing what you learned with others.",
     },
   ],
 
   bestPractices: {
-    intro: "These patterns show up again and again in mentoring relationships that work — and are usually missing in the ones that quietly fizzle out.",
+    intro: "These patterns show up again and again in mentoring relationships that work, and are usually missing in the ones that quietly fizzle out.",
     sections: [
-      { heading: "Match on fit, not hierarchy", body: "The instinct is to pair people by seniority — a director mentors an associate. But the strongest pairings match on a specific learning goal against a specific skill, regardless of title. A senior IC who's spent five years doing exactly the thing you're trying to learn is often a better match than a director three levels up who did it once, a decade ago." },
-      { heading: "Agree on ground rules in the first conversation", body: "Before diving into content, spend five minutes agreeing on three things: how often you'll meet, what happens if either of you needs to reschedule, and what's confidential. Pairs that skip this step often drift — not because the relationship failed, but because nobody actually owned making it happen." },
+      { heading: "Match on fit, not hierarchy", body: "The instinct is to pair people by seniority: a director mentors an associate. But the strongest pairings match on a specific learning goal against a specific skill, regardless of title. A senior IC who's spent five years doing exactly the thing you're trying to learn is often a better match than a director three levels up who did it once, a decade ago." },
+      { heading: "Agree on ground rules in the first conversation", body: "Before diving into content, spend five minutes agreeing on three things: how often you'll meet, what happens if either of you needs to reschedule, and what's confidential. Pairs that skip this step often drift, not because the relationship failed, but because nobody actually owned making it happen." },
       { heading: "Put it on the calendar, not on hope", body: "\"Let's find time\" is where most informal mentoring quietly dies. A recurring 30-minute slot, even if it sometimes gets moved, beats an open-ended intention every time. Momentum comes from cadence, not from any single conversation being perfect." },
-      { heading: "Treat it as an exchange, not a favor", body: "The mentee isn't the only one who's supposed to walk away with something. Mentors regularly report learning as much as they teach — a different vantage point on the business, a sharper way of explaining their own thinking, or just a reason to reflect on how they actually got good at something. If it only flows one direction, something's off." },
-      { heading: "Check the relationship, not just the topic", body: "It's easy to spend every session on content and never ask \"is this actually working for both of us?\" The midpoint pulse exists for exactly this reason — but you don't have to wait for it. A two-minute check-in early catches most problems before they become a reason to quietly stop showing up." },
-      { heading: "Close the loop deliberately", body: "Relationships that end with a short, explicit reflection — even an informal one — consistently produce more lasting value than ones that just taper off. It's the difference between \"we sort of stopped meeting\" and \"we did the thing, here's what came of it, here's what's next.\"" },
+      { heading: "Treat it as an exchange, not a favor", body: "The mentee isn't the only one who's supposed to walk away with something. Mentors regularly report learning as much as they teach: a different vantage point on the business, a sharper way of explaining their own thinking, or just a reason to reflect on how they actually got good at something. If it only flows one direction, something's off." },
+      { heading: "Check the relationship, not just the topic", body: "It's easy to spend every session on content and never ask \"is this actually working for both of us?\" The midpoint pulse exists for exactly this reason. But you don't have to wait for it. A two-minute check-in early catches most problems before they become a reason to quietly stop showing up." },
+      { heading: "Close the loop deliberately", body: "Relationships that end with a short, explicit reflection (even an informal one) consistently produce more lasting value than ones that just taper off. It's the difference between \"we sort of stopped meeting\" and \"we did the thing, here's what came of it, here's what's next.\"" },
     ],
   },
 
   mentorTips: {
     intro: "Mentoring well is a specific skill, and it's different from managing or from simply being the expert in the room. Most of what goes wrong comes down to advising too early or too much.",
     sections: [
-      { heading: "Listen before you advise", body: "The instinct when someone describes a problem is to jump straight to how you'd solve it. Resist it for a minute. Ask what they've already tried and what's made it hard — you'll often find the real question is different from the one they opened with, and your eventual advice will land better for it." },
+      { heading: "Listen before you advise", body: "The instinct when someone describes a problem is to jump straight to how you'd solve it. Resist it for a minute. Ask what they've already tried and what's made it hard. You'll often find the real question is different from the one they opened with, and your eventual advice will land better for it." },
       { heading: "Share the reasoning, not just the answer", body: "\"Here's what I'd do\" is less useful than \"here's what I was weighing when I decided what to do.\" The reasoning is what your mentee can actually reuse in a different situation next month, when you're not in the room." },
-      { heading: "Guide, don't direct", body: "It's your mentee's goal, their career, their call on what to act on. Your job is to widen the range of options they can see and pressure-test the ones they're leaning toward — not to hand them a decision." },
-      { heading: "Confidentiality is the whole deal", body: "Anything shared about a specific colleague, a performance concern, or a workplace conflict stays with you. The moment a mentee suspects otherwise, the relationship stops being useful — they'll simply stop bringing you the real stuff." },
-      { heading: "It's fine to say \"I don't know\"", body: "Mentoring isn't a certification that you have every answer — it's a willingness to think something through with someone else. \"I haven't dealt with that, but here's how I'd think about it\" is a completely legitimate answer." },
-      { heading: "Expect nothing back", body: "This isn't a two-way obligation with a receipt. Most mentors report getting something out of it anyway — but if you go in expecting repayment, it'll show, and it'll change the dynamic." },
+      { heading: "Guide, don't direct", body: "It's your mentee's goal, their career, their call on what to act on. Your job is to widen the range of options they can see and pressure-test the ones they're leaning toward, not to hand them a decision." },
+      { heading: "Confidentiality is the whole deal", body: "Anything shared about a specific colleague, a performance concern, or a workplace conflict stays with you. The moment a mentee suspects otherwise, the relationship stops being useful. They'll simply stop bringing you the real stuff." },
+      { heading: "It's fine to say \"I don't know\"", body: "Mentoring isn't a certification that you have every answer: it's a willingness to think something through with someone else. \"I haven't dealt with that, but here's how I'd think about it\" is a completely legitimate answer." },
+      { heading: "Expect nothing back", body: "This isn't a two-way obligation with a receipt. Most mentors report getting something out of it anyway. But if you go in expecting repayment, it'll show, and it'll change the dynamic." },
     ],
   },
 
   menteeTips: {
-    intro: "Mentees who get the most out of this program tend to do a few things differently — mostly around ownership. Your mentor can point the way; only you can walk it.",
+    intro: "Mentees who get the most out of this program tend to do a few things differently, mostly around ownership. Your mentor can point the way; only you can walk it.",
     sections: [
-      { heading: "Bring a specific goal, not a general request", body: "\"I want career advice\" is hard for anyone to act on. \"I want to get comfortable presenting financials to execs within 12 weeks\" gives your mentor something concrete to actually help with — and gives you both a way to know if it's working." },
-      { heading: "Own the logistics", body: "Schedule the sessions. Set the agenda. Send the follow-up. A mentor who has to chase you for the next meeting will quietly deprioritize it — not out of malice, just bandwidth. The relationships that last are the ones the mentee visibly drives." },
-      { heading: "Do the work in between", body: "The conversation itself is not the value — trying something and coming back with what happened is. If you leave a session with an idea and never test it, the next conversation just repeats the last one." },
+      { heading: "Bring a specific goal, not a general request", body: "\"I want career advice\" is hard for anyone to act on. \"I want to get comfortable presenting financials to execs within 12 weeks\" gives your mentor something concrete to actually help with, and gives you both a way to know if it's working." },
+      { heading: "Own the logistics", body: "Schedule the sessions. Set the agenda. Send the follow-up. A mentor who has to chase you for the next meeting will quietly deprioritize it, not out of malice, just bandwidth. The relationships that last are the ones the mentee visibly drives." },
+      { heading: "Do the work in between", body: "The conversation itself is not the value: trying something and coming back with what happened is. If you leave a session with an idea and never test it, the next conversation just repeats the last one." },
       { heading: "Give context, not just questions", body: "\"How do I get promoted?\" is hard to answer. \"I got told I need more executive presence, here's the specific feedback I got, here's what I've tried\" lets your mentor actually help instead of guessing." },
       { heading: "Be willing to hear the answer you didn't want", body: "The most useful feedback is rarely the most comfortable. If every conversation just confirms what you already believed, you're probably not getting the full picture." },
-      { heading: "Respect the time you're being given", body: "Show up prepared. If you need to reschedule, do it early rather than as a no-show. Your mentor is choosing to spend time on this — most will keep choosing it if it feels respected." },
+      { heading: "Respect the time you're being given", body: "Show up prepared. If you need to reschedule, do it early rather than as a no-show. Your mentor is choosing to spend time on this. Most will keep choosing it if it feels respected." },
     ],
   },
 
@@ -604,20 +604,20 @@ const RESOURCE_LIBRARY = {
     "Treat it as a one-off \"pick your brain\" session",
     "Wait for the other person to drive every conversation",
     "Turn it into a performance review or a complaints channel",
-    "Ghost — if you need to step back, just say so",
+    "Ghost: if you need to step back, just say so",
     "Expect a mentor to have every answer",
-    "Skip the first \"getting to know you\" conversation to save time — it's what makes the rest work",
+    "Skip the first \"getting to know you\" conversation to save time: it's what makes the rest work",
   ],
-  dosDontsIntro: "A quick-reference version of everything in Best Practices and the mentor/mentee guides — pin this if you just want the short list.",
+  dosDontsIntro: "A quick-reference version of everything in Best Practices and the mentor/mentee guides. Pin this if you just want the short list.",
 
   makingTheMost: {
-    intro: "A few small habits around each conversation — not the quality of any single piece of advice — are usually what determines whether a mentoring relationship builds momentum or fizzles out. Here's what to do before, during, and after each session, and over the life of the relationship.",
+    intro: "A few small habits around each conversation (not the quality of any single piece of advice) are usually what determines whether a mentoring relationship builds momentum or fizzles out. Here's what to do before, during, and after each session, and over the life of the relationship.",
     phases: [
-      { phase: "Before", tip: "Send a short agenda the day before — even three bullet points signals you're prepared and gives your partner time to think." },
-      { phase: "Start", tip: "Spend the first few minutes on rapport, not straight into business — trust is what makes the advice land." },
+      { phase: "Before", tip: "Send a short agenda the day before: even three bullet points signals you're prepared and gives your partner time to think." },
+      { phase: "Start", tip: "Spend the first few minutes on rapport, not straight into business: trust is what makes the advice land." },
       { phase: "End", tip: "Leave the last five minutes for \"what will I actually try before we next meet?\"" },
-      { phase: "After", tip: "Send a one-line follow-up on what you took away or tried — it closes the loop and builds momentum for next time." },
-      { phase: "Ongoing", tip: "Revisit your goal every few sessions — it's fine for it to evolve as you learn more about what you actually need." },
+      { phase: "After", tip: "Send a one-line follow-up on what you took away or tried: it closes the loop and builds momentum for next time." },
+      { phase: "Ongoing", tip: "Revisit your goal every few sessions: it's fine for it to evolve as you learn more about what you actually need." },
     ],
   },
 

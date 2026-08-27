@@ -139,7 +139,7 @@ function matchReasons(seeker, candidate, breakdown) {
     const diffs = [];
     if (seeker.department !== candidate.department) diffs.push("a different function");
     if (seeker.geography !== candidate.geography) diffs.push("a different region");
-    reasons.push(diffs.length ? `Brings ${diffs.join(" and ")} — a genuinely different perspective` : "Brings a different perspective than your immediate team");
+    reasons.push(diffs.length ? `Brings ${diffs.join(" and ")}: a genuinely different perspective` : "Brings a different perspective than your immediate team");
   }
 
   if (byKey.format === 1) {
@@ -157,7 +157,7 @@ function matchReasons(seeker, candidate, breakdown) {
   }
 
   if (!reasons.length) {
-    reasons.push("Limited overlap with what you're looking for today — worth a look if you're open to a stretch");
+    reasons.push("Limited overlap with what you're looking for today: worth a look if you're open to a stretch");
   }
 
   return reasons.slice(0, 4);
