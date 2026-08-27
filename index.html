@@ -402,8 +402,23 @@
     <h2>I want to become a Mentor</h2>
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
-  <p class="muted small">A few quick questions — this adds to your existing profile.</p>
+  <p class="muted small">This builds your profile and powers your matches — about 5–7 minutes.</p>
   <form id="form-become-mentor-role" class="modal-body form-stack">
+    <div class="form-row">
+      <label>Full name<input type="text" name="fullName" required /></label>
+      <label>Work email<input type="email" name="email" required /></label>
+    </div>
+    <div class="form-row">
+      <label>Department<input type="text" name="department" required /></label>
+      <label>Region
+        <select name="geography" required>
+          <option value="APAC">APAC</option>
+          <option value="EMEA">EMEA</option>
+          <option value="LATAM">LATAM</option>
+          <option value="NA">NA</option>
+        </select>
+      </label>
+    </div>
     <label>Reason to become a Mentor<textarea name="purpose" rows="3" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned" required></textarea></label>
     <label>Skill category
       <select name="mentorSkillCategory" required>
@@ -414,13 +429,17 @@
       </select>
     </label>
     <label>What skills do you want to mentor on?<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching (up to 5, comma-separated)" required /></label>
-    <label>How much time can you allocate?
-      <select name="frequency" required>
-        <option value="1 hour weekly">1 hour, weekly</option>
-        <option value="1 hour bi-weekly">1 hour, bi-weekly</option>
-        <option value="1 hour monthly">1 hour, monthly</option>
-      </select>
-    </label>
+    <div class="form-row">
+      <label>How much time can you allocate?
+        <select name="frequency" required>
+          <option value="1 hour weekly">1 hour, weekly</option>
+          <option value="1 hour bi-weekly">1 hour, bi-weekly</option>
+          <option value="1 hour monthly">1 hour, monthly</option>
+        </select>
+      </label>
+      <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+    </div>
+    <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand participation is voluntary and confidential, and I can request a no-fault rematch at any time.</label>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
       <button type="submit" class="btn btn-primary">Become a mentor</button>
@@ -433,8 +452,23 @@
     <h2>I want to become a Mentee</h2>
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
-  <p class="muted small">A few quick questions — this adds to your existing profile.</p>
+  <p class="muted small">This builds your profile and powers your matches — about 5–7 minutes.</p>
   <form id="form-become-mentee-role" class="modal-body form-stack">
+    <div class="form-row">
+      <label>Full name<input type="text" name="fullName" required /></label>
+      <label>Work email<input type="email" name="email" required /></label>
+    </div>
+    <div class="form-row">
+      <label>Department<input type="text" name="department" required /></label>
+      <label>Region
+        <select name="geography" required>
+          <option value="APAC">APAC</option>
+          <option value="EMEA">EMEA</option>
+          <option value="LATAM">LATAM</option>
+          <option value="NA">NA</option>
+        </select>
+      </label>
+    </div>
     <label>What do you want to learn?<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting (up to 3, comma-separated)" required /></label>
     <label>Skill category
       <select name="learningSkillCategory" required>
@@ -451,14 +485,18 @@
         <option value="Advanced">Advanced</option>
       </select>
     </label>
-    <label>How much time can I allot?
-      <select name="frequency" required>
-        <option value="1 hour weekly">1 hour, weekly</option>
-        <option value="1 hour bi-weekly">1 hour, bi-weekly</option>
-        <option value="1 hour monthly">1 hour, monthly</option>
-      </select>
-    </label>
+    <div class="form-row">
+      <label>How much time can I allot?
+        <select name="frequency" required>
+          <option value="1 hour weekly">1 hour, weekly</option>
+          <option value="1 hour bi-weekly">1 hour, bi-weekly</option>
+          <option value="1 hour monthly">1 hour, monthly</option>
+        </select>
+      </label>
+      <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+    </div>
     <label>What is my goal?<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" required /></label>
+    <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand participation is voluntary and confidential, and I can request a no-fault rematch at any time.</label>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
       <button type="submit" class="btn btn-primary">Become a mentee</button>

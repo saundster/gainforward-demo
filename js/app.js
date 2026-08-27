@@ -187,21 +187,33 @@ function renderUserChrome() {
 function openBecomeMentorRoleModal() {
   const me = getCurrentUser();
   const form = $("#form-become-mentor-role");
+  form.fullName.value = me.fullName || "";
+  form.email.value = me.email || "";
+  form.department.value = me.department || "";
+  if (me.geography) form.geography.value = me.geography;
   form.purpose.value = me.purpose || "";
   if (me.mentorSkillCategory) form.mentorSkillCategory.value = me.mentorSkillCategory;
   form.offeredSkills.value = (me.offeredSkills || []).join(", ");
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
+  form.timezone.value = me.availability?.timezone || "";
+  form.consentAck.checked = !!me.consentAck;
   openModal("modal-become-mentor-role");
 }
 
 function openBecomeMenteeRoleModal() {
   const me = getCurrentUser();
   const form = $("#form-become-mentee-role");
+  form.fullName.value = me.fullName || "";
+  form.email.value = me.email || "";
+  form.department.value = me.department || "";
+  if (me.geography) form.geography.value = me.geography;
   form.learningGoals.value = (me.learningGoals || []).join(", ");
   if (me.learningSkillCategory) form.learningSkillCategory.value = me.learningSkillCategory;
   if (me.skillLevel) form.skillLevel.value = me.skillLevel;
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
+  form.timezone.value = me.availability?.timezone || "";
   form.goalStatement.value = me.goalStatement || "";
+  form.consentAck.checked = !!me.consentAck;
   openModal("modal-become-mentee-role");
 }
 
@@ -1586,7 +1598,16 @@ function wireEvents() {
     e.preventDefault();
     const fd = new FormData(e.target);
     const me = getCurrentUser();
+    const fullName = fd.get("fullName").trim();
+    const parts = fullName.split(/\s+/);
     saveCurrentUserProfile({
+      fullName,
+      displayName: parts.length > 1 ? `${parts[0][0]}. ${parts[parts.length - 1]}` : fullName,
+      avatarInitials: parts.map((p) => p[0]?.toUpperCase() || "").join("").slice(0, 2) || "??",
+      email: fd.get("email").trim(),
+      department: fd.get("department").trim(),
+      division: fd.get("department").trim(),
+      geography: fd.get("geography"),
       purpose: fd.get("purpose").trim(),
       mentorSkillCategory: fd.get("mentorSkillCategory"),
       offeredSkills: fd
@@ -1595,7 +1616,8 @@ function wireEvents() {
         .map((s) => s.trim())
         .filter(Boolean)
         .slice(0, 5),
-      availability: { ...me.availability, frequency: fd.get("frequency") },
+      availability: { ...me.availability, frequency: fd.get("frequency"), timezone: fd.get("timezone").trim() || "—" },
+      consentAck: fd.get("consentAck") === "on",
       preferredFormat: "mentor",
       engagementStatus: me.engagementStatus === "closed" ? "available" : me.engagementStatus,
       profileComplete: true,
@@ -1612,7 +1634,16 @@ function wireEvents() {
     e.preventDefault();
     const fd = new FormData(e.target);
     const me = getCurrentUser();
+    const fullName = fd.get("fullName").trim();
+    const parts = fullName.split(/\s+/);
     saveCurrentUserProfile({
+      fullName,
+      displayName: parts.length > 1 ? `${parts[0][0]}. ${parts[parts.length - 1]}` : fullName,
+      avatarInitials: parts.map((p) => p[0]?.toUpperCase() || "").join("").slice(0, 2) || "??",
+      email: fd.get("email").trim(),
+      department: fd.get("department").trim(),
+      division: fd.get("department").trim(),
+      geography: fd.get("geography"),
       learningGoals: fd
         .get("learningGoals")
         .split(",")
@@ -1621,8 +1652,9 @@ function wireEvents() {
         .slice(0, 3),
       skillLevel: fd.get("skillLevel"),
       learningSkillCategory: fd.get("learningSkillCategory"),
-      availability: { ...me.availability, frequency: fd.get("frequency") },
+      availability: { ...me.availability, frequency: fd.get("frequency"), timezone: fd.get("timezone").trim() || "—" },
       goalStatement: fd.get("goalStatement").trim(),
+      consentAck: fd.get("consentAck") === "on",
       preferredFormat: "mentee",
       engagementStatus: me.engagementStatus === "closed" ? "available" : me.engagementStatus,
       profileComplete: true,
@@ -1831,9 +1863,8 @@ async function startApp() {
   ensureMeetingsField();
   renderUserChrome();
   renderHome();
-  if (!getCurrentUser().profileComplete) {
-    openProfileModal({ onboarding: true });
-  }
+  // No forced profile gate — signing up happens when someone clicks "I want to
+  // become a Mentor/Mentee" on Home. Until then they can look around freely.
 }
 
 async function init() {
