@@ -1743,6 +1743,7 @@ function wireEvents() {
     savePersisted(STORAGE.journeys, journeys);
     toast("Pulse check submitted — thanks for the honest signal.", "success");
     closeAllModals();
+    renderJourney();
   });
 
   $("#form-reflection").addEventListener("submit", (e) => {
