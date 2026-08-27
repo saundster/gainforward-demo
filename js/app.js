@@ -109,8 +109,25 @@ function isJourneyOpen(j) {
 function findActiveJourneyFor(userId) {
   return journeys.find((j) => isJourneyOpen(j) && (j.participantA === userId || j.participantB === userId));
 }
+function findActiveJourneysFor(userId) {
+  return journeys.filter((j) => isJourneyOpen(j) && (j.participantA === userId || j.participantB === userId));
+}
 function getPartnerId(journey, userId) {
   return journey.participantA === userId ? journey.participantB : journey.participantA;
+}
+/** Mentors can hold multiple concurrent connections up to their stated capacity;
+ * everyone else (mentees, peers, reverse) is still capped at one at a time. */
+function isAtCapacity(userId) {
+  const person = getEmployeeById(userId);
+  if (!person) return true;
+  const activeCount = findActiveJourneysFor(userId).length;
+  if (person.preferredFormat === "mentor" && person.menteeCapacity) {
+    return activeCount >= person.menteeCapacity;
+  }
+  return activeCount >= 1;
+}
+function hasOpenJourneyBetween(idA, idB) {
+  return journeys.some((j) => isJourneyOpen(j) && ((j.participantA === idA && j.participantB === idB) || (j.participantA === idB && j.participantB === idA)));
 }
 
 /* ---------------------------------------------------------------- */
@@ -153,11 +170,13 @@ function openProfileModal({ onboarding }) {
   form.skillLevel.value = me.skillLevel || "";
   form.offeredSkills.value = (me.offeredSkills || []).join(", ");
   form.mentorSkillCategory.value = me.mentorSkillCategory || "";
+  if (me.menteeCapacity) form.menteeCapacity.value = me.menteeCapacity;
   form.goalStatement.value = me.goalStatement || "";
   form.purpose.value = me.purpose || "";
   if (me.preferredFormat) form.preferredFormat.value = me.preferredFormat;
   if (me.aiConfidence) form.aiConfidence.value = me.aiConfidence;
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
+  if (me.availability?.hours) form.hours.value = me.availability.hours;
   form.timezone.value = me.availability?.timezone || "";
   form.matchNote.value = me.matchNote || "";
   form.consentAck.checked = !!me.consentAck;
@@ -194,7 +213,9 @@ function openBecomeMentorRoleModal() {
   form.purpose.value = me.purpose || "";
   if (me.mentorSkillCategory) form.mentorSkillCategory.value = me.mentorSkillCategory;
   form.offeredSkills.value = (me.offeredSkills || []).join(", ");
+  if (me.menteeCapacity) form.menteeCapacity.value = me.menteeCapacity;
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
+  if (me.availability?.hours) form.hours.value = me.availability.hours;
   form.timezone.value = me.availability?.timezone || "";
   form.consentAck.checked = !!me.consentAck;
   openModal("modal-become-mentor-role");
@@ -211,6 +232,7 @@ function openBecomeMenteeRoleModal() {
   if (me.learningSkillCategory) form.learningSkillCategory.value = me.learningSkillCategory;
   if (me.skillLevel) form.skillLevel.value = me.skillLevel;
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
+  if (me.availability?.hours) form.hours.value = me.availability.hours;
   form.timezone.value = me.availability?.timezone || "";
   form.goalStatement.value = me.goalStatement || "";
   form.consentAck.checked = !!me.consentAck;
@@ -444,9 +466,9 @@ function openMatchModalFor(candidateId) {
 
   const { total, breakdown } = computeMatchScore(me, candidate);
   const reasons = matchReasons(me, candidate, breakdown);
-  const existing = requests.find((r) => r.fromId === CURRENT_USER_ID && r.toId === candidateId && r.status !== "declined");
-  const candidateBusy = findActiveJourneyFor(candidateId);
-  const meBusy = findActiveJourneyFor(CURRENT_USER_ID);
+  const existing = hasOpenJourneyBetween(CURRENT_USER_ID, candidateId);
+  const candidateBusy = isAtCapacity(candidateId);
+  const meBusy = isAtCapacity(CURRENT_USER_ID);
 
   const body = $("#match-modal-body");
   body.innerHTML = `
@@ -481,7 +503,7 @@ function openMatchModalFor(candidateId) {
         : meBusy
         ? `<p class="muted small">You already have an active journey — you'll need a rematch before starting a new one.</p>`
         : candidateBusy
-        ? `<p class="muted small">${candidate.displayName} already has an active journey right now.</p>`
+        ? `<p class="muted small">${candidate.displayName} ${candidate.preferredFormat === "mentor" && candidate.menteeCapacity ? "is at capacity right now" : "already has an active journey right now"}.</p>`
         : `<button class="btn btn-primary" id="btn-send-request">Connect now</button>
            <p class="muted small" style="margin-top:6px">This connects you right away — no approval needed. People Development can review it anytime and step in if something looks off.</p>`
     }
@@ -499,11 +521,11 @@ function sendRequest(candidateId, total, breakdown) {
   const candidate = getEmployeeById(candidateId);
   const me = getCurrentUser();
 
-  const fromBusy = findActiveJourneyFor(CURRENT_USER_ID);
-  const toBusy = findActiveJourneyFor(candidateId);
+  const fromBusy = isAtCapacity(CURRENT_USER_ID);
+  const toBusy = isAtCapacity(candidateId);
   if (fromBusy || toBusy) {
     const busyName = fromBusy ? me.displayName : candidate.displayName;
-    toast(`${busyName} already has an active journey. They'd need a rematch first — this pilot runs one relationship at a time.`, "error");
+    toast(`${busyName} ${fromBusy ? "would need a rematch before starting a new relationship" : "is at capacity right now"}.`, "error");
     return;
   }
 
@@ -604,9 +626,13 @@ function renderJourney() {
   const currentIndex = clamp(completed, 0, PROGRAM_META.stages.length - 1);
   const weekNumber = weekNumberFor(startDate);
 
-  $("#journey-subtitle").textContent = `With ${partner ? partner.displayName : "your partner"} · Week ${weekNumber} of 12 · started ${formatDateShort(
-    new Date(`${startDate}T00:00:00`)
-  )}, wraps up around ${pilotEndDate(startDate)}.`;
+  const allMine = findActiveJourneysFor(CURRENT_USER_ID);
+  const extraCount = allMine.length - 1;
+  $("#journey-subtitle").textContent =
+    `With ${partner ? partner.displayName : "your partner"} · Week ${weekNumber} of 12 · started ${formatDateShort(
+      new Date(`${startDate}T00:00:00`)
+    )}, wraps up around ${pilotEndDate(startDate)}.` +
+    (extraCount > 0 ? ` You also have ${extraCount} other active mentee${extraCount === 1 ? "" : "s"} — this shows the most recent.` : "");
 
   renderUpcomingMeetings(journey);
 
@@ -1085,8 +1111,10 @@ function renderRoster() {
 
   $("#roster-body").innerHTML = rows
     .map((e) => {
-      const journey = findActiveJourneyFor(e.id);
+      const allJourneys = findActiveJourneysFor(e.id);
+      const journey = allJourneys[0] || null;
       const partner = journey ? getEmployeeById(getPartnerId(journey, e.id)) : null;
+      const extraCount = allJourneys.length - 1;
       return `
       <tr>
         <td>${e.displayName}${e.id === CURRENT_USER_ID ? " (you)" : ""}</td>
@@ -1098,7 +1126,7 @@ function renderRoster() {
             ${["available", "active", "paused", "closed"].map((s) => `<option value="${s}" ${e.engagementStatus === s ? "selected" : ""}>${statusLabel(s)}</option>`).join("")}
           </select>
         </td>
-        <td>${partner ? `${partner.displayName}` : "—"}</td>
+        <td>${partner ? `${partner.displayName}${extraCount > 0 ? ` <span class="muted small">+${extraCount} more</span>` : ""}` : "—"}</td>
         <td>
           <div class="row-actions">
             ${e.id !== CURRENT_USER_ID ? `<button class="btn btn-ghost btn-sm" data-action="open-nudge" data-id="${e.id}">Nudge</button>` : ""}
@@ -1342,6 +1370,7 @@ function ensureCurrentUser() {
       learningSkillCategory: "",
       offeredSkills: [],
       mentorSkillCategory: "",
+      menteeCapacity: null,
       goalStatement: "",
       purpose: "",
       skillLevel: "",
@@ -1575,11 +1604,12 @@ function wireEvents() {
         .filter(Boolean)
         .slice(0, 5),
       mentorSkillCategory: fd.get("mentorSkillCategory"),
+      menteeCapacity: Number(fd.get("menteeCapacity")) || 1,
       goalStatement: fd.get("goalStatement").trim(),
       purpose: fd.get("purpose").trim(),
       preferredFormat: fd.get("preferredFormat"),
       aiConfidence: fd.get("aiConfidence"),
-      availability: { ...me.availability, frequency: fd.get("frequency"), timezone: fd.get("timezone").trim() || "—" },
+      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
       matchNote: fd.get("matchNote").trim(),
     };
 
@@ -1616,7 +1646,8 @@ function wireEvents() {
         .map((s) => s.trim())
         .filter(Boolean)
         .slice(0, 5),
-      availability: { ...me.availability, frequency: fd.get("frequency"), timezone: fd.get("timezone").trim() || "—" },
+      menteeCapacity: Number(fd.get("menteeCapacity")) || 1,
+      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
       consentAck: fd.get("consentAck") === "on",
       preferredFormat: "mentor",
       engagementStatus: me.engagementStatus === "closed" ? "available" : me.engagementStatus,
@@ -1652,7 +1683,7 @@ function wireEvents() {
         .slice(0, 3),
       skillLevel: fd.get("skillLevel"),
       learningSkillCategory: fd.get("learningSkillCategory"),
-      availability: { ...me.availability, frequency: fd.get("frequency"), timezone: fd.get("timezone").trim() || "—" },
+      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
       goalStatement: fd.get("goalStatement").trim(),
       consentAck: fd.get("consentAck") === "on",
       preferredFormat: "mentee",

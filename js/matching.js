@@ -63,11 +63,23 @@ function formatScore(seeker, candidate) {
 function availabilityScore(seeker, candidate) {
   if (!seeker.availability || !candidate.availability) return 0.5;
   let score = 0;
-  if (seeker.availability.frequency === candidate.availability.frequency) score += 0.5;
+
+  if (seeker.availability.frequency && seeker.availability.frequency === candidate.availability.frequency) score += 0.35;
+
+  const seekerHours = Number(seeker.availability.hours) || 0;
+  const candidateHours = Number(candidate.availability.hours) || 0;
+  if (seekerHours && candidateHours) {
+    // Closeness, not exact match — 1hr vs 2hrs should barely dent the score, 1hr vs 10hrs should.
+    score += 0.35 * Math.max(0, 1 - Math.abs(seekerHours - candidateHours) / 9);
+  } else {
+    score += 0.175;
+  }
+
   const seekerZone = normalizeText(seeker.availability.timezone).split(" ")[0];
   const candidateZone = normalizeText(candidate.availability.timezone).split(" ")[0];
-  if (seekerZone === candidateZone) score += 0.5;
-  else score += 0.2;
+  if (seekerZone && seekerZone === candidateZone) score += 0.3;
+  else score += 0.12;
+
   return Math.min(1, score);
 }
 
@@ -135,9 +147,9 @@ function matchReasons(seeker, candidate, breakdown) {
   }
 
   if (byKey.availability >= 0.9) {
-    reasons.push("Compatible schedule and time zone");
+    reasons.push("Compatible cadence, hours, and time zone");
   } else if (byKey.availability >= 0.5) {
-    reasons.push("Same meeting cadence, though time zones don't fully overlap");
+    reasons.push("Broadly compatible availability, though not a perfect overlap");
   }
 
   if (byKey.other === 1 && seeker.matchNote) {

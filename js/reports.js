@@ -101,15 +101,15 @@ function buildPrintReportHTML() {
     </table>`;
 
   return `
-    <h1>GainForward — Pilot Report</h1>
+    <h1>GainForward — Program Report</h1>
     <p class="print-meta">Generated ${new Date().toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" })}</p>
-    <h2>Pilot scorecard</h2>
+    <h2>Program scorecard</h2>
     ${table(["Category", "Metric", "Value", "Target"], kpiRows)}
     <h2>Cohort by department</h2>
     ${table(["Group", "Participants"], deptRows)}
     <h2>Cohort by region</h2>
     ${table(["Group", "Participants"], geoRows)}
-    <p class="print-footer">GainForward · RateGain Mentorship &amp; Peer Learning Ecosystem pilot</p>`;
+    <p class="print-footer">GainForward · RateGain Mentorship &amp; Peer Learning Ecosystem</p>`;
 }
 
 function exportPDFReport() {

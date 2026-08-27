@@ -267,7 +267,7 @@
   <section id="tab-admin" class="tab-panel hidden">
     <div class="panel-head panel-head--page">
       <h2>Admin · PD Console</h2>
-      <p class="muted">Connections form automatically — review them here, manage participant status, and track the pilot's go/no-go decisions.</p>
+      <p class="muted">Connections form automatically — review them here, manage participant status, and track program go/no-go decisions.</p>
     </div>
 
     <div class="panel">
@@ -359,6 +359,20 @@
         </select>
       </label>
       <label>Why would you want to mentor someone? (optional)<textarea name="purpose" rows="2" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned"></textarea></label>
+      <label>How many mentees could you take on?
+        <select name="menteeCapacity">
+          <option value="1">1 mentee</option>
+          <option value="2">2 mentees</option>
+          <option value="3">3 mentees</option>
+          <option value="4">4 mentees</option>
+          <option value="5">5 mentees</option>
+          <option value="6">6 mentees</option>
+          <option value="7">7 mentees</option>
+          <option value="8">8 mentees</option>
+          <option value="9">9 mentees</option>
+          <option value="10">10 mentees</option>
+        </select>
+      </label>
       <div class="form-row">
         <label>Preferred format
           <select name="preferredFormat">
@@ -378,15 +392,29 @@
         </label>
       </div>
       <div class="form-row">
-        <label>Time I can allocate
+        <label>Frequency
           <select name="frequency">
-            <option value="1 hour weekly">1 hour, weekly</option>
-            <option value="1 hour bi-weekly">1 hour, bi-weekly</option>
-            <option value="1 hour monthly">1 hour, monthly</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Bi-weekly">Bi-weekly</option>
+            <option value="Monthly">Monthly</option>
           </select>
         </label>
-        <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+        <label>Hours you can commit
+          <select name="hours">
+            <option value="1">1 hour</option>
+            <option value="2">2 hours</option>
+            <option value="3">3 hours</option>
+            <option value="4">4 hours</option>
+            <option value="5">5 hours</option>
+            <option value="6">6 hours</option>
+            <option value="7">7 hours</option>
+            <option value="8">8 hours</option>
+            <option value="9">9 hours</option>
+            <option value="10">10 hours</option>
+          </select>
+        </label>
       </div>
+      <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
       <label>Anything that helps us match you (optional)<input type="text" name="matchNote" placeholder="e.g. Prefer someone outside my function" /></label>
     </div>
     <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand participation is voluntary and confidential, and I can request a no-fault rematch at any time.</label>
@@ -429,16 +457,44 @@
       </select>
     </label>
     <label>What skills do you want to mentor on?<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching (up to 5, comma-separated)" required /></label>
+    <label>How many mentees could you take on?
+      <select name="menteeCapacity" required>
+        <option value="1">1 mentee</option>
+        <option value="2">2 mentees</option>
+        <option value="3">3 mentees</option>
+        <option value="4">4 mentees</option>
+        <option value="5">5 mentees</option>
+        <option value="6">6 mentees</option>
+        <option value="7">7 mentees</option>
+        <option value="8">8 mentees</option>
+        <option value="9">9 mentees</option>
+        <option value="10">10 mentees</option>
+      </select>
+    </label>
     <div class="form-row">
-      <label>How much time can you allocate?
+      <label>Frequency
         <select name="frequency" required>
-          <option value="1 hour weekly">1 hour, weekly</option>
-          <option value="1 hour bi-weekly">1 hour, bi-weekly</option>
-          <option value="1 hour monthly">1 hour, monthly</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Bi-weekly">Bi-weekly</option>
+          <option value="Monthly">Monthly</option>
         </select>
       </label>
-      <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+      <label>Hours you can commit
+        <select name="hours" required>
+          <option value="1">1 hour</option>
+          <option value="2">2 hours</option>
+          <option value="3">3 hours</option>
+          <option value="4">4 hours</option>
+          <option value="5">5 hours</option>
+          <option value="6">6 hours</option>
+          <option value="7">7 hours</option>
+          <option value="8">8 hours</option>
+          <option value="9">9 hours</option>
+          <option value="10">10 hours</option>
+        </select>
+      </label>
     </div>
+    <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
     <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand participation is voluntary and confidential, and I can request a no-fault rematch at any time.</label>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
@@ -486,15 +542,29 @@
       </select>
     </label>
     <div class="form-row">
-      <label>How much time can I allot?
+      <label>Frequency
         <select name="frequency" required>
-          <option value="1 hour weekly">1 hour, weekly</option>
-          <option value="1 hour bi-weekly">1 hour, bi-weekly</option>
-          <option value="1 hour monthly">1 hour, monthly</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Bi-weekly">Bi-weekly</option>
+          <option value="Monthly">Monthly</option>
         </select>
       </label>
-      <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+      <label>Hours you can commit
+        <select name="hours" required>
+          <option value="1">1 hour</option>
+          <option value="2">2 hours</option>
+          <option value="3">3 hours</option>
+          <option value="4">4 hours</option>
+          <option value="5">5 hours</option>
+          <option value="6">6 hours</option>
+          <option value="7">7 hours</option>
+          <option value="8">8 hours</option>
+          <option value="9">9 hours</option>
+          <option value="10">10 hours</option>
+        </select>
+      </label>
     </div>
+    <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
     <label>What is my goal?<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" required /></label>
     <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand participation is voluntary and confidential, and I can request a no-fault rematch at any time.</label>
     <div class="modal-actions">
