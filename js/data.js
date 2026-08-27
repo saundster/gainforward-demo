@@ -519,9 +519,7 @@ const PROGRAM_META = {
 
 /* Learning Resources — content for the tabbed resources modal.
    LinkedIn Learning entries are real, existing courses (verified titles,
-   instructors, and URLs) commonly included in enterprise LinkedIn Learning
-   subscriptions — search the title in your org's LinkedIn Learning portal
-   to confirm your own access, since exact catalog contents vary by tier. */
+   instructors, and URLs) available to employees through Delta. */
 const RESOURCE_LIBRARY = {
   faqs: [
     {
@@ -559,7 +557,7 @@ const RESOURCE_LIBRARY = {
   ],
 
   bestPractices: {
-    intro: "These patterns show up again and again in mentoring programs that work — and in the ones that quietly fizzle out. None of this is unique to GainForward; it's what other companies' mentoring programs (GitLab, HubSpot, Mastercard) and the broader research consistently point to.",
+    intro: "These patterns show up again and again in mentoring relationships that work — and are usually missing in the ones that quietly fizzle out.",
     sections: [
       { heading: "Match on fit, not hierarchy", body: "The instinct is to pair people by seniority — a director mentors an associate. But the strongest pairings match on a specific learning goal against a specific skill, regardless of title. A senior IC who's spent five years doing exactly the thing you're trying to learn is often a better match than a director three levels up who did it once, a decade ago." },
       { heading: "Agree on ground rules in the first conversation", body: "Before diving into content, spend five minutes agreeing on three things: how often you'll meet, what happens if either of you needs to reschedule, and what's confidential. Pairs that skip this step often drift — not because the relationship failed, but because nobody actually owned making it happen." },
@@ -613,7 +611,7 @@ const RESOURCE_LIBRARY = {
   dosDontsIntro: "A quick-reference version of everything in Best Practices and the mentor/mentee guides — pin this if you just want the short list.",
 
   makingTheMost: {
-    intro: "The difference between a mentoring relationship that sticks and one that fizzles is rarely the quality of the advice — it's usually these small mechanics around it.",
+    intro: "A few small habits around each conversation — not the quality of any single piece of advice — are usually what determines whether a mentoring relationship builds momentum or fizzles out. Here's what to do before, during, and after each session, and over the life of the relationship.",
     phases: [
       { phase: "Before", tip: "Send a short agenda the day before — even three bullet points signals you're prepared and gives your partner time to think." },
       { phase: "Start", tip: "Spend the first few minutes on rapport, not straight into business — trust is what makes the advice land." },

@@ -1279,7 +1279,7 @@ function renderResourcePanel() {
         .join("")}`;
   } else if (key === "linkedinCourses") {
     panel.innerHTML = `
-      <p class="muted small">Commonly available through most LinkedIn Learning enterprise subscriptions — search the title in your LinkedIn Learning portal to confirm your access.</p>
+      <p class="muted small">Available on Delta — search the title there to add it to your learning plan.</p>
       ${RESOURCE_LIBRARY.linkedinCourses
         .map(
           (c) => `
