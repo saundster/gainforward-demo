@@ -291,7 +291,14 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
   position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
   background: white; width: 92%; max-width: 560px; max-height: 86vh; overflow-y: auto;
   border-radius: var(--radius-lg); z-index: 60; box-shadow: 0 24px 60px rgba(64,30,134,0.28);
+  scrollbar-width: thin; scrollbar-color: var(--rg-lavender-200) transparent;
 }
+/* A thin, rounded scrollbar instead of the browser's default so it doesn't
+   read as a hard square notch cutting into the modal's rounded corner. */
+.modal::-webkit-scrollbar { width: 8px; }
+.modal::-webkit-scrollbar-track { background: transparent; }
+.modal::-webkit-scrollbar-thumb { background: var(--rg-lavender-200); border-radius: 999px; border: 2px solid white; }
+.modal::-webkit-scrollbar-thumb:hover { background: var(--rg-purple-mid); }
 .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--rg-lavender-100); position: sticky; top: 0; background: white; }
 .modal-head h2 { font-size: 1.1rem; }
 .modal-close { background: none; border: none; font-size: 1rem; cursor: pointer; color: var(--rg-gray-muted); }
@@ -395,11 +402,30 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 
 /* Info icon: small inline "i" with a native tooltip on hover/focus. */
 .info-icon {
-  display: inline-flex; align-items: center; justify-content: center;
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
   width: 16px; height: 16px; border-radius: 50%; margin-left: 4px;
   background: var(--rg-lavender-100); color: var(--rg-purple-deep);
   font-size: 0.7rem; font-weight: 700; font-style: normal; cursor: help;
   vertical-align: middle;
+}
+/* Callout-style tooltip for .info-icon: a small speech-bubble box instead
+   of relying on the browser's plain native title tooltip. */
+.info-tooltip {
+  position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+  width: 230px; background: var(--rg-purple-deep); color: white;
+  font-size: 0.76rem; font-weight: 400; font-style: normal; line-height: 1.55;
+  text-align: left; padding: 10px 12px; border-radius: var(--radius-md);
+  box-shadow: 0 10px 24px rgba(64,30,134,0.3);
+  opacity: 0; visibility: hidden; transform: translateX(-50%) translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none; z-index: 80;
+}
+.info-tooltip::before {
+  content: ""; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent; border-bottom-color: var(--rg-purple-deep);
+}
+.info-icon:hover .info-tooltip, .info-icon:focus .info-tooltip, .info-icon:focus-visible .info-tooltip {
+  opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
 }
 
 /* AI-recommended skill chips: shown under a skill field once a category is picked. */

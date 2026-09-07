@@ -218,6 +218,7 @@ function applyAccessGate() {
   $("#cta-learning-resources").classList.toggle("hidden", locked);
   $("#home-grid").classList.toggle("hidden", locked);
   $("#home-locked-hint").classList.toggle("hidden", !locked);
+  $all(".admin-only-control").forEach((el) => el.classList.toggle("hidden", !isAdmin));
   const activeTab = $(".tab-btn.is-active")?.dataset.tab;
   const activeNeedsAdmin = activeTab === "insights" || activeTab === "admin";
   if ((locked && activeTab !== "home") || (activeNeedsAdmin && !isAdmin)) {
@@ -1642,8 +1643,8 @@ function wireEvents() {
         closeAllModals();
         break;
       case "open-settings":
-        openSettingsModal();
         $("#user-menu").classList.add("hidden");
+        if (getCurrentUser().isAdmin) openSettingsModal();
         break;
       case "view-profile":
         $("#user-menu").classList.add("hidden");

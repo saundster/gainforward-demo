@@ -74,7 +74,7 @@
   </nav>
 
   <div class="topbar-actions">
-    <button id="btn-data-source" class="btn btn-ghost btn-sm" title="Configure AI employee-data source">
+    <button id="btn-data-source" class="btn btn-ghost btn-sm admin-only-control" title="Configure AI employee-data source">
       <span id="data-source-dot" class="status-dot status-dot--seed"></span> Data source
     </button>
     <div class="avatar-menu">
@@ -88,7 +88,7 @@
           </div>
         </div>
         <button class="dropdown-item" data-action="view-profile">My profile</button>
-        <button class="dropdown-item" data-action="open-settings">Data source settings</button>
+        <button class="dropdown-item admin-only-control" data-action="open-settings">Data source settings</button>
         <button class="dropdown-item dropdown-item--muted" data-action="sign-out">Sign out (demo)</button>
       </div>
     </div>
@@ -433,7 +433,7 @@
     <h2>I want to become a Mentor</h2>
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
-  <p class="muted small">This builds your profile and powers your matches (about 5–7 minutes).</p>
+  <p class="muted small modal-body-lead">This builds your profile and powers your matches (about 5–7 minutes).</p>
   <form id="form-become-mentor-role" class="modal-body form-stack">
     <div class="form-row">
       <label>Full name<input type="text" name="fullName" required /></label>
@@ -512,7 +512,7 @@
     <h2>I want to become a Mentee</h2>
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
-  <p class="muted small">This builds your profile and powers your matches (about 5–7 minutes).</p>
+  <p class="muted small modal-body-lead">This builds your profile and powers your matches (about 5–7 minutes).</p>
   <form id="form-become-mentee-role" class="modal-body form-stack">
     <div class="form-row">
       <label>Full name<input type="text" name="fullName" required /></label>
@@ -636,7 +636,7 @@
 
 <div id="modal-match" class="modal hidden" role="dialog" aria-modal="true">
   <div class="modal-head">
-    <h2>Match score <span class="info-icon" tabindex="0" title="A blend of goal-and-skill fit (40%), how different a perspective they bring (20%), format fit (15%), availability overlap (15%), and other stated preferences (10%).">i</span></h2>
+    <h2>Match score <span class="info-icon" tabindex="0">i<span class="info-tooltip">A blend of goal-and-skill fit (40%), how different a perspective they bring (20%), format fit (15%), availability overlap (15%), and other stated preferences (10%).</span></span></h2>
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
   <div id="match-modal-body" class="modal-body"></div>
