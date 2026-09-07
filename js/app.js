@@ -275,7 +275,7 @@ function renderSkillSuggestions(container, category, inputEl) {
   }
   container.classList.remove("hidden");
   container.innerHTML =
-    `<span class="skill-suggestions-label">AI suggestions:</span>` +
+    `<span class="skill-suggestions-label">Suggestions:</span>` +
     suggestions.map((s) => `<button type="button" class="skill-chip" data-skill="${s}">+ ${s}</button>`).join("");
   container.querySelectorAll(".skill-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
@@ -289,13 +289,65 @@ function renderSkillSuggestions(container, category, inputEl) {
 
 /** Wires a skill-category <select> to its suggestion strip so picking a
  * category (or opening the modal with one already picked) refreshes the
- * chips for whichever text field that category feeds. */
+ * chips for whichever text field that category feeds. Also attaches a
+ * type-as-you-go autocomplete to the same text field. */
 function wireSkillSuggestions(formEl, selectName, containerId, targetName) {
   const select = formEl.querySelector(`[name="${selectName}"]`);
   const container = document.getElementById(containerId);
   const input = formEl.querySelector(`[name="${targetName}"]`);
   if (!select || !container || !input) return;
   select.addEventListener("change", () => renderSkillSuggestions(container, select.value, input));
+  attachSkillTypeahead(input, () => renderSkillSuggestions(container, select.value, input));
+}
+
+/** Type-as-you-go autocomplete for a comma-separated skill/goal field: as
+ * the last (in-progress) entry is typed, suggests matching skill names
+ * from across every category, not just the one currently selected. */
+function attachSkillTypeahead(inputEl, onPick) {
+  const label = inputEl.closest("label");
+  if (!label) return;
+  label.style.position = "relative";
+  const menu = document.createElement("div");
+  menu.className = "typeahead-menu hidden";
+  label.appendChild(menu);
+
+  function currentTags() {
+    return (inputEl.value || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  }
+
+  function renderMenu() {
+    const parts = (inputEl.value || "").split(",");
+    const term = parts[parts.length - 1].trim().toLowerCase();
+    if (!term) {
+      menu.classList.add("hidden");
+      menu.innerHTML = "";
+      return;
+    }
+    const existing = currentTags();
+    const matches = ALL_SKILL_EXAMPLES.filter((s) => s.toLowerCase().includes(term) && !existing.includes(s.toLowerCase())).slice(0, 6);
+    if (!matches.length) {
+      menu.classList.add("hidden");
+      menu.innerHTML = "";
+      return;
+    }
+    menu.innerHTML = matches.map((s) => `<button type="button" class="typeahead-option">${s}</button>`).join("");
+    menu.classList.remove("hidden");
+  }
+
+  inputEl.addEventListener("input", renderMenu);
+  inputEl.addEventListener("focus", renderMenu);
+  inputEl.addEventListener("blur", () => setTimeout(() => menu.classList.add("hidden"), 150));
+  menu.addEventListener("mousedown", (e) => {
+    const btn = e.target.closest(".typeahead-option");
+    if (!btn) return;
+    e.preventDefault();
+    const parts = (inputEl.value || "").split(",");
+    parts[parts.length - 1] = ` ${btn.textContent}`;
+    inputEl.value = parts.map((p) => p.trim()).join(", ");
+    menu.classList.add("hidden");
+    inputEl.focus();
+    if (onPick) onPick();
+  });
 }
 
 function refreshSkillSuggestions(formEl, selectName, containerId, targetName) {
@@ -2090,5 +2142,21 @@ setInterval(() => {
   $("#login-timeout-note").classList.remove("hidden");
   showLoginScreen();
 }, 60 * 1000);
+
+/* ---------------------------------------------------------------- */
+/* Employee data sync: re-pulls from the configured source (or seed) */
+/* every 2 hours, for any tab left open that long                    */
+/* ---------------------------------------------------------------- */
+const DATA_SYNC_INTERVAL_MS = 2 * 60 * 60 * 1000;
+setInterval(async () => {
+  if (!CURRENT_USER_ID) return;
+  await refreshEmployeeSource();
+  renderHome();
+  const activeTab = $(".tab-btn.is-active")?.dataset.tab;
+  if (activeTab === "directory") renderDirectory();
+  if (activeTab === "journey") renderJourney();
+  if (activeTab === "insights") renderInsights();
+  if (activeTab === "admin") renderAdmin();
+}, DATA_SYNC_INTERVAL_MS);
 
 init();

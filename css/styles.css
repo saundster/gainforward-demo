@@ -428,7 +428,20 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
   opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
 }
 
-/* AI-recommended skill chips: shown under a skill field once a category is picked. */
+/* Type-as-you-go autocomplete dropdown for skill/goal text fields. */
+.typeahead-menu {
+  position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px;
+  background: white; border: 1px solid var(--rg-lavender-200); border-radius: var(--radius-md);
+  box-shadow: 0 10px 24px rgba(64,30,134,0.16); z-index: 45; max-height: 180px; overflow-y: auto;
+}
+.typeahead-option {
+  display: block; width: 100%; text-align: left; background: none; border: none;
+  padding: 8px 12px; font-family: var(--font); font-weight: 400; font-size: 0.85rem;
+  color: var(--rg-gray-dark); cursor: pointer;
+}
+.typeahead-option:hover { background: var(--rg-lavender-bg); }
+
+/* Recommended skill chips: shown under a skill field once a category is picked. */
 .skill-suggestions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: -4px; }
 .skill-suggestions-label { font-size: 0.72rem; color: var(--rg-gray-muted); margin-right: 2px; }
 .skill-chip {

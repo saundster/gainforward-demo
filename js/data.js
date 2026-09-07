@@ -660,6 +660,10 @@ const SKILL_CATEGORIES = [
   },
 ];
 
+/* Flattened, deduped skill list across all categories, used to power
+   type-as-you-go autocomplete on the skill/goal text fields. */
+const ALL_SKILL_EXAMPLES = [...new Set(SKILL_CATEGORIES.flatMap((c) => c.examples))];
+
 /* Role tutorials — shown once, before a first-time user builds their
    profile, so they know what they're signing up for before they answer
    questions about it. */
