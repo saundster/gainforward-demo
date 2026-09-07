@@ -191,6 +191,8 @@ function openProfileModal({ onboarding }) {
   $("#profile-modal-cancel").classList.toggle("hidden", onboarding);
   $("#profile-modal-submit").textContent = onboarding ? "Create my profile" : "Save changes";
 
+  refreshSkillSuggestions(form, "learningSkillCategory", "profile-learning-suggestions", "learningGoals");
+  refreshSkillSuggestions(form, "mentorSkillCategory", "profile-offering-suggestions", "offeredSkills");
   openModal("modal-become-mentor");
 }
 
@@ -200,6 +202,118 @@ function renderUserChrome() {
   $("#dropdown-avatar").textContent = me.avatarInitials || "?";
   $("#dropdown-name").textContent = me.fullName || "Your name";
   $("#dropdown-role").textContent = me.profileComplete ? `${me.department || "—"} · ${me.geography || "—"}` : "Profile not set up yet";
+  applyAccessGate();
+}
+
+/** Before a profile exists, a new user can only pick a role, nothing else,
+ * so Home and the nav don't show sections that don't mean anything yet. */
+function applyAccessGate() {
+  const me = getCurrentUser();
+  const locked = !me.profileComplete;
+  $all(".nav-tab-gated").forEach((btn) => btn.classList.toggle("hidden", locked));
+  $("#cta-learning-resources").classList.toggle("hidden", locked);
+  $("#home-grid").classList.toggle("hidden", locked);
+  $("#home-locked-hint").classList.toggle("hidden", !locked);
+  if (locked) {
+    const activeTab = $(".tab-btn.is-active")?.dataset.tab;
+    if (activeTab && activeTab !== "home") switchTab("home");
+  }
+}
+
+/** Shown once, before a first-time user builds their profile, so they know
+ * what the role involves before answering questions about it. Skipped for
+ * anyone who already has a profile (they're just editing, not deciding). */
+function openRoleTutorial(role) {
+  const data = ROLE_TUTORIALS[role];
+  $("#role-tutorial-title").textContent = data.title;
+  $("#role-tutorial-subtitle").textContent = data.subtitle;
+  $("#role-tutorial-body").innerHTML = data.points
+    .map((p) => `<div class="role-tutorial-point"><h4>${p.heading}</h4><p>${p.body}</p></div>`)
+    .join("");
+  $("#role-tutorial-continue").onclick = () => {
+    closeAllModals();
+    if (role === "mentor") openBecomeMentorRoleModal();
+    else openBecomeMenteeRoleModal();
+  };
+  openModal("modal-role-tutorial");
+}
+
+function handleBecomeMentorEntry() {
+  const me = getCurrentUser();
+  if (!me.profileComplete) openRoleTutorial("mentor");
+  else openBecomeMentorRoleModal();
+}
+
+function handleBecomeMenteeEntry() {
+  const me = getCurrentUser();
+  if (!me.profileComplete) openRoleTutorial("mentee");
+  else openBecomeMenteeRoleModal();
+}
+
+/** AI-recommended skill chips: reads the same SKILL_CATEGORIES list used by
+ * the Skills Directory article, filters out what's already typed in, and
+ * lets a click append the suggestion to the field instead of typing it. */
+function renderSkillSuggestions(container, category, inputEl) {
+  const cat = SKILL_CATEGORIES.find((c) => c.key === category);
+  if (!cat) {
+    container.classList.add("hidden");
+    container.innerHTML = "";
+    return;
+  }
+  const current = (inputEl.value || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  const suggestions = cat.examples.filter((s) => !current.includes(s.toLowerCase())).slice(0, 6);
+  if (!suggestions.length) {
+    container.classList.add("hidden");
+    container.innerHTML = "";
+    return;
+  }
+  container.classList.remove("hidden");
+  container.innerHTML =
+    `<span class="skill-suggestions-label">AI suggestions:</span>` +
+    suggestions.map((s) => `<button type="button" class="skill-chip" data-skill="${s}">+ ${s}</button>`).join("");
+  container.querySelectorAll(".skill-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const existing = (inputEl.value || "").split(",").map((s) => s.trim()).filter(Boolean);
+      existing.push(chip.dataset.skill);
+      inputEl.value = existing.join(", ");
+      renderSkillSuggestions(container, category, inputEl);
+    });
+  });
+}
+
+/** Wires a skill-category <select> to its suggestion strip so picking a
+ * category (or opening the modal with one already picked) refreshes the
+ * chips for whichever text field that category feeds. */
+function wireSkillSuggestions(formEl, selectName, containerId, targetName) {
+  const select = formEl.querySelector(`[name="${selectName}"]`);
+  const container = document.getElementById(containerId);
+  const input = formEl.querySelector(`[name="${targetName}"]`);
+  if (!select || !container || !input) return;
+  select.addEventListener("change", () => renderSkillSuggestions(container, select.value, input));
+}
+
+function refreshSkillSuggestions(formEl, selectName, containerId, targetName) {
+  const select = formEl.querySelector(`[name="${selectName}"]`);
+  const container = document.getElementById(containerId);
+  const input = formEl.querySelector(`[name="${targetName}"]`);
+  if (!select || !container || !input) return;
+  renderSkillSuggestions(container, select.value, input);
+}
+
+/** Quick tour: a handful of static steps shown once, right after someone
+ * finishes building their profile for the first time. */
+let walkthroughStepIndex = 0;
+function openWalkthroughTour() {
+  walkthroughStepIndex = 0;
+  renderWalkthroughStep();
+  openModal("modal-walkthrough");
+}
+function renderWalkthroughStep() {
+  const step = WALKTHROUGH_STEPS[walkthroughStepIndex];
+  $("#walkthrough-body").innerHTML = `<h3 class="tour-step-title">${step.title}</h3><p class="tour-step-body">${step.body}</p>`;
+  $("#walkthrough-dots").innerHTML = WALKTHROUGH_STEPS.map((_, i) => `<span class="tour-dot ${i === walkthroughStepIndex ? "is-active" : ""}"></span>`).join("");
+  $("#walkthrough-back").classList.toggle("hidden", walkthroughStepIndex === 0);
+  $("#walkthrough-next").textContent = walkthroughStepIndex === WALKTHROUGH_STEPS.length - 1 ? "Done" : "Next";
 }
 
 /** Focused add-on forms, layered on top of whatever base profile onboarding already collected. */
@@ -218,6 +332,7 @@ function openBecomeMentorRoleModal() {
   if (me.availability?.hours) form.hours.value = me.availability.hours;
   form.timezone.value = me.availability?.timezone || "";
   form.consentAck.checked = !!me.consentAck;
+  refreshSkillSuggestions(form, "mentorSkillCategory", "mentor-role-suggestions", "offeredSkills");
   openModal("modal-become-mentor-role");
 }
 
@@ -236,6 +351,7 @@ function openBecomeMenteeRoleModal() {
   form.timezone.value = me.availability?.timezone || "";
   form.goalStatement.value = me.goalStatement || "";
   form.consentAck.checked = !!me.consentAck;
+  refreshSkillSuggestions(form, "learningSkillCategory", "mentee-role-suggestions", "learningGoals");
   openModal("modal-become-mentee-role");
 }
 
@@ -243,6 +359,8 @@ function openBecomeMenteeRoleModal() {
 /* Tabs                                                               */
 /* ---------------------------------------------------------------- */
 function switchTab(tab) {
+  const me = getCurrentUser();
+  if (!me.profileComplete && tab !== "home") tab = "home";
   $all(".tab-btn").forEach((b) => {
     const active = b.dataset.tab === tab;
     b.classList.toggle("is-active", active);
@@ -1221,6 +1339,7 @@ const RESOURCE_TABS = [
   { key: "menteeTips", label: "For Mentees" },
   { key: "dos", label: "Do's & Don'ts" },
   { key: "makingTheMost", label: "Making the Most of It" },
+  { key: "skillsDirectory", label: "Skills Directory" },
   { key: "linkedinCourses", label: "LinkedIn Learning" },
 ];
 let currentResourceTab = "faqs";
@@ -1277,6 +1396,17 @@ function renderResourcePanel() {
       ${RESOURCE_LIBRARY.makingTheMost.phases
         .map((item) => `<div class="phase-tip"><span class="phase-tag">${item.phase}</span><span>${item.tip}</span></div>`)
         .join("")}`;
+  } else if (key === "skillsDirectory") {
+    panel.innerHTML = `
+      <p class="article-intro">What each skill category covers, with a few representative examples. Use this to decide which category best fits what you want to learn or offer.</p>
+      ${SKILL_CATEGORIES.map(
+        (c) => `
+        <div class="article-section">
+          <h4>${c.key}</h4>
+          <p>${c.description}</p>
+          <div class="chip-row" style="margin-top:8px">${c.examples.map((s) => `<span class="chip">${s}</span>`).join("")}</div>
+        </div>`
+      ).join("")}`;
   } else if (key === "linkedinCourses") {
     panel.innerHTML = `
       <p class="muted small">Available on Delta. Search the title there to add it to your learning plan.</p>
@@ -1437,12 +1567,32 @@ function wireEvents() {
       return;
     }
     errorEl.textContent = "";
+    $("#login-timeout-note").classList.add("hidden");
     localStorage.setItem(STORAGE.activeDemoUser, account.id);
     e.target.reset();
     startApp();
   });
 
   $all(".tab-btn").forEach((btn) => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
+
+  wireSkillSuggestions($("#form-become-mentor"), "learningSkillCategory", "profile-learning-suggestions", "learningGoals");
+  wireSkillSuggestions($("#form-become-mentor"), "mentorSkillCategory", "profile-offering-suggestions", "offeredSkills");
+  wireSkillSuggestions($("#form-become-mentor-role"), "mentorSkillCategory", "mentor-role-suggestions", "offeredSkills");
+  wireSkillSuggestions($("#form-become-mentee-role"), "learningSkillCategory", "mentee-role-suggestions", "learningGoals");
+
+  $("#walkthrough-next").addEventListener("click", () => {
+    if (walkthroughStepIndex >= WALKTHROUGH_STEPS.length - 1) {
+      closeAllModals();
+      return;
+    }
+    walkthroughStepIndex++;
+    renderWalkthroughStep();
+  });
+  $("#walkthrough-back").addEventListener("click", () => {
+    if (walkthroughStepIndex === 0) return;
+    walkthroughStepIndex--;
+    renderWalkthroughStep();
+  });
 
   document.body.addEventListener("click", (e) => {
     const el = e.target.closest("[data-action]");
@@ -1456,10 +1606,10 @@ function wireEvents() {
         switchTab("journey");
         break;
       case "open-become-mentor-role":
-        openBecomeMentorRoleModal();
+        handleBecomeMentorEntry();
         break;
       case "open-become-mentee-role":
-        openBecomeMenteeRoleModal();
+        handleBecomeMenteeEntry();
         break;
       case "switch-resource-tab":
         currentResourceTab = el.dataset.key;
@@ -1480,6 +1630,9 @@ function wireEvents() {
         openModal("modal-resources");
         break;
       case "close-modal":
+        closeAllModals();
+        break;
+      case "close-walkthrough":
         closeAllModals();
         break;
       case "open-settings":
@@ -1628,6 +1781,7 @@ function wireEvents() {
     e.preventDefault();
     const fd = new FormData(e.target);
     const me = getCurrentUser();
+    const wasComplete = me.profileComplete;
     const fullName = fd.get("fullName").trim();
     const parts = fullName.split(/\s+/);
     saveCurrentUserProfile({
@@ -1659,12 +1813,14 @@ function wireEvents() {
     populateFilterDropdowns();
     renderDirectory();
     renderHome();
+    if (!wasComplete) openWalkthroughTour();
   });
 
   $("#form-become-mentee-role").addEventListener("submit", (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const me = getCurrentUser();
+    const wasComplete = me.profileComplete;
     const fullName = fd.get("fullName").trim();
     const parts = fullName.split(/\s+/);
     saveCurrentUserProfile({
@@ -1695,7 +1851,8 @@ function wireEvents() {
     renderUserChrome();
     populateFilterDropdowns();
     renderHome();
-    switchTab("directory");
+    if (!wasComplete) openWalkthroughTour();
+    else switchTab("directory");
   });
 
   $("#form-log-session").addEventListener("submit", (e) => {
@@ -1894,8 +2051,9 @@ async function startApp() {
   ensureMeetingsField();
   renderUserChrome();
   renderHome();
-  // No forced profile gate; signing up happens when someone clicks "I want to
-  // become a Mentor/Mentee" on Home. Until then they can look around freely.
+  markActivity();
+  // Home CTAs handle sign-up; applyAccessGate() (inside renderUserChrome)
+  // locks the rest of the app down until a profile exists.
 }
 
 async function init() {
@@ -1907,5 +2065,23 @@ async function init() {
     showLoginScreen();
   }
 }
+
+/* ---------------------------------------------------------------- */
+/* Session idle timeout: signs out after an hour of no activity      */
+/* ---------------------------------------------------------------- */
+const IDLE_LIMIT_MS = 60 * 60 * 1000;
+let lastActivityAt = Date.now();
+function markActivity() {
+  lastActivityAt = Date.now();
+}
+["mousemove", "keydown", "click", "scroll", "touchstart"].forEach((evt) => document.addEventListener(evt, markActivity, { passive: true }));
+setInterval(() => {
+  if (!CURRENT_USER_ID) return;
+  if (Date.now() - lastActivityAt < IDLE_LIMIT_MS) return;
+  localStorage.removeItem(STORAGE.activeDemoUser);
+  CURRENT_USER_ID = null;
+  $("#login-timeout-note").classList.remove("hidden");
+  showLoginScreen();
+}, 60 * 1000);
 
 init();

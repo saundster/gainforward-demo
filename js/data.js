@@ -452,7 +452,7 @@ const DEMO_ACCOUNTS = [
     username: "newuser1",
     password: "Demo@2026",
     id: "demo-new-1",
-    scenario: "A brand-new employee who hasn't set up a profile yet: good for showing the mandatory onboarding screen and the two \"I want to become a...\" flows.",
+    scenario: "A brand-new employee who hasn't set up a profile yet: good for showing the locked-down Home screen, the role tutorial, and the two \"I want to become a...\" flows.",
     employee: {
       fullName: "", displayName: "", avatarInitials: "", email: "",
       department: "", division: "", careerLevel: "", tenureBand: "", geography: "",
@@ -630,3 +630,68 @@ const RESOURCE_LIBRARY = {
     { title: "Having Difficult Conversations", instructor: "Marlene Chism", note: "For when a mentoring conversation needs to get real.", url: "https://www.linkedin.com/learning/having-difficult-conversations-2018" },
   ],
 };
+
+/* Skill categories — the same four buckets used in every skill-category
+   dropdown across the app. Doubles as the "Skills Directory" article (so
+   people can see what each category covers before picking one) and as the
+   source list for the AI-recommended skill chips shown while building a
+   profile. */
+const SKILL_CATEGORIES = [
+  {
+    key: "Technical Skills",
+    description: "Hands-on tools, systems, and technical craft: the how-to of getting something built, shipped, or analyzed.",
+    examples: ["Product strategy", "Data analysis", "API design", "ML model deployment", "Distributed systems", "Pricing strategy", "Revenue forecasting", "AI-assisted workflows", "Dashboarding", "Demand forecasting"],
+  },
+  {
+    key: "Behavioural Skills",
+    description: "How you work with other people day to day: communication, collaboration, and handling difficult moments well.",
+    examples: ["Public speaking", "Executive communication", "Difficult conversations", "Giving and receiving feedback", "Cross-team collaboration", "Negotiation tactics", "Client relationship management", "Active listening"],
+  },
+  {
+    key: "Leadership Skills",
+    description: "Guiding people and decisions: setting direction, developing others, and leading without always having formal authority.",
+    examples: ["People management", "Coaching", "Delegation", "Program facilitation", "Strategic decision-making", "Leading through influence", "Team development", "Change management"],
+  },
+  {
+    key: "Career Development",
+    description: "Navigating your own growth: building a career path, a personal brand, and the visibility that comes with both.",
+    examples: ["Career planning", "Personal branding", "Interview preparation", "Building an internal network", "Navigating a promotion", "Working across functions", "Finding a career sponsor"],
+  },
+];
+
+/* Role tutorials — shown once, before a first-time user builds their
+   profile, so they know what they're signing up for before they answer
+   questions about it. */
+const ROLE_TUTORIALS = {
+  mentor: {
+    title: "Before you sign up as a Mentor",
+    subtitle: "A few things worth knowing about the role before you build your profile.",
+    points: [
+      { heading: "What a mentor does", body: "You share what you've learned with someone earlier in that specific skill or path than you are, on a recurring cadence you both agree on. You're not their manager and you're not responsible for their performance; you're a sounding board with relevant experience." },
+      { heading: "Time commitment", body: "Typically 30–60 minutes per conversation, on whatever cadence you choose (weekly, bi-weekly, or monthly), across a 12-week cycle. You'll set your own frequency and hours on the next screen." },
+      { heading: "What's expected of you", body: "Show up prepared, listen before you advise, and keep what's shared confidential. You're not expected to have every answer, just a willingness to think something through with someone else." },
+      { heading: "How many mentees", body: "You'll choose how many mentees you can take on (1 to 10). You can hold that many active relationships at once, and adjust the number later from your profile." },
+      { heading: "If it's not working", body: "Either side can request a no-fault rematch at any time, no explanation required. Ending a mismatched pairing quickly is expected, not a failure." },
+    ],
+  },
+  mentee: {
+    title: "Before you sign up as a Mentee",
+    subtitle: "A few things worth knowing about the role before you build your profile.",
+    points: [
+      { heading: "What a mentee does", body: "You bring a specific goal (a skill to build, a decision to think through, a path to understand) and drive the relationship toward it. Your mentor guides; you own the follow-through." },
+      { heading: "Time commitment", body: "Typically 30–60 minutes per conversation, on whatever cadence you choose (weekly, bi-weekly, or monthly), across a 12-week cycle. You'll set your own frequency and hours on the next screen." },
+      { heading: "What's expected of you", body: "Come with a specific, concrete goal rather than a general request, own the scheduling, and do the work in between sessions. The conversation itself isn't the value; trying something and coming back with what happened is." },
+      { heading: "One relationship at a time", body: "You can be in one active mentoring relationship at a time as a mentee. You're welcome to also offer to mentor someone else in a different area at the same time." },
+      { heading: "If it's not working", body: "Either side can request a no-fault rematch at any time, no explanation required. Ending a mismatched pairing quickly is expected, not a failure." },
+    ],
+  },
+};
+
+/* First-run walkthrough — a short tour shown once, right after someone
+   finishes building their profile for the first time. */
+const WALKTHROUGH_STEPS = [
+  { title: "Home", body: "Your Home tab now shows people recommended for you, your active journey (once you have one), and your Growth Profile: a running summary of what you're learning or offering." },
+  { title: "Directory", body: "Browse everyone in the program. Every card shows a live match score once you open it, explained in plain language, not just a number." },
+  { title: "My Journey", body: "Once you're connected with someone, this is where you track conversations, schedule the next one, and log what happened." },
+  { title: "Learning Resources", body: "FAQs, best-practice tips for mentors and mentees, a Skills Directory, and curated LinkedIn Learning courses, all in one place." },
+];

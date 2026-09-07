@@ -392,3 +392,34 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
   .form-row { grid-template-columns: 1fr; }
   .dos-donts { grid-template-columns: 1fr; }
 }
+
+/* Info icon: small inline "i" with a native tooltip on hover/focus. */
+.info-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 50%; margin-left: 4px;
+  background: var(--rg-lavender-100); color: var(--rg-purple-deep);
+  font-size: 0.7rem; font-weight: 700; font-style: normal; cursor: help;
+  vertical-align: middle;
+}
+
+/* AI-recommended skill chips: shown under a skill field once a category is picked. */
+.skill-suggestions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: -4px; }
+.skill-suggestions-label { font-size: 0.72rem; color: var(--rg-gray-muted); margin-right: 2px; }
+.skill-chip {
+  background: white; border: 1px dashed var(--rg-purple); color: var(--rg-purple-deep);
+  font-size: 0.75rem; font-weight: 600; padding: 4px 9px; border-radius: 999px;
+  cursor: pointer; font-family: var(--font);
+}
+.skill-chip:hover { background: var(--rg-lavender-bg); }
+
+/* Role tutorial: reuses .article-section styling for each point. */
+.role-tutorial-point { margin-bottom: 14px; }
+.role-tutorial-point h4 { font-size: 0.92rem; color: var(--rg-purple-deep); margin: 0 0 4px; }
+.role-tutorial-point p { font-size: 0.88rem; color: var(--rg-gray-dark); line-height: 1.6; margin: 0; }
+
+/* Quick-tour walkthrough dots. */
+.tour-dots { display: flex; gap: 6px; align-items: center; }
+.tour-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rg-lavender-200); }
+.tour-dot.is-active { background: var(--rg-purple); }
+.tour-step-title { font-weight: 700; color: var(--rg-purple-deep); font-size: 1.05rem; margin: 0 0 6px; }
+.tour-step-body { font-size: 0.9rem; color: var(--rg-gray-dark); line-height: 1.6; margin: 0; }

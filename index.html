@@ -32,6 +32,7 @@
     </svg>
     <h1>GainForward</h1>
     <p class="login-sub">Sign in with the demo credentials you were given.</p>
+    <p class="login-note hidden" id="login-timeout-note">You were signed out after an hour of inactivity.</p>
     <form id="form-login" class="form-stack">
       <label>Username<input type="text" id="login-username" name="username" autocomplete="username" required /></label>
       <label>Password<input type="password" name="password" autocomplete="current-password" required /></label>
@@ -66,10 +67,10 @@
 
   <nav class="tabs" role="tablist" aria-label="Primary">
     <button class="tab-btn is-active" data-tab="home" role="tab" aria-selected="true">Home</button>
-    <button class="tab-btn" data-tab="directory" role="tab" aria-selected="false">Directory</button>
-    <button class="tab-btn" data-tab="journey" role="tab" aria-selected="false">My Journey</button>
-    <button class="tab-btn" data-tab="insights" role="tab" aria-selected="false">Insights</button>
-    <button class="tab-btn" data-tab="admin" role="tab" aria-selected="false">Admin · PD Console</button>
+    <button class="tab-btn nav-tab-gated" data-tab="directory" role="tab" aria-selected="false">Directory</button>
+    <button class="tab-btn nav-tab-gated" data-tab="journey" role="tab" aria-selected="false">My Journey</button>
+    <button class="tab-btn nav-tab-gated" data-tab="insights" role="tab" aria-selected="false">Insights</button>
+    <button class="tab-btn nav-tab-gated" data-tab="admin" role="tab" aria-selected="false">Admin · PD Console</button>
   </nav>
 
   <div class="topbar-actions">
@@ -101,31 +102,30 @@
     <div class="hero">
       <h1 id="home-greeting">What would you like to do?</h1>
       <p class="hero-sub">Everyone has something to learn. Everyone has something to contribute.</p>
+      <p class="muted small hidden" id="home-locked-hint">Pick one to get started. Everything else unlocks once your profile is set up.</p>
       <div class="hero-actions">
         <button class="cta-card" data-action="open-become-mentor-role">
-          <span class="cta-icon">🌱</span>
           <span class="cta-title">I want to become a Mentor</span>
           <span class="cta-desc">Why you'd mentor, what you bring, and your time</span>
         </button>
         <button class="cta-card" data-action="open-become-mentee-role">
-          <span class="cta-icon">🧭</span>
           <span class="cta-title">I want to become a Mentee</span>
           <span class="cta-desc">What you want to learn, and your goal</span>
         </button>
-        <button class="cta-card" data-action="open-resources">
-          <span class="cta-icon">📚</span>
+        <button class="cta-card" id="cta-learning-resources" data-action="open-resources">
           <span class="cta-title">Learning Resources</span>
           <span class="cta-desc">FAQs, best-practice tips, and LinkedIn Learning picks</span>
         </button>
       </div>
     </div>
 
-    <div class="home-grid">
+    <div class="home-grid" id="home-grid">
       <div class="panel">
         <div class="panel-head">
           <h2>Recommended for you</h2>
           <button class="link-btn" data-action="goto-directory">View all</button>
         </div>
+        <p class="muted small">People whose skills or goals line up well with your own profile, ranked by match score.</p>
         <div id="top-mentors-list" class="mentor-list"></div>
       </div>
 
@@ -136,6 +136,7 @@
         </div>
         <div class="panel">
           <div class="panel-head"><h2>Your Growth Profile</h2></div>
+          <p class="muted small">Built from your own profile answers below, not pre-filled for you.</p>
           <div id="growth-profile-card"></div>
         </div>
       </div>
@@ -146,7 +147,7 @@
   <section id="tab-directory" class="tab-panel hidden">
     <div class="panel-head panel-head--page">
       <h2>Directory</h2>
-      <p class="muted">Search by name, goal, or skill. Every card shows a live match score against your profile.</p>
+      <p class="muted">Search by name, goal (what someone wants to learn), or skill (what someone can teach). Open a card to see a live match score against your own profile.</p>
     </div>
 
     <div class="filter-bar">
@@ -339,6 +340,7 @@
           <option value="Career Development">Career Development</option>
         </select>
       </label>
+      <div class="skill-suggestions hidden" id="profile-learning-suggestions" data-target="learningGoals"></div>
       <label>My level of understanding or skill
         <select name="skillLevel">
           <option value="">Not sure yet</option>
@@ -358,6 +360,7 @@
           <option value="Career Development">Career Development</option>
         </select>
       </label>
+      <div class="skill-suggestions hidden" id="profile-offering-suggestions" data-target="offeredSkills"></div>
       <label>Why would you want to mentor someone? (optional)<textarea name="purpose" rows="2" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned"></textarea></label>
       <label>How many mentees could you take on?
         <select name="menteeCapacity">
@@ -417,7 +420,7 @@
       <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
       <label>Anything that helps us match you (optional)<input type="text" name="matchNote" placeholder="e.g. Prefer someone outside my function" /></label>
     </div>
-    <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand participation is voluntary and confidential, and I can request a no-fault rematch at any time.</label>
+    <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand I don't have to participate, that what I share stays confidential, and that if a pairing isn't working for either of us, either person can ask for a new match at any time without having to explain why.</label>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" id="profile-modal-cancel" data-action="close-modal">Cancel</button>
       <button type="submit" class="btn btn-primary" id="profile-modal-submit">Submit profile</button>
@@ -457,6 +460,7 @@
       </select>
     </label>
     <label>What skills do you want to mentor on?<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching (up to 5, comma-separated)" required /></label>
+    <div class="skill-suggestions hidden" id="mentor-role-suggestions" data-target="offeredSkills"></div>
     <label>How many mentees could you take on?
       <select name="menteeCapacity" required>
         <option value="1">1 mentee</option>
@@ -495,7 +499,7 @@
       </label>
     </div>
     <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
-    <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand participation is voluntary and confidential, and I can request a no-fault rematch at any time.</label>
+    <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand I don't have to participate, that what I share stays confidential, and that if a pairing isn't working for either of us, either person can ask for a new match at any time without having to explain why.</label>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
       <button type="submit" class="btn btn-primary">Become a mentor</button>
@@ -534,6 +538,7 @@
         <option value="Career Development">Career Development</option>
       </select>
     </label>
+    <div class="skill-suggestions hidden" id="mentee-role-suggestions" data-target="learningGoals"></div>
     <label>My level of understanding or skill
       <select name="skillLevel" required>
         <option value="Beginner">Beginner</option>
@@ -566,12 +571,40 @@
     </div>
     <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
     <label>What is my goal?<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" required /></label>
-    <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand participation is voluntary and confidential, and I can request a no-fault rematch at any time.</label>
+    <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand I don't have to participate, that what I share stays confidential, and that if a pairing isn't working for either of us, either person can ask for a new match at any time without having to explain why.</label>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
       <button type="submit" class="btn btn-primary">Become a mentee</button>
     </div>
   </form>
+</div>
+
+<div id="modal-role-tutorial" class="modal modal--wide hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2 id="role-tutorial-title">Before you sign up</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <p class="muted small" id="role-tutorial-subtitle"></p>
+  <div class="modal-body" id="role-tutorial-body"></div>
+  <div class="modal-actions" style="padding:0 22px 22px">
+    <button type="button" class="btn btn-ghost" data-action="close-modal">Not right now</button>
+    <button type="button" class="btn btn-primary" id="role-tutorial-continue">Continue to profile</button>
+  </div>
+</div>
+
+<div id="modal-walkthrough" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <h2>Quick tour</h2>
+    <button class="modal-close" data-action="close-walkthrough">✕</button>
+  </div>
+  <div class="modal-body" id="walkthrough-body"></div>
+  <div class="modal-actions" style="justify-content:space-between; padding:0 22px 22px">
+    <div class="tour-dots" id="walkthrough-dots"></div>
+    <div class="row-actions">
+      <button type="button" class="btn btn-ghost" id="walkthrough-back">Back</button>
+      <button type="button" class="btn btn-primary" id="walkthrough-next">Next</button>
+    </div>
+  </div>
 </div>
 
 <div id="modal-resources" class="modal modal--wide hidden" role="dialog" aria-modal="true">
@@ -603,7 +636,7 @@
 
 <div id="modal-match" class="modal hidden" role="dialog" aria-modal="true">
   <div class="modal-head">
-    <h2>Match score</h2>
+    <h2>Match score <span class="info-icon" tabindex="0" title="A blend of goal-and-skill fit (40%), how different a perspective they bring (20%), format fit (15%), availability overlap (15%), and other stated preferences (10%).">i</span></h2>
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
   <div id="match-modal-body" class="modal-body"></div>
