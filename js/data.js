@@ -439,6 +439,7 @@ const DEMO_ACCOUNTS = [
     scenario: "The PD/program-admin persona. Good for exploring the Admin console: active connections, roster, decision gates.",
     employee: {
       fullName: "Morgan Lee", displayName: "M. Lee", avatarInitials: "ML", email: "morgan.lee@demo.gainforward.app",
+      isAdmin: true,
       department: "People Development", division: "People & Culture", careerLevel: "L4: Principal", tenureBand: "5+ yrs", geography: "NA",
       learningGoals: [], offeredSkills: ["Program facilitation", "Coaching"], mentorSkillCategory: "Leadership Skills", menteeCapacity: 3,
       experience: "Runs the GainForward program end to end",

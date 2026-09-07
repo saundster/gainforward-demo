@@ -210,13 +210,18 @@ function renderUserChrome() {
 function applyAccessGate() {
   const me = getCurrentUser();
   const locked = !me.profileComplete;
-  $all(".nav-tab-gated").forEach((btn) => btn.classList.toggle("hidden", locked));
+  const isAdmin = !!me.isAdmin;
+  $all(".nav-tab-gated").forEach((btn) => {
+    const needsAdmin = btn.classList.contains("nav-tab-admin");
+    btn.classList.toggle("hidden", locked || (needsAdmin && !isAdmin));
+  });
   $("#cta-learning-resources").classList.toggle("hidden", locked);
   $("#home-grid").classList.toggle("hidden", locked);
   $("#home-locked-hint").classList.toggle("hidden", !locked);
-  if (locked) {
-    const activeTab = $(".tab-btn.is-active")?.dataset.tab;
-    if (activeTab && activeTab !== "home") switchTab("home");
+  const activeTab = $(".tab-btn.is-active")?.dataset.tab;
+  const activeNeedsAdmin = activeTab === "insights" || activeTab === "admin";
+  if ((locked && activeTab !== "home") || (activeNeedsAdmin && !isAdmin)) {
+    switchTab("home");
   }
 }
 
@@ -361,6 +366,7 @@ function openBecomeMenteeRoleModal() {
 function switchTab(tab) {
   const me = getCurrentUser();
   if (!me.profileComplete && tab !== "home") tab = "home";
+  if ((tab === "insights" || tab === "admin") && !me.isAdmin) tab = "home";
   $all(".tab-btn").forEach((b) => {
     const active = b.dataset.tab === tab;
     b.classList.toggle("is-active", active);
