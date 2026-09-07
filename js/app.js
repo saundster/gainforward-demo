@@ -1484,6 +1484,106 @@ function renderResourcePanel() {
 }
 
 /* ---------------------------------------------------------------- */
+/* Ask GainForward: rule-based assistant                              */
+/* Answers strictly from content already in RESOURCE_LIBRARY /        */
+/* SKILL_CATEGORIES — no external calls, so there's no API key to     */
+/* protect. Matching is plain keyword overlap, not real NLP.          */
+/* ---------------------------------------------------------------- */
+let CHAT_KNOWLEDGE_BASE = null;
+
+// Generic question words that appear in almost every entry and would
+// otherwise drown out the words that actually distinguish one answer
+// from another (e.g. "how", "does", "my").
+const CHAT_STOPWORDS = new Set([
+  "how", "what", "when", "where", "why", "who", "which", "does", "do", "did", "is", "are", "was", "were",
+  "can", "could", "should", "would", "the", "a", "an", "to", "of", "for", "and", "or", "in", "on", "at",
+  "my", "your", "you", "i", "me", "it", "this", "that", "these", "those", "about", "with", "from", "if",
+]);
+
+function chatTokenize(text) {
+  return normalizeText(text)
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length > 2 && !CHAT_STOPWORDS.has(w));
+}
+
+/* Each entry has a short `primary` phrase (the question/heading/label a
+   user's own words are most likely to echo) and a longer `secondary` text
+   (the fuller content). Primary matches count for more, so a query that
+   closely matches an entry's own question wins over one that just happens
+   to share incidental words with a long, unrelated answer. */
+function buildChatKnowledgeBase() {
+  const kb = [];
+  RESOURCE_LIBRARY.faqs.forEach((f) => kb.push({ a: f.a, primary: f.q, secondary: f.a }));
+  ["bestPractices", "mentorTips", "menteeTips"].forEach((key) => {
+    RESOURCE_LIBRARY[key].sections.forEach((s) => kb.push({ a: s.body, primary: s.heading, secondary: s.body }));
+  });
+  kb.push({
+    a: `Do: ${RESOURCE_LIBRARY.dos.join("; ")}. Don't: ${RESOURCE_LIBRARY.donts.join("; ")}.`,
+    primary: "do's and don'ts rules etiquette",
+    secondary: `${RESOURCE_LIBRARY.dos.join(" ")} ${RESOURCE_LIBRARY.donts.join(" ")}`,
+  });
+  RESOURCE_LIBRARY.makingTheMost.phases.forEach((p) => kb.push({ a: p.tip, primary: `${p.phase} of a conversation`, secondary: p.tip }));
+  SKILL_CATEGORIES.forEach((c) => kb.push({ a: `${c.description} Examples: ${c.examples.join(", ")}.`, primary: `${c.key} skill category`, secondary: `${c.description} ${c.examples.join(" ")}` }));
+  kb.push({ a: "Go to Directory, browse or search by name, goal, or skill, and open a card to see your match score and connect. Connecting forms the relationship right away, no approval needed.", primary: "find a mentor in the directory", secondary: "search browse connect match score" });
+  kb.push({ a: "Go to My Journey and use \"Schedule a conversation\" to create a calendar invite (.ics, Google, or Outlook) with reminders.", primary: "schedule a conversation or meeting", secondary: "calendar invite booking reminders" });
+  kb.push({ a: "From My Journey (or the Admin console if you're an admin), use the rematch option. It's no-fault, no explanation required.", primary: "end a connection or request a rematch", secondary: "stop pause quit leave the relationship" });
+  kb.push({ a: "Open your avatar menu in the top right and choose \"My profile\" to update what you're learning, offering, your availability, or your capacity.", primary: "edit or update my profile, hours, or frequency", secondary: "change settings capacity availability" });
+  kb.push({ a: "You're signed out automatically after an hour with no activity, as a security precaution. Just log back in with your same credentials.", primary: "why was I signed out or logged out", secondary: "session timeout inactive expire" });
+  return kb;
+}
+
+function answerChatQuestion(question) {
+  if (!CHAT_KNOWLEDGE_BASE) CHAT_KNOWLEDGE_BASE = buildChatKnowledgeBase();
+  const queryWords = chatTokenize(question);
+  if (!queryWords.length) return null;
+  let best = null;
+  let bestScore = 0;
+  CHAT_KNOWLEDGE_BASE.forEach((entry) => {
+    const primaryWords = new Set(chatTokenize(entry.primary));
+    const secondaryWords = new Set(chatTokenize(entry.secondary || ""));
+    let score = 0;
+    queryWords.forEach((w) => {
+      if (primaryWords.has(w)) score += 3;
+      else if (secondaryWords.has(w)) score += 1;
+    });
+    if (score > bestScore) {
+      bestScore = score;
+      best = entry;
+    }
+  });
+  return bestScore > 0 ? best : null;
+}
+
+const CHAT_SUGGESTIONS = [
+  "How long does a mentoring relationship last?",
+  "What if we aren't clicking?",
+  "How do I schedule a conversation?",
+  "What's Career Development as a skill category?",
+];
+
+function renderChatSuggestions() {
+  $("#chat-suggestions").innerHTML = CHAT_SUGGESTIONS.map((q) => `<button type="button" class="chat-suggestion-chip">${q}</button>`).join("");
+}
+
+function appendChatMessage(text, who) {
+  const log = $("#chat-log");
+  const div = document.createElement("div");
+  div.className = `chat-msg chat-msg--${who}`;
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function handleChatQuestion(question) {
+  appendChatMessage(question, "user");
+  const match = answerChatQuestion(question);
+  appendChatMessage(
+    match ? match.a : "I don't have a good answer for that yet. Try Learning Resources, or reach out to People Development directly.",
+    "bot"
+  );
+}
+
+/* ---------------------------------------------------------------- */
 /* Settings / AI data source                                          */
 /* ---------------------------------------------------------------- */
 function updateDataSourceDot() {
@@ -1651,6 +1751,28 @@ function wireEvents() {
     if (walkthroughStepIndex === 0) return;
     walkthroughStepIndex--;
     renderWalkthroughStep();
+  });
+
+  $("#chat-fab").addEventListener("click", () => {
+    const panel = $("#chat-panel");
+    panel.classList.toggle("hidden");
+    if (!panel.classList.contains("hidden") && !$("#chat-suggestions").childElementCount) {
+      renderChatSuggestions();
+    }
+  });
+  $("#chat-close").addEventListener("click", () => $("#chat-panel").classList.add("hidden"));
+  $("#chat-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = $("#chat-input");
+    const question = input.value.trim();
+    if (!question) return;
+    handleChatQuestion(question);
+    input.value = "";
+  });
+  $("#chat-suggestions").addEventListener("click", (e) => {
+    const btn = e.target.closest(".chat-suggestion-chip");
+    if (!btn) return;
+    handleChatQuestion(btn.textContent);
   });
 
   document.body.addEventListener("click", (e) => {
@@ -2101,6 +2223,8 @@ function wireEvents() {
 function showLoginScreen() {
   $("#login-screen").classList.remove("hidden");
   $("#login-username").focus();
+  $("#chat-fab").classList.add("hidden");
+  $("#chat-panel").classList.add("hidden");
 }
 
 async function startApp() {
@@ -2111,6 +2235,7 @@ async function startApp() {
   renderUserChrome();
   renderHome();
   markActivity();
+  $("#chat-fab").classList.remove("hidden");
   // Home CTAs handle sign-up; applyAccessGate() (inside renderUserChrome)
   // locks the rest of the app down until a profile exists.
 }

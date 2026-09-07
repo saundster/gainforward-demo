@@ -829,6 +829,33 @@
 <!-- Print-only report layout, used by the PDF export (browser "Save as PDF"). -->
 <div id="print-report" class="print-report"></div>
 
+<!-- Ask GainForward: a rule-based assistant that answers only from the
+     Learning Resources content already in this app (FAQs, tips, Skills
+     Directory) — no external API calls, so there's no key to secure. -->
+<button id="chat-fab" class="chat-fab hidden" aria-label="Ask GainForward" title="Ask GainForward">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M4 5.5C4 4.67 4.67 4 5.5 4h13c.83 0 1.5.67 1.5 1.5v10c0 .83-.67 1.5-1.5 1.5H9l-4 3.5v-3.5H5.5C4.67 16.5 4 15.83 4 15v-9.5Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/>
+    <circle cx="9" cy="10" r="1" fill="white"/>
+    <circle cx="12.5" cy="10" r="1" fill="white"/>
+    <circle cx="16" cy="10" r="1" fill="white"/>
+  </svg>
+</button>
+
+<div id="chat-panel" class="chat-panel hidden" role="dialog" aria-label="Ask GainForward">
+  <div class="chat-panel-head">
+    <span>Ask GainForward</span>
+    <button type="button" id="chat-close" aria-label="Close">✕</button>
+  </div>
+  <div id="chat-log" class="chat-log">
+    <div class="chat-msg chat-msg--bot">Hi! Ask me about the program, mentoring, or how to use GainForward — try one of these, or type your own question.</div>
+  </div>
+  <div id="chat-suggestions" class="chat-suggestions"></div>
+  <form id="chat-form" class="chat-form">
+    <input type="text" id="chat-input" placeholder="Ask a question…" autocomplete="off" />
+    <button type="submit" class="btn btn-primary btn-sm">Send</button>
+  </form>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="js/data.js"></script>
