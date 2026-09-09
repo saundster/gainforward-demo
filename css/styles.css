@@ -408,23 +408,26 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
   vertical-align: middle;
 }
 /* Callout-style tooltip for .info-icon: a small speech-bubble box instead
-   of relying on the browser's plain native title tooltip. */
+   of relying on the browser's plain native title tooltip. Anchored to the
+   icon's own left edge (not centered under it) so it can't bleed past the
+   left side of a narrow column or modal; clamped to the viewport width so
+   it can't overflow on small screens either. */
 .info-tooltip {
-  position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%);
-  width: 230px; background: var(--rg-purple-deep); color: white;
+  position: absolute; top: calc(100% + 10px); left: 0;
+  width: 230px; max-width: calc(100vw - 40px); background: var(--rg-purple-deep); color: white;
   font-size: 0.76rem; font-weight: 400; font-style: normal; line-height: 1.55;
   text-align: left; padding: 10px 12px; border-radius: var(--radius-md);
   box-shadow: 0 10px 24px rgba(64,30,134,0.3);
-  opacity: 0; visibility: hidden; transform: translateX(-50%) translateY(-4px);
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
   transition: opacity 0.15s ease, transform 0.15s ease;
   pointer-events: none; z-index: 80;
 }
 .info-tooltip::before {
-  content: ""; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+  content: ""; position: absolute; bottom: 100%; left: 8px;
   border: 6px solid transparent; border-bottom-color: var(--rg-purple-deep);
 }
 .info-icon:hover .info-tooltip, .info-icon:focus .info-tooltip, .info-icon:focus-visible .info-tooltip {
-  opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
+  opacity: 1; visibility: visible; transform: translateY(0);
 }
 
 /* Type-as-you-go autocomplete dropdown for skill/goal text fields. */
