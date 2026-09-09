@@ -80,9 +80,6 @@
   </nav>
 
   <div class="topbar-actions">
-    <button id="btn-data-source" class="btn btn-ghost btn-sm admin-only-control" title="Configure AI employee-data source">
-      <span id="data-source-dot" class="status-dot status-dot--seed"></span> Data source
-    </button>
     <div class="avatar-menu">
       <button id="user-avatar-btn" class="avatar" aria-haspopup="true" aria-expanded="false">JD</button>
       <div id="user-menu" class="dropdown hidden">
@@ -94,7 +91,9 @@
           </div>
         </div>
         <button class="dropdown-item" data-action="view-profile">My profile</button>
-        <button class="dropdown-item admin-only-control" data-action="open-settings">Data source settings</button>
+        <button class="dropdown-item admin-only-control" data-action="open-settings" title="Configure AI employee-data source">
+          <span id="data-source-dot" class="status-dot status-dot--seed"></span> Data source settings
+        </button>
         <button class="dropdown-item dropdown-item--muted" data-action="sign-out">Sign out (demo)</button>
       </div>
     </div>

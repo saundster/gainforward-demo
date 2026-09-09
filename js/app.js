@@ -2114,8 +2114,6 @@ function wireEvents() {
     }
   });
 
-  $("#btn-data-source").addEventListener("click", openSettingsModal);
-
   $("#user-avatar-btn").addEventListener("click", (e) => {
     e.stopPropagation();
     $("#user-menu").classList.toggle("hidden");
