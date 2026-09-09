@@ -60,8 +60,8 @@ function stageDateRange(startDateStr, stage) {
   const to = addDays(startDateStr, stage.weekEnd * 7 - 1);
   return `${formatDateShort(from)} – ${formatDateShort(to)}`;
 }
-function weekNumberFor(startDateStr) {
-  return clamp(Math.floor(daysBetween(startDateStr, new Date()) / 7) + 1, 1, 12);
+function weekNumberFor(startDateStr, referenceDate) {
+  return clamp(Math.floor(daysBetween(startDateStr, referenceDate || new Date()) / 7) + 1, 1, 12);
 }
 function pilotEndDate(startDateStr) {
   return formatDateShort(addDays(startDateStr, 12 * 7));
@@ -150,6 +150,35 @@ function openModal(id) {
   $(`#${id}`).classList.remove("hidden");
 }
 let isOnboarding = false;
+
+/** Profile photo: undefined = untouched this session, null = explicitly
+ * removed, a data URL = a new photo just picked. Resized/cropped client-side
+ * (there's no server to do it) so it doesn't bloat localStorage. */
+let pendingPhotoUrl;
+
+function resizeImageToDataURL(file, size) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error || new Error("Couldn't read that file."));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Couldn't load that image."));
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        const scale = Math.max(size / img.width, size / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 function closeAllModals(force) {
   if (isOnboarding && !force) return;
   $("#modal-backdrop").classList.add("hidden");
@@ -161,6 +190,10 @@ function openProfileModal({ onboarding }) {
   isOnboarding = onboarding;
   const me = getCurrentUser();
   const form = $("#form-become-mentor");
+  pendingPhotoUrl = undefined;
+  applyAvatarVisual($("#profile-photo-preview"), me);
+  $("#profile-photo-remove").classList.toggle("hidden", !me.photoUrl);
+  $("#profile-photo-input").value = "";
   form.fullName.value = me.fullName || "";
   form.email.value = me.email || "";
   form.department.value = me.department || "";
@@ -196,10 +229,29 @@ function openProfileModal({ onboarding }) {
   openModal("modal-become-mentor");
 }
 
+/** Renders an avatar as a photo when one's set, falling back to initials. */
+function avatarHTML(person, extraClass = "") {
+  const cls = `avatar ${extraClass}`.trim();
+  return person?.photoUrl ? `<img class="${cls}" src="${person.photoUrl}" alt="" />` : `<div class="${cls}">${person?.avatarInitials || "?"}</div>`;
+}
+
+/** Same fallback, but for a fixed element (button/div) whose content we set in place. */
+function applyAvatarVisual(el, person) {
+  if (person?.photoUrl) {
+    el.style.backgroundImage = `url("${person.photoUrl}")`;
+    el.style.backgroundSize = "cover";
+    el.style.backgroundPosition = "center";
+    el.textContent = "";
+  } else {
+    el.style.backgroundImage = "";
+    el.textContent = person?.avatarInitials || "?";
+  }
+}
+
 function renderUserChrome() {
   const me = getCurrentUser();
-  $("#user-avatar-btn").textContent = me.avatarInitials || "?";
-  $("#dropdown-avatar").textContent = me.avatarInitials || "?";
+  applyAvatarVisual($("#user-avatar-btn"), me);
+  applyAvatarVisual($("#dropdown-avatar"), me);
   $("#dropdown-name").textContent = me.fullName || "Your name";
   $("#dropdown-role").textContent = me.profileComplete ? `${me.department || "—"} · ${me.geography || "—"}` : "Profile not set up yet";
   applyAccessGate();
@@ -463,7 +515,7 @@ function renderTopMentors() {
     .map(
       ({ employee: m }) => `
     <div class="mentor-row">
-      <div class="avatar">${m.avatarInitials}</div>
+      ${avatarHTML(m)}
       <div class="mentor-row-info">
         <div class="mentor-row-name">${m.displayName}</div>
         <div class="mentor-row-meta">${m.department} · ${m.geography} · ${m.menteeCount} mentee${m.menteeCount === 1 ? "" : "s"}</div>
@@ -477,6 +529,44 @@ function renderTopMentors() {
 
 function getJourneyStartDate(journey) {
   return journey.startDate || journey.sessions[0]?.date || new Date().toISOString().slice(0, 10);
+}
+
+/** Pausing freezes the 12-week clock and shifts the whole remaining
+ * schedule later by however long the pause lasts, instead of quietly
+ * losing that time. Either participant can pause or resume. */
+function isJourneyPaused(journey) {
+  return !!journey.pausedAt;
+}
+
+function getJourneyEffectiveStartDate(journey) {
+  const base = getJourneyStartDate(journey);
+  const pausedDays = journey.pausedDays || 0;
+  return pausedDays ? addDays(base, pausedDays).toISOString().slice(0, 10) : base;
+}
+
+function getJourneyReferenceDate(journey) {
+  return isJourneyPaused(journey) ? new Date(`${journey.pausedAt}T00:00:00`) : new Date();
+}
+
+function toggleJourneyPause(journey) {
+  if (isJourneyPaused(journey)) {
+    const pausedDays = daysBetween(journey.pausedAt, new Date());
+    journey.pausedDays = (journey.pausedDays || 0) + Math.max(pausedDays, 0);
+    journey.pausedAt = null;
+    toast(`Resumed. Your schedule shifted forward by ${pausedDays} day${pausedDays === 1 ? "" : "s"}.`, "success");
+  } else {
+    journey.pausedAt = new Date().toISOString().slice(0, 10);
+    const cancelledCount = cancelUpcomingMeetings(journey, "This relationship is paused. Resume it to schedule again.");
+    toast(
+      cancelledCount
+        ? `Paused. ${cancelledCount} upcoming calendar invite${cancelledCount === 1 ? "" : "s"} cancelled automatically; download the cancellation file${cancelledCount === 1 ? "" : "s"} from My Journey to clear ${cancelledCount === 1 ? "it" : "them"} off your calendar.`
+        : "Paused. Resume whenever both of you are ready to pick back up.",
+      "success"
+    );
+  }
+  savePersisted(STORAGE.journeys, journeys);
+  renderJourney();
+  renderActiveJourneyCard();
 }
 
 function renderActiveJourneyCard() {
@@ -493,14 +583,17 @@ function renderActiveJourneyCard() {
   const progress = clamp(completed / 5, 0, 1);
   const stageIndex = clamp(completed, 0, PROGRAM_META.stages.length - 1);
   const stage = PROGRAM_META.stages[stageIndex];
-  const startDate = getJourneyStartDate(journey);
-  const weekNumber = weekNumberFor(startDate);
+  const startDate = getJourneyEffectiveStartDate(journey);
+  const weekNumber = weekNumberFor(startDate, getJourneyReferenceDate(journey));
+  const paused = isJourneyPaused(journey);
   const lastSession = journey.sessions.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
   const upcomingMeeting = (journey.meetings || [])
     .filter((m) => m.status === "scheduled" && new Date(m.startISO) > new Date())
     .sort((a, b) => a.startISO.localeCompare(b.startISO))[0];
 
-  const nextAction = upcomingMeeting
+  const nextAction = paused
+    ? "Paused. Resume from My Journey when you're both ready."
+    : upcomingMeeting
     ? `Scheduled: ${meetingTimeLabel(upcomingMeeting.startISO)}`
     : completed === 0
     ? `Schedule your first conversation: ${stage.label.toLowerCase()} is up first.`
@@ -514,7 +607,7 @@ function renderActiveJourneyCard() {
     <div class="journey-summary">
       <div>
         <div class="journey-partner">With ${partner ? partner.displayName : "—"}</div>
-        <div class="journey-type">${journey.relationshipType} · Week ${weekNumber} of 12</div>
+        <div class="journey-type">${journey.relationshipType} · Week ${weekNumber} of 12${paused ? ` <span class="chip chip--paused">Paused</span>` : ""}</div>
       </div>
       <div class="progress-track"><div class="progress-fill" style="width:${pct(progress)}"></div></div>
       <div class="progress-label"><span>${completed} of 5 conversations</span><span>${pct(progress)}</span></div>
@@ -604,7 +697,7 @@ function renderDirectory() {
       return `
       <div class="employee-card">
         <div class="employee-card-head">
-          <div class="avatar">${e.avatarInitials}</div>
+          ${avatarHTML(e)}
           <div>
             <div class="employee-name">${e.displayName}</div>
             <div class="employee-meta">${e.department} · ${e.geography}</div>
@@ -650,7 +743,7 @@ function openMatchModalFor(candidateId) {
   const body = $("#match-modal-body");
   body.innerHTML = `
     <div class="mentor-row" style="margin-bottom:4px">
-      <div class="avatar">${candidate.avatarInitials}</div>
+      ${avatarHTML(candidate)}
       <div class="mentor-row-info">
         <div class="mentor-row-name">${candidate.displayName}</div>
         <div class="mentor-row-meta">${candidate.department} · ${candidate.geography} · ${formatLabel(candidate.preferredFormat)}</div>
@@ -659,8 +752,9 @@ function openMatchModalFor(candidateId) {
     <p class="match-verdict">${scoreVerdict(total)}</p>
     <p class="muted small" style="margin:2px 0 -2px">Why we think so:</p>
     <ul class="tip-list">${reasons.map((r) => `<li>${r}</li>`).join("")}</ul>
+    <p class="muted small">Use this as a starting point for a conversation, not a verdict; the reasons above matter more than the number below.</p>
     <details class="score-details">
-      <summary>Score breakdown (${total}%)</summary>
+      <summary>Score breakdown</summary>
       <div class="bar-chart" style="margin-top:10px">
         ${breakdown
           .map(
@@ -732,6 +826,8 @@ function sendRequest(candidateId, total, breakdown) {
     meetings: [],
     pulse: null,
     reflection: null,
+    pausedAt: null,
+    pausedDays: 0,
   });
   if (candidate.menteeCount != null) candidate.menteeCount += 1;
 
@@ -790,6 +886,8 @@ function renderJourney() {
     empty.classList.remove("hidden");
     content.classList.add("hidden");
     $("#journey-subtitle").textContent = "Once you're matched, your conversations and progress will show up here.";
+    $("#btn-toggle-pause").classList.add("hidden");
+    $("#journey-pause-banner").classList.add("hidden");
     renderJourneyCleanup();
     return;
   }
@@ -798,18 +896,34 @@ function renderJourney() {
   content.classList.remove("hidden");
 
   const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
-  const startDate = getJourneyStartDate(journey);
+  const realStartDate = getJourneyStartDate(journey);
+  const startDate = getJourneyEffectiveStartDate(journey);
   const completed = journey.sessions.filter((s) => s.completed).length;
   const currentIndex = clamp(completed, 0, PROGRAM_META.stages.length - 1);
-  const weekNumber = weekNumberFor(startDate);
+  const weekNumber = weekNumberFor(startDate, getJourneyReferenceDate(journey));
+  const paused = isJourneyPaused(journey);
 
   const allMine = findActiveJourneysFor(CURRENT_USER_ID);
   const extraCount = allMine.length - 1;
   $("#journey-subtitle").textContent =
     `With ${partner ? partner.displayName : "your partner"} · Week ${weekNumber} of 12 · started ${formatDateShort(
-      new Date(`${startDate}T00:00:00`)
+      new Date(`${realStartDate}T00:00:00`)
     )}, wraps up around ${pilotEndDate(startDate)}.` +
     (extraCount > 0 ? ` You also have ${extraCount} other active mentee${extraCount === 1 ? "" : "s"}; this shows the most recent.` : "");
+
+  const pauseBtn = $("#btn-toggle-pause");
+  pauseBtn.classList.remove("hidden");
+  pauseBtn.textContent = paused ? "Resume relationship" : "Pause relationship";
+  pauseBtn.className = `btn btn-sm ${paused ? "btn-primary" : "btn-secondary"}`;
+  pauseBtn.id = "btn-toggle-pause";
+
+  const banner = $("#journey-pause-banner");
+  if (paused) {
+    banner.classList.remove("hidden");
+    banner.textContent = `Paused since ${formatDateShort(new Date(`${journey.pausedAt}T00:00:00`))}. Meetings are on hold, and the whole schedule will shift forward by however long you're paused once you resume.`;
+  } else {
+    banner.classList.add("hidden");
+  }
 
   renderUpcomingMeetings(journey);
 
@@ -1226,11 +1340,24 @@ function renderInsights() {
  * (no-fault rematch) a connection at any point if something looks off. */
 function renderMatchingQueue() {
   const container = $("#matching-queue");
-  const activeJourneys = journeys.filter((j) => j.formalStatus === "active");
+  const search = ($("#matching-queue-search").value || "").trim().toLowerCase();
+  let activeJourneys = journeys.filter((j) => j.formalStatus === "active");
 
   if (!activeJourneys.length) {
     container.innerHTML = `<p class="empty-state">No active connections yet. New ones form automatically from the Directory and will show up here for review.</p>`;
     return;
+  }
+
+  if (search) {
+    activeJourneys = activeJourneys.filter((j) => {
+      const from = getEmployeeById(j.participantA);
+      const to = getEmployeeById(j.participantB);
+      return `${from?.displayName || ""} ${to?.displayName || ""}`.toLowerCase().includes(search);
+    });
+    if (!activeJourneys.length) {
+      container.innerHTML = `<p class="empty-state">No active connections match "${search}".</p>`;
+      return;
+    }
   }
 
   container.innerHTML = activeJourneys
@@ -1364,6 +1491,13 @@ function renderDecisionGates() {
     <div class="gate-card">
       <div class="gate-title">${g.label}</div>
       <div class="gate-question">${g.question}</div>
+      ${
+        g.criteria?.length
+          ? `<details class="score-details"><summary>What counts as passing</summary><ul class="tip-list" style="margin-top:8px">${g.criteria
+              .map((c) => `<li>${c}</li>`)
+              .join("")}</ul></details>`
+          : ""
+      }
       <div class="gate-status">
         <select data-gate="${g.key}">
           ${["Not started", "In progress", "Passed", "Blocked"].map((s) => `<option ${gateStatus[g.key] === s ? "selected" : ""}>${s}</option>`).join("")}
@@ -1398,7 +1532,6 @@ const RESOURCE_TABS = [
   { key: "menteeTips", label: "For Mentees" },
   { key: "dos", label: "Do's & Don'ts" },
   { key: "makingTheMost", label: "Making the Most of It" },
-  { key: "skillsDirectory", label: "Skills Directory" },
   { key: "linkedinCourses", label: "LinkedIn Learning" },
 ];
 let currentResourceTab = "faqs";
@@ -1455,17 +1588,6 @@ function renderResourcePanel() {
       ${RESOURCE_LIBRARY.makingTheMost.phases
         .map((item) => `<div class="phase-tip"><span class="phase-tag">${item.phase}</span><span>${item.tip}</span></div>`)
         .join("")}`;
-  } else if (key === "skillsDirectory") {
-    panel.innerHTML = `
-      <p class="article-intro">What each skill category covers, with a few representative examples. Use this to decide which category best fits what you want to learn or offer.</p>
-      ${SKILL_CATEGORIES.map(
-        (c) => `
-        <div class="article-section">
-          <h4>${c.key}</h4>
-          <p>${c.description}</p>
-          <div class="chip-row" style="margin-top:8px">${c.examples.map((s) => `<span class="chip">${s}</span>`).join("")}</div>
-        </div>`
-      ).join("")}`;
   } else if (key === "linkedinCourses") {
     panel.innerHTML = `
       <p class="muted small">Available on Delta. Search the title there to add it to your learning plan.</p>
@@ -1848,6 +1970,11 @@ function wireEvents() {
       case "open-pulse":
         openPulseModal();
         break;
+      case "toggle-pause": {
+        const journey = findActiveJourneyFor(CURRENT_USER_ID);
+        if (journey) toggleJourneyPause(journey);
+        break;
+      }
       case "cancel-meeting": {
         const journey = journeys.find((j) => (j.meetings || []).some((m) => m.id === el.dataset.id));
         const meeting = journey?.meetings.find((m) => m.id === el.dataset.id);
@@ -1900,6 +2027,25 @@ function wireEvents() {
   $("#filter-geo").addEventListener("change", renderDirectory);
   $("#filter-format").addEventListener("change", renderDirectory);
   $("#roster-search").addEventListener("input", renderRoster);
+  $("#matching-queue-search").addEventListener("input", renderMatchingQueue);
+
+  $("#profile-photo-input").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      pendingPhotoUrl = await resizeImageToDataURL(file, 200);
+      applyAvatarVisual($("#profile-photo-preview"), { photoUrl: pendingPhotoUrl, avatarInitials: getCurrentUser().avatarInitials });
+      $("#profile-photo-remove").classList.remove("hidden");
+    } catch {
+      toast("Couldn't read that image. Try a different file.", "error");
+    }
+  });
+  $("#profile-photo-remove").addEventListener("click", () => {
+    pendingPhotoUrl = null;
+    $("#profile-photo-input").value = "";
+    applyAvatarVisual($("#profile-photo-preview"), { photoUrl: null, avatarInitials: getCurrentUser().avatarInitials });
+    $("#profile-photo-remove").classList.add("hidden");
+  });
 
   $("#btn-open-reflection").addEventListener("click", openReflectionModal);
 
@@ -1945,6 +2091,7 @@ function wireEvents() {
       aiConfidence: fd.get("aiConfidence"),
       availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
       matchNote: fd.get("matchNote").trim(),
+      photoUrl: pendingPhotoUrl === undefined ? me.photoUrl : pendingPhotoUrl,
     };
 
     saveCurrentUserProfile(fields);

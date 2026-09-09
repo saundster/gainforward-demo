@@ -170,8 +170,12 @@
   <section id="tab-journey" class="tab-panel hidden">
     <div class="panel-head panel-head--page">
       <h2>My Journey</h2>
-      <p class="muted" id="journey-subtitle">Once you're matched, your conversations and progress will show up here.</p>
+      <div class="panel-head-actions">
+        <button class="btn btn-secondary btn-sm hidden" id="btn-toggle-pause" data-action="toggle-pause">Pause relationship</button>
+      </div>
     </div>
+    <p class="muted" id="journey-subtitle">Once you're matched, your conversations and progress will show up here.</p>
+    <div id="journey-pause-banner" class="pause-banner hidden"></div>
 
     <div id="journey-empty" class="panel hidden">
       <p>You don't have an active mentoring journey yet. Head to <strong>Find a Mentor</strong> or <strong>Become a Mentor</strong> to start one.</p>
@@ -272,7 +276,10 @@
     </div>
 
     <div class="panel">
-      <div class="panel-head"><h2>Active connections</h2></div>
+      <div class="panel-head">
+        <h2>Active connections</h2>
+        <input id="matching-queue-search" type="search" placeholder="Search by name…" class="roster-search" />
+      </div>
       <div id="matching-queue" class="matching-queue"></div>
     </div>
 
@@ -314,6 +321,16 @@
   </div>
   <p class="muted small" id="profile-modal-intro">5–7 minutes. You can offer to mentor, be mentored, or both.</p>
   <form id="form-become-mentor" class="modal-body">
+    <div class="photo-upload-row">
+      <div class="avatar avatar--lg" id="profile-photo-preview">?</div>
+      <div class="photo-upload-controls">
+        <label class="btn btn-secondary btn-sm">
+          Upload photo
+          <input type="file" accept="image/*" id="profile-photo-input" style="display:none" />
+        </label>
+        <button type="button" class="btn btn-ghost btn-sm hidden" id="profile-photo-remove">Remove</button>
+      </div>
+    </div>
     <div class="form-row">
       <label>Full name<input type="text" name="fullName" required /></label>
       <label>Work email<input type="email" name="email" required /></label>
@@ -376,8 +393,9 @@
           <option value="10">10 mentees</option>
         </select>
       </label>
+      <p class="muted small">Hours you can commit (below) is per mentee, not split between them; three mentees at two hours each is about six hours total.</p>
       <div class="form-row">
-        <label>Preferred format
+        <label>Preferred format <span class="info-icon" tabindex="0">i<span class="info-tooltip">Mentor: you guide someone else. Mentee: someone guides you. Peer: two people at a similar level learning from each other, neither guiding. Reverse mentoring: someone earlier in their career teaches you something newer (a tool, a trend) while you mentor them using your experience.</span></span>
           <select name="preferredFormat">
             <option value="mentee">Mentee</option>
             <option value="mentor">Mentor</option>
@@ -402,7 +420,7 @@
             <option value="Monthly">Monthly</option>
           </select>
         </label>
-        <label>Hours you can commit
+        <label>Hours you can commit (per relationship)
           <select name="hours">
             <option value="1">1 hour</option>
             <option value="2">2 hours</option>
@@ -475,6 +493,7 @@
         <option value="10">10 mentees</option>
       </select>
     </label>
+    <p class="muted small">Hours you can commit (below) is per mentee, not split between them; three mentees at two hours each is about six hours total.</p>
     <div class="form-row">
       <label>Frequency
         <select name="frequency" required>
@@ -483,7 +502,7 @@
           <option value="Monthly">Monthly</option>
         </select>
       </label>
-      <label>Hours you can commit
+      <label>Hours you can commit (per relationship)
         <select name="hours" required>
           <option value="1">1 hour</option>
           <option value="2">2 hours</option>
@@ -554,7 +573,7 @@
           <option value="Monthly">Monthly</option>
         </select>
       </label>
-      <label>Hours you can commit
+      <label>Hours you can commit (per relationship)
         <select name="hours" required>
           <option value="1">1 hour</option>
           <option value="2">2 hours</option>

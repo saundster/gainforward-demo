@@ -99,8 +99,12 @@ h1, h2, h3 { color: var(--rg-purple-deep); margin: 0; }
   width: 36px; height: 36px; border-radius: 50%; background: var(--rg-purple);
   color: white; border: none; font-weight: 700; font-family: var(--font); cursor: pointer;
   display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+  object-fit: cover; flex-shrink: 0;
 }
 .avatar--sm { width: 32px; height: 32px; font-size: 0.75rem; }
+.avatar--lg { width: 64px; height: 64px; font-size: 1.3rem; cursor: default; }
+.photo-upload-row { display: flex; align-items: center; gap: 14px; }
+.photo-upload-controls { display: flex; gap: 8px; align-items: center; }
 .dropdown {
   position: absolute; right: 0; top: 46px; width: 240px; background: white;
   border-radius: var(--radius-md); box-shadow: var(--shadow-card); border: 1px solid var(--rg-lavender-200);
@@ -316,6 +320,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .calendar-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
 .form-stack { display: flex; flex-direction: column; gap: 14px; }
 .security-note { background: #FDF3E4; color: #8A6414; font-size: 0.76rem; padding: 10px 12px; border-radius: var(--radius-sm); margin: 0; }
+.pause-banner { background: #FDF3E4; color: #8A6414; font-size: 0.82rem; padding: 10px 12px; border-radius: var(--radius-sm); margin: -8px 0 18px; }
 .privacy-note { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.76rem; padding: 8px 12px; border-radius: var(--radius-sm); margin: -6px 0 0; }
 
 /* ---------- Reports / export ---------- */
