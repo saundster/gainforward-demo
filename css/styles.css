@@ -483,9 +483,12 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .skill-chip:hover { background: var(--rg-lavender-bg); }
 
 /* Role tutorial: reuses .article-section styling for each point. */
-.role-tutorial-point { margin-bottom: 14px; }
-.role-tutorial-point h4 { font-size: 0.92rem; color: var(--rg-purple-deep); margin: 0 0 4px; }
-.role-tutorial-point p { font-size: 0.88rem; color: var(--rg-gray-dark); line-height: 1.6; margin: 0; }
+.role-tutorial-point {
+  background: var(--rg-lavender-bg); border: 1px solid var(--rg-lavender-200); border-radius: var(--radius-md);
+  padding: 20px 22px; min-height: 140px; display: flex; flex-direction: column; justify-content: center;
+}
+.role-tutorial-point h4 { font-size: 1.05rem; color: var(--rg-purple-deep); margin: 0 0 10px; }
+.role-tutorial-point p { font-size: 0.92rem; color: var(--rg-gray-dark); line-height: 1.65; margin: 0; }
 
 /* Quick-tour walkthrough dots. */
 .tour-dots { display: flex; gap: 6px; align-items: center; }

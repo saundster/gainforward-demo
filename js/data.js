@@ -681,24 +681,24 @@ const ALL_SKILL_EXAMPLES = [...new Set(SKILL_CATEGORIES.flatMap((c) => c.example
 const ROLE_TUTORIALS = {
   mentor: {
     title: "Before you sign up as a Mentor",
-    subtitle: "A few things worth knowing about the role before you build your profile.",
+    subtitle: "Here's what to expect, in five quick points.",
     points: [
-      { heading: "What a mentor does", body: "You share what you've learned with someone earlier in that specific skill or path than you are, on a recurring cadence you both agree on. You're not their manager and you're not responsible for their performance; you're a sounding board with relevant experience." },
-      { heading: "Time commitment", body: "Typically 30–60 minutes per conversation, on whatever cadence you choose (weekly, bi-weekly, or monthly), across a 12-week cycle. You'll set your own frequency and hours on the next screen." },
-      { heading: "What's expected of you", body: "Show up prepared, listen before you advise, and keep what's shared confidential. You're not expected to have every answer, just a willingness to think something through with someone else." },
-      { heading: "How many mentees", body: "You'll choose how many mentees you can take on (1 to 10). You can hold that many active relationships at once, and adjust the number later from your profile." },
-      { heading: "If it's not working", body: "Either side can request a no-fault rematch at any time, no explanation required. Ending a mismatched pairing quickly is expected, not a failure." },
+      { heading: "What a mentor does", body: "You share what you've learned with someone a bit earlier on the same path. Think less \"manager,\" more experienced friend: a sounding board who's been there before." },
+      { heading: "Time commitment", body: "Most conversations run 30–60 minutes, on whatever cadence works for you (weekly, bi-weekly, or monthly) over about 12 weeks. You'll pick your own frequency and hours on the next screen." },
+      { heading: "What's expected of you", body: "Show up prepared, listen before jumping to advice, and keep things confidential. You don't need every answer, just a willingness to think it through together." },
+      { heading: "How many mentees you can take on", body: "You choose, anywhere from 1 to 10, and can hold that many at once. You're free to adjust the number later from your profile." },
+      { heading: "If it's not working out", body: "Not clicking with your mentee? Either of you can request a new match at any time, no questions asked. Moving on quickly is completely normal, not a failure." },
     ],
   },
   mentee: {
     title: "Before you sign up as a Mentee",
-    subtitle: "A few things worth knowing about the role before you build your profile.",
+    subtitle: "Here's what to expect, in five quick points.",
     points: [
-      { heading: "What a mentee does", body: "You bring a specific goal (a skill to build, a decision to think through, a path to understand) and drive the relationship toward it. Your mentor guides; you own the follow-through." },
-      { heading: "Time commitment", body: "Typically 30–60 minutes per conversation, on whatever cadence you choose (weekly, bi-weekly, or monthly), across a 12-week cycle. You'll set your own frequency and hours on the next screen." },
-      { heading: "What's expected of you", body: "Come with a specific, concrete goal rather than a general request, own the scheduling, and do the work in between sessions. The conversation itself isn't the value; trying something and coming back with what happened is." },
-      { heading: "One relationship at a time", body: "You can be in one active mentoring relationship at a time as a mentee. You're welcome to also offer to mentor someone else in a different area at the same time." },
-      { heading: "If it's not working", body: "Either side can request a no-fault rematch at any time, no explanation required. Ending a mismatched pairing quickly is expected, not a failure." },
+      { heading: "What a mentee does", body: "You bring the goal, whether it's a skill to build or a decision to think through, and drive things forward. Your mentor guides; the follow-through is on you." },
+      { heading: "Time commitment", body: "Most conversations run 30–60 minutes, on whatever cadence works for you (weekly, bi-weekly, or monthly) over about 12 weeks. You'll pick your own frequency and hours on the next screen." },
+      { heading: "What's expected of you", body: "Come with something specific rather than a general ask, own the scheduling, and put what you discuss into practice between sessions. The real progress happens in between conversations, not just during them." },
+      { heading: "One relationship at a time", body: "As a mentee, you can be in one active relationship at a time. Nothing stops you from also mentoring someone else in a different area, though." },
+      { heading: "If it's not working out", body: "Not clicking with your mentor? Either of you can request a new match at any time, no questions asked. Moving on quickly is completely normal, not a failure." },
     ],
   },
 };
