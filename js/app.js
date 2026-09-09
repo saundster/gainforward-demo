@@ -279,19 +279,28 @@ function applyAccessGate() {
 /** Shown once, before a first-time user builds their profile, so they know
  * what the role involves before answering questions about it. Skipped for
  * anyone who already has a profile (they're just editing, not deciding). */
+let roleTutorialRole = null;
+let roleTutorialStepIndex = 0;
+
 function openRoleTutorial(role) {
+  roleTutorialRole = role;
+  roleTutorialStepIndex = 0;
   const data = ROLE_TUTORIALS[role];
   $("#role-tutorial-title").textContent = data.title;
   $("#role-tutorial-subtitle").textContent = data.subtitle;
-  $("#role-tutorial-body").innerHTML = data.points
-    .map((p) => `<div class="role-tutorial-point"><h4>${p.heading}</h4><p>${p.body}</p></div>`)
-    .join("");
-  $("#role-tutorial-continue").onclick = () => {
-    closeAllModals();
-    if (role === "mentor") openBecomeMentorRoleModal();
-    else openBecomeMenteeRoleModal();
-  };
+  renderRoleTutorialStep();
   openModal("modal-role-tutorial");
+}
+
+function renderRoleTutorialStep() {
+  const data = ROLE_TUTORIALS[roleTutorialRole];
+  const point = data.points[roleTutorialStepIndex];
+  $("#role-tutorial-body").innerHTML = `<div class="role-tutorial-point"><h4>${point.heading}</h4><p>${point.body}</p></div>`;
+  $("#role-tutorial-dots").innerHTML = data.points
+    .map((_, i) => `<span class="tour-dot ${i === roleTutorialStepIndex ? "is-active" : ""}"></span>`)
+    .join("");
+  $("#role-tutorial-back").classList.toggle("hidden", roleTutorialStepIndex === 0);
+  $("#role-tutorial-next").textContent = roleTutorialStepIndex === data.points.length - 1 ? "Done" : "Next";
 }
 
 function handleBecomeMentorEntry() {
@@ -1032,7 +1041,7 @@ function renderJourney() {
   const banner = $("#journey-pause-banner");
   if (paused) {
     banner.classList.remove("hidden");
-    banner.textContent = `Paused since ${formatDateShort(new Date(`${journey.pausedAt}T00:00:00`))}. Meetings are on hold, and the whole schedule will shift forward by however long you're paused once you resume.`;
+    banner.textContent = `Paused since ${formatDateShort(new Date(`${journey.pausedAt}T00:00:00`))}. Meetings are on hold until you resume.`;
   } else {
     banner.classList.add("hidden");
   }
@@ -1968,6 +1977,23 @@ function wireEvents() {
     if (walkthroughStepIndex === 0) return;
     walkthroughStepIndex--;
     renderWalkthroughStep();
+  });
+
+  $("#role-tutorial-next").addEventListener("click", () => {
+    const data = ROLE_TUTORIALS[roleTutorialRole];
+    if (roleTutorialStepIndex >= data.points.length - 1) {
+      closeAllModals();
+      if (roleTutorialRole === "mentor") openBecomeMentorRoleModal();
+      else openBecomeMenteeRoleModal();
+      return;
+    }
+    roleTutorialStepIndex++;
+    renderRoleTutorialStep();
+  });
+  $("#role-tutorial-back").addEventListener("click", () => {
+    if (roleTutorialStepIndex === 0) return;
+    roleTutorialStepIndex--;
+    renderRoleTutorialStep();
   });
 
   $("#chat-fab").addEventListener("click", () => {
