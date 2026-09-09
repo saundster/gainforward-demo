@@ -283,12 +283,6 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .roster-table select { font-family: var(--font); font-size: 0.78rem; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--rg-lavender-200); }
 .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
-.decision-gates { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
-.gate-card { border: 1px solid var(--rg-lavender-200); border-radius: var(--radius-md); padding: 12px 14px; }
-.gate-title { font-weight: 700; font-size: 0.85rem; color: var(--rg-purple-deep); }
-.gate-question { font-size: 0.78rem; color: var(--rg-gray-muted); margin: 4px 0 8px; }
-.gate-status select { width: 100%; }
-
 /* ---------- Modals ---------- */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(64, 30, 134, 0.35); z-index: 50; }
 .modal {

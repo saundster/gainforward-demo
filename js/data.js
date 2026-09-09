@@ -510,48 +510,6 @@ const PROGRAM_META = {
       { key: "peerShared", label: "Peer learning shared", target: 0.25, format: "percent" },
     ],
   },
-  decisionGates: [
-    {
-      key: "gate0",
-      label: "Gate 0: Design",
-      question: "Are hypotheses and boundaries clear?",
-      criteria: [
-        "Program goals and target cohort size are documented",
-        "The matching rubric (weights, checklist) is agreed and won't change mid-cycle",
-        "Success metrics (the KPIs tracked in Insights) are set and have an owner",
-      ],
-    },
-    {
-      key: "gate1",
-      label: "Gate 1: Ready",
-      question: "Enough participants and viable matches?",
-      criteria: [
-        "Cohort size is at or above the Adoption target",
-        "Every registered seeker has at least one viable match (\"Worth exploring\" or better)",
-        "No pairing in the queue has an unresolved conflict of interest or reporting relationship",
-      ],
-    },
-    {
-      key: "gate2",
-      label: "Gate 2: Midpoint",
-      question: "Is the experience healthy enough to continue?",
-      criteria: [
-        "Pulse-check completion rate is on track against target",
-        "Average relationship health is at or above target",
-        "No rematch request has gone unaddressed for more than a few days",
-      ],
-    },
-    {
-      key: "gate3",
-      label: "Gate 3: Close",
-      question: "Did the program create enough value to justify continued investment?",
-      criteria: [
-        "Adoption, relationship-quality, and learning-impact KPIs are met or substantially met",
-        "Participant sentiment from final reflections has been collected and reviewed",
-        "A documented recommendation exists: continue, iterate, or stop",
-      ],
-    },
-  ],
 };
 
 /* Learning Resources: content for the tabbed resources modal.

@@ -6,7 +6,6 @@ const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const STORAGE = {
   requests: "gainforward.requests",
   journeys: "gainforward.journeys",
-  gates: "gainforward.gateStatus",
   addedEmployees: "gainforward.addedEmployees",
   overrides: "gainforward.employeeOverrides",
   nudges: "gainforward.nudges",
@@ -17,7 +16,6 @@ let CURRENT_USER_ID = null;
 let employees = [];
 let requests = loadPersisted(STORAGE.requests, []);
 let journeys = loadPersisted(STORAGE.journeys, null); // null = not yet seeded this browser
-let gateStatus = loadPersisted(STORAGE.gates, {});
 let nudges = loadPersisted(STORAGE.nudges, []);
 let dataSourceInfo = { source: "seed" };
 
@@ -1484,41 +1482,9 @@ function triggerRematch(journeyId) {
   renderHome();
 }
 
-function renderDecisionGates() {
-  $("#decision-gates").innerHTML = PROGRAM_META.decisionGates
-    .map(
-      (g) => `
-    <div class="gate-card">
-      <div class="gate-title">${g.label}</div>
-      <div class="gate-question">${g.question}</div>
-      ${
-        g.criteria?.length
-          ? `<details class="score-details"><summary>What counts as passing</summary><ul class="tip-list" style="margin-top:8px">${g.criteria
-              .map((c) => `<li>${c}</li>`)
-              .join("")}</ul></details>`
-          : ""
-      }
-      <div class="gate-status">
-        <select data-gate="${g.key}">
-          ${["Not started", "In progress", "Passed", "Blocked"].map((s) => `<option ${gateStatus[g.key] === s ? "selected" : ""}>${s}</option>`).join("")}
-        </select>
-      </div>
-    </div>`
-    )
-    .join("");
-
-  $all("[data-gate]").forEach((sel) => {
-    sel.addEventListener("change", (e) => {
-      gateStatus[e.target.dataset.gate] = e.target.value;
-      savePersisted(STORAGE.gates, gateStatus);
-    });
-  });
-}
-
 function renderAdmin() {
   renderMatchingQueue();
   renderRoster();
-  renderDecisionGates();
   renderNudgeLog();
 }
 
