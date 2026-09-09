@@ -567,6 +567,111 @@ function toggleJourneyPause(journey) {
   renderActiveJourneyCard();
 }
 
+/** Admin "Needs attention" triage: surfaces what the pulse-check intro
+ * promises PD reviews ("to catch issues early") plus relationships that
+ * have gone quiet, instead of requiring someone to open every connection
+ * individually to find out if anything's wrong. */
+function pulseAverageScore(pulse) {
+  const vals = ["q1", "q2", "q3", "q4"].map((k) => Number(pulse[k])).filter((n) => !isNaN(n));
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+
+function getAttentionReasons(journey) {
+  const reasons = [];
+  if (isJourneyPaused(journey)) return reasons; // a pause is an acknowledged break, not a silent problem
+  if (journey.pulse) {
+    const avg = pulseAverageScore(journey.pulse);
+    if (avg !== null && avg <= 2.5) reasons.push(`Pulse check averaged ${avg.toFixed(1)}/5`);
+    if (journey.pulse.continuation === "no") reasons.push('Someone answered "no" to continuing');
+    else if (journey.pulse.continuation === "maybe") reasons.push('Someone answered "maybe" to continuing');
+  }
+  const lastSession = journey.sessions.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
+  const lastActivityDate = lastSession ? lastSession.date : getJourneyStartDate(journey);
+  const daysSince = daysBetween(lastActivityDate, new Date());
+  if (daysSince >= 21) reasons.push(`Nothing logged in ${daysSince} days`);
+  return reasons;
+}
+
+function renderAttentionList() {
+  const container = $("#attention-list");
+  const flagged = journeys
+    .filter((j) => j.formalStatus === "active")
+    .map((j) => ({ journey: j, reasons: getAttentionReasons(j) }))
+    .filter((f) => f.reasons.length);
+
+  if (!flagged.length) {
+    container.innerHTML = `<p class="empty-state">Nothing needs attention right now.</p>`;
+    return;
+  }
+
+  container.innerHTML = flagged
+    .map(({ journey: j, reasons }) => {
+      const from = getEmployeeById(j.participantA);
+      const to = getEmployeeById(j.participantB);
+      return `
+      <div class="match-item">
+        <div class="match-item-head">
+          <span class="match-item-pair">${from ? from.displayName : "?"} ↔ ${to ? to.displayName : "?"}</span>
+        </div>
+        <ul class="tip-list match-reasons">${reasons.map((r) => `<li>${r}</li>`).join("")}</ul>
+        <div class="match-actions">
+          <button class="btn btn-ghost btn-sm" data-action="open-nudge" data-id="${from?.id || ""}">Nudge ${from?.displayName || ""}</button>
+          <button class="btn btn-ghost btn-sm" data-action="open-nudge" data-id="${to?.id || ""}">Nudge ${to?.displayName || ""}</button>
+          <button class="btn btn-danger-outline btn-sm" data-action="rematch" data-id="${j.id}">End connection (rematch)</button>
+        </div>
+      </div>`;
+    })
+    .join("");
+}
+
+/** Admin adoption tracking: who hasn't finished a profile, so PD can chase
+ * completion instead of only seeing one aggregate percentage in Insights. */
+function getIncompleteProfiles() {
+  return employees.filter((e) => !e.profileComplete && e.id !== CURRENT_USER_ID);
+}
+
+function renderAdoptionList() {
+  const container = $("#adoption-list");
+  const incomplete = getIncompleteProfiles();
+  $("#btn-nudge-adoption").classList.toggle("hidden", incomplete.length === 0);
+
+  if (!incomplete.length) {
+    container.innerHTML = `<p class="empty-state">Everyone in the roster has set up a profile.</p>`;
+    return;
+  }
+
+  container.innerHTML = incomplete
+    .map(
+      (e) => `
+    <div class="session-item">
+      <div class="session-item-head">
+        <span>${e.fullName || e.displayName || "Unnamed"}${e.department ? ` · ${e.department}` : ""}</span>
+        <button class="btn btn-ghost btn-sm" data-action="open-nudge" data-id="${e.id}">Nudge</button>
+      </div>
+    </div>`
+    )
+    .join("");
+}
+
+/** Bulk nudge: one mailto draft, everyone BCC'd, since there's no backend
+ * to send individual emails from. Logs one nudge entry per recipient so
+ * Recent Nudges stays an accurate record of who's been reached out to. */
+function sendBulkNudge(recipients, subject, body) {
+  const withEmail = recipients.filter((e) => e?.email);
+  if (!withEmail.length) {
+    toast("No one to nudge; nobody in this list has an email on file.", "error");
+    return;
+  }
+  const bcc = withEmail.map((e) => e.email).join(",");
+  window.location.href = `mailto:?bcc=${encodeURIComponent(bcc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  withEmail.forEach((e) => {
+    nudges.unshift({ id: uid("nudge"), fromId: CURRENT_USER_ID, toId: e.id, message: body, sentAt: new Date().toISOString() });
+  });
+  savePersisted(STORAGE.nudges, nudges);
+  toast(`Email draft opened, ${withEmail.length} people BCC'd.`, "success");
+  renderNudgeLog();
+}
+
 function renderActiveJourneyCard() {
   const card = $("#active-journey-card");
   const journey = findActiveJourneyFor(CURRENT_USER_ID);
@@ -653,12 +758,21 @@ function renderGrowthProfileCard() {
 /* Directory                                                          */
 /* ---------------------------------------------------------------- */
 function populateFilterDropdowns() {
-  const depts = [...new Set(employees.map((e) => e.department))].sort();
-  const geos = [...new Set(employees.map((e) => e.geography))].sort();
-  const deptSel = $("#filter-department");
-  const geoSel = $("#filter-geo");
-  deptSel.innerHTML = `<option value="">All departments</option>` + depts.map((d) => `<option value="${d}">${d}</option>`).join("");
-  geoSel.innerHTML = `<option value="">All regions</option>` + geos.map((g) => `<option value="${g}">${g}</option>`).join("");
+  const depts = [...new Set(employees.map((e) => e.department))].filter(Boolean).sort();
+  const geos = [...new Set(employees.map((e) => e.geography))].filter(Boolean).sort();
+  const deptOptions = `<option value="">All departments</option>` + depts.map((d) => `<option value="${d}">${d}</option>`).join("");
+  const geoOptions = `<option value="">All regions</option>` + geos.map((g) => `<option value="${g}">${g}</option>`).join("");
+
+  [$("#filter-department"), $("#roster-filter-department")].forEach((sel) => {
+    const current = sel.value;
+    sel.innerHTML = deptOptions;
+    if (depts.includes(current)) sel.value = current;
+  });
+  [$("#filter-geo"), $("#roster-filter-geo")].forEach((sel) => {
+    const current = sel.value;
+    sel.innerHTML = geoOptions;
+    if (geos.includes(current)) sel.value = current;
+  });
 }
 
 function renderDirectory() {
@@ -1406,10 +1520,23 @@ function renderMatchingQueue() {
 
 function renderRoster() {
   const search = ($("#roster-search").value || "").trim().toLowerCase();
+  const dept = $("#roster-filter-department").value;
+  const geo = $("#roster-filter-geo").value;
+  const format = $("#roster-filter-format").value;
+  const status = $("#roster-filter-status").value;
   const rows = employees.filter((e) => {
+    if (dept && e.department !== dept) return false;
+    if (geo && e.geography !== geo) return false;
+    if (format && e.preferredFormat !== format) return false;
+    if (status && e.engagementStatus !== status) return false;
     if (!search) return true;
     return `${e.fullName} ${e.department}`.toLowerCase().includes(search);
   });
+
+  if (!rows.length) {
+    $("#roster-body").innerHTML = `<tr><td colspan="7" class="empty-state">No one matches these filters.</td></tr>`;
+    return;
+  }
 
   $("#roster-body").innerHTML = rows
     .map((e) => {
@@ -1483,7 +1610,9 @@ function triggerRematch(journeyId) {
 }
 
 function renderAdmin() {
+  renderAttentionList();
   renderMatchingQueue();
+  renderAdoptionList();
   renderRoster();
   renderNudgeLog();
 }
@@ -1941,6 +2070,15 @@ function wireEvents() {
         if (journey) toggleJourneyPause(journey);
         break;
       }
+      case "nudge-adoption": {
+        const incomplete = getIncompleteProfiles();
+        sendBulkNudge(
+          incomplete,
+          "Finish setting up your GainForward profile",
+          "Hi,\n\nA quick nudge to finish setting up your GainForward profile; it only takes a few minutes and it's what powers your matches.\n\nThanks,\nPeople Development"
+        );
+        break;
+      }
       case "cancel-meeting": {
         const journey = journeys.find((j) => (j.meetings || []).some((m) => m.id === el.dataset.id));
         const meeting = journey?.meetings.find((m) => m.id === el.dataset.id);
@@ -1994,6 +2132,9 @@ function wireEvents() {
   $("#filter-format").addEventListener("change", renderDirectory);
   $("#roster-search").addEventListener("input", renderRoster);
   $("#matching-queue-search").addEventListener("input", renderMatchingQueue);
+  ["#roster-filter-department", "#roster-filter-geo", "#roster-filter-format", "#roster-filter-status"].forEach((sel) =>
+    $(sel).addEventListener("change", renderRoster)
+  );
 
   $("#profile-photo-input").addEventListener("change", async (e) => {
     const file = e.target.files[0];

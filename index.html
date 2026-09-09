@@ -272,7 +272,16 @@
   <section id="tab-admin" class="tab-panel hidden">
     <div class="panel-head panel-head--page">
       <h2>Admin · PD Console</h2>
-      <p class="muted">Connections form automatically. Review them here, manage participant status, and track program go/no-go decisions.</p>
+      <div class="panel-head-actions">
+        <button class="btn btn-secondary btn-sm" data-action="export-excel">Export roster & requests (Excel)</button>
+      </div>
+    </div>
+    <p class="muted">Connections form automatically. Review them here and manage participant status.</p>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Needs attention</h2></div>
+      <p class="muted small">Relationships a low pulse check flagged, someone said "maybe" or "no" to continuing, or where nothing's been logged in three weeks or more.</p>
+      <div id="attention-list" class="matching-queue"></div>
     </div>
 
     <div class="panel">
@@ -285,8 +294,35 @@
 
     <div class="panel">
       <div class="panel-head">
+        <h2>Adoption</h2>
+        <button class="btn btn-secondary btn-sm hidden" id="btn-nudge-adoption" data-action="nudge-adoption">Nudge everyone below</button>
+      </div>
+      <p class="muted small">Employees who haven't finished setting up a profile yet.</p>
+      <div id="adoption-list" class="session-log"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
         <h2>Roster</h2>
         <input id="roster-search" type="search" placeholder="Search roster…" class="roster-search" />
+      </div>
+      <div class="filter-bar">
+        <select id="roster-filter-department"><option value="">All departments</option></select>
+        <select id="roster-filter-geo"><option value="">All regions</option></select>
+        <select id="roster-filter-format">
+          <option value="">Any format</option>
+          <option value="mentor">Mentor</option>
+          <option value="mentee">Mentee</option>
+          <option value="peer">Peer</option>
+          <option value="reverse">Reverse mentoring</option>
+        </select>
+        <select id="roster-filter-status">
+          <option value="">Any status</option>
+          <option value="available">Open to connect</option>
+          <option value="active">Currently in a journey</option>
+          <option value="paused">Paused</option>
+          <option value="closed">Not accepting requests</option>
+        </select>
       </div>
       <div class="table-scroll">
         <table class="roster-table">

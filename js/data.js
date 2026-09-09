@@ -33,6 +33,7 @@ const SEED_EMPLOYEES = [
     rating: 4.9,
     menteeCount: 6,
     consentAck: true,
+    profileComplete: true,
   },
   {
     id: "e-meyer",
@@ -62,6 +63,7 @@ const SEED_EMPLOYEES = [
     rating: 5.0,
     menteeCount: 9,
     consentAck: true,
+    profileComplete: true,
   },
   {
     id: "e-alonso",
@@ -91,6 +93,7 @@ const SEED_EMPLOYEES = [
     rating: 4.8,
     menteeCount: 4,
     consentAck: true,
+    profileComplete: true,
   },
   {
     id: "e-osei",
@@ -120,6 +123,7 @@ const SEED_EMPLOYEES = [
     rating: 4.9,
     menteeCount: 7,
     consentAck: true,
+    profileComplete: true,
   },
   {
     id: "e-nair",
@@ -148,6 +152,7 @@ const SEED_EMPLOYEES = [
     rating: null,
     menteeCount: 0,
     consentAck: true,
+    profileComplete: true,
   },
   {
     id: "e-fischer",
@@ -176,6 +181,7 @@ const SEED_EMPLOYEES = [
     rating: null,
     menteeCount: 0,
     consentAck: true,
+    profileComplete: true,
   },
   {
     id: "e-rossi",
@@ -204,6 +210,7 @@ const SEED_EMPLOYEES = [
     rating: null,
     menteeCount: 0,
     consentAck: true,
+    profileComplete: true,
   },
   {
     id: "e-castillo",
@@ -232,6 +239,7 @@ const SEED_EMPLOYEES = [
     rating: null,
     menteeCount: 0,
     consentAck: true,
+    profileComplete: true,
   },
   {
     id: "e-thompson",
@@ -261,7 +269,8 @@ const SEED_EMPLOYEES = [
     rating: 4.7,
     menteeCount: 3,
     consentAck: true,
-    isPDAdmin: true,
+    profileComplete: true,
+    isAdmin: true,
   },
   {
     id: "e-singh",
@@ -290,6 +299,7 @@ const SEED_EMPLOYEES = [
     rating: null,
     menteeCount: 0,
     consentAck: true,
+    profileComplete: true,
   },
   {
     id: "e-oyelaran",
@@ -318,6 +328,7 @@ const SEED_EMPLOYEES = [
     rating: null,
     menteeCount: 0,
     consentAck: true,
+    profileComplete: true,
   },
   {
     id: "e-park",
@@ -346,6 +357,7 @@ const SEED_EMPLOYEES = [
     rating: null,
     menteeCount: 0,
     consentAck: true,
+    profileComplete: true,
   },
   {
     id: "e-diallo",
@@ -374,6 +386,7 @@ const SEED_EMPLOYEES = [
     rating: null,
     menteeCount: 0,
     consentAck: true,
+    profileComplete: true,
   },
 ];
 
