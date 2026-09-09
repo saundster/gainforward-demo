@@ -1,4 +1,4 @@
-/* GainForward — pluggable employee-data source.
+/* Click: pluggable employee-data source.
    The prototype ships with the mock roster in js/data.js. Once you have an
    API key for pulling real employee details, configure it from the header's
    "Data source" button — no code changes needed for a standard REST/JSON

@@ -1,4 +1,4 @@
-/* GainForward: mock employee/participant dataset.
+/* Click: mock employee/participant dataset.
    Schema follows the SOP "Participant Profile" (Section 16) plus the roadmap
    extension fields called out for the AI-powered dashboard (division, tenure,
    geography, engagement status). Swap this seed for live data once the AI
@@ -257,7 +257,7 @@ const SEED_EMPLOYEES = [
     offeredSkills: ["Program design", "Facilitation", "Coaching"],
     mentorSkillCategory: "Leadership Skills",
     menteeCapacity: 5,
-    experience: "Owns the GainForward program design and SOP",
+    experience: "Owns the Click program design and SOP",
     goalStatement: "",
     purpose: "PD lead: facilitates the ecosystem, matching and pulse checks",
     interests: ["AI Maturity Pathway"],
@@ -403,7 +403,7 @@ const DEMO_ACCOUNTS = [
     id: "demo-mentor-1",
     scenario: "An experienced mentor with mentees already: good for exploring the Directory from the other side, and the Admin console's active connections.",
     employee: {
-      fullName: "Priya Nair", displayName: "P. Nair", avatarInitials: "PN", email: "priya.nair@demo.gainforward.app",
+      fullName: "Priya Nair", displayName: "P. Nair", avatarInitials: "PN", email: "priya.nair@demo.click.app",
       department: "Customer Experience", division: "CX", careerLevel: "L4: Principal", tenureBand: "5+ yrs", geography: "EMEA",
       learningGoals: [], offeredSkills: ["Client escalation handling", "Coaching new CSMs"], mentorSkillCategory: "Behavioural Skills", menteeCapacity: 4,
       experience: "8 years leading enterprise CX for EMEA hotel groups",
@@ -419,7 +419,7 @@ const DEMO_ACCOUNTS = [
     id: "demo-mentee-1",
     scenario: "A fresh mentee with no journey yet: good for exploring Directory search and instantly connecting from scratch.",
     employee: {
-      fullName: "Sam Ortiz", displayName: "S. Ortiz", avatarInitials: "SO", email: "sam.ortiz@demo.gainforward.app",
+      fullName: "Sam Ortiz", displayName: "S. Ortiz", avatarInitials: "SO", email: "sam.ortiz@demo.click.app",
       department: "Sales", division: "Commercial", careerLevel: "L2: Associate", tenureBand: "0-2 yrs", geography: "NA",
       learningGoals: ["Negotiation tactics", "Deal storytelling"], learningSkillCategory: "Behavioural Skills", offeredSkills: [],
       experience: "1.5 years in enterprise sales",
@@ -435,7 +435,7 @@ const DEMO_ACCOUNTS = [
     id: "demo-mentee-2",
     scenario: "A mentee already partway through an active journey: good for exploring My Journey, calendar scheduling, nudges, and Insights with real data already in place.",
     employee: {
-      fullName: "Jordan Blake", displayName: "J. Blake", avatarInitials: "JB", email: "jordan.blake@demo.gainforward.app",
+      fullName: "Jordan Blake", displayName: "J. Blake", avatarInitials: "JB", email: "jordan.blake@demo.click.app",
       department: "MarTech", division: "MarTech", careerLevel: "L3: Senior", tenureBand: "3-5 yrs", geography: "APAC",
       learningGoals: ["Executive communication", "Revenue forecasting"], learningSkillCategory: "Leadership Skills", offeredSkills: ["Campaign analytics"], mentorSkillCategory: "Technical Skills",
       experience: "Marketing automation, lifecycle campaigns",
@@ -451,11 +451,11 @@ const DEMO_ACCOUNTS = [
     id: "demo-admin-1",
     scenario: "The PD/program-admin persona. Good for exploring the Admin console: active connections, roster, decision gates.",
     employee: {
-      fullName: "Morgan Lee", displayName: "M. Lee", avatarInitials: "ML", email: "morgan.lee@demo.gainforward.app",
+      fullName: "Morgan Lee", displayName: "M. Lee", avatarInitials: "ML", email: "morgan.lee@demo.click.app",
       isAdmin: true,
       department: "People Development", division: "People & Culture", careerLevel: "L4: Principal", tenureBand: "5+ yrs", geography: "NA",
       learningGoals: [], offeredSkills: ["Program facilitation", "Coaching"], mentorSkillCategory: "Leadership Skills", menteeCapacity: 3,
-      experience: "Runs the GainForward program end to end",
+      experience: "Runs the Click program end to end",
       goalStatement: "", purpose: "I own the program design and review how connections are going.", skillLevel: "",
       interests: [], preferredFormat: "mentor", aiConfidence: "Practitioner",
       availability: { frequency: "Bi-weekly", hours: 1, timezone: "ET (UTC-5)", windows: "Mon/Wed afternoons" },
@@ -552,7 +552,7 @@ const RESOURCE_LIBRARY = {
     },
     {
       q: "Does this affect my performance review?",
-      a: "No. GainForward is explicitly not a performance-management tool. Conversations here are confidential and separate from any formal review process, and won't be used to make career or promotion decisions.",
+      a: "No. Click is explicitly not a performance-management tool. Conversations here are confidential and separate from any formal review process, and won't be used to make career or promotion decisions.",
     },
     {
       q: "What if I don't have much time?",

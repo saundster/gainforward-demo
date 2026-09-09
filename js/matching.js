@@ -1,4 +1,4 @@
-/* GainForward — matching engine.
+/* Click: matching engine.
    Implements the weighted scoring rubric from SOP Section 17 (Matching
    Architecture) so the Directory and Admin > Matching Queue views can show
    a real, explainable score instead of a random number. */

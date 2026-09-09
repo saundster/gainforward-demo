@@ -1,4 +1,4 @@
-/* GainForward: app logic (tabs, forms, matching, journeys, insights, admin). */
+/* Click: app logic (tabs, forms, matching, journeys, insights, admin). */
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -214,7 +214,7 @@ function openProfileModal({ onboarding }) {
 
   // Sign-up builds the full profile in one go; this is the only place all of
   // this is asked, so there's nothing left to fill in piecemeal later.
-  $("#profile-modal-title").textContent = onboarding ? "Welcome to GainForward, let's build your profile" : "Your profile";
+  $("#profile-modal-title").textContent = onboarding ? "Welcome to Click, let's build your profile" : "Your profile";
   $("#profile-modal-intro").textContent = onboarding
     ? "This is what powers your matches (about 5–7 minutes)."
     : "Update what you're learning, offering, and how you'd like to participate.";
@@ -1149,7 +1149,7 @@ function renderUpcomingMeetings(journey) {
       return `
       <div class="session-item">
         <div class="session-item-head"><span>${stage ? stage.label : m.stage} conversation (cancelled)</span><span class="muted small">${meetingTimeLabel(m.startISO)}</span></div>
-        <div class="session-item-notes">Removed from GainForward. Download the cancellation file to also remove it from your calendar.</div>
+        <div class="session-item-notes">Removed from Click. Download the cancellation file to also remove it from your calendar.</div>
         <div class="match-actions" style="margin-top:8px">
           <button class="btn btn-ghost btn-sm" data-action="download-cancel-ics" data-id="${m.id}">Download cancellation (.ics)</button>
         </div>
@@ -1176,14 +1176,14 @@ function cancelMeeting(journey, meeting, reasonText) {
     sequence: meeting.sequence,
     method: "CANCEL",
     status: "CANCELLED",
-    title: `GainForward: ${stage ? stage.label : meeting.stage} conversation`,
+    title: `Click: ${stage ? stage.label : meeting.stage} conversation`,
     description: reasonText || "This conversation was cancelled.",
     start: new Date(meeting.startISO),
     durationMins: meeting.durationMins,
     organizer: organizer ? { name: organizer.fullName, email: organizer.email } : null,
     attendees,
   });
-  meeting.cancelFilename = `gainforward-${meeting.stage}-conversation-cancelled.ics`;
+  meeting.cancelFilename = `click-${meeting.stage}-conversation-cancelled.ics`;
   return meeting;
 }
 
@@ -1232,11 +1232,11 @@ function openNudgeModal({ toId }) {
     subject = `Reminder: your ${stage ? stage.label : upcoming.stage} conversation`;
     body = `Hi ${firstName},\n\nJust a quick reminder about our ${stage ? stage.label.toLowerCase() : upcoming.stage} conversation, ${meetingTimeLabel(upcoming.startISO)}. Let me know if the time still works.\n\n${me.fullName}`;
   } else if (journey) {
-    subject = "Checking in on GainForward";
+    subject = "Checking in on Click";
     body = `Hi ${firstName},\n\nJust checking in on our mentoring journey, would you like to schedule our next conversation?\n\n${me.fullName}`;
   } else {
-    subject = "GainForward: following up";
-    body = `Hi ${firstName},\n\nFollowing up on GainForward. Let us know if there's anything you need to get started.\n\n${me.fullName}`;
+    subject = "Click: following up";
+    body = `Hi ${firstName},\n\nFollowing up on Click. Let us know if there's anything you need to get started.\n\n${me.fullName}`;
   }
 
   pendingNudge = { toId: recipientId, subject };
@@ -1701,7 +1701,7 @@ function renderResourcePanel() {
 }
 
 /* ---------------------------------------------------------------- */
-/* Ask GainForward: rule-based assistant                              */
+/* Ask Click: rule-based assistant                                    */
 /* Answers strictly from content already in RESOURCE_LIBRARY /        */
 /* SKILL_CATEGORIES — no external calls, so there's no API key to     */
 /* protect. Matching is plain keyword overlap, not real NLP.          */
@@ -2074,8 +2074,8 @@ function wireEvents() {
         const incomplete = getIncompleteProfiles();
         sendBulkNudge(
           incomplete,
-          "Finish setting up your GainForward profile",
-          "Hi,\n\nA quick nudge to finish setting up your GainForward profile; it only takes a few minutes and it's what powers your matches.\n\nThanks,\nPeople Development"
+          "Finish setting up your Click profile",
+          "Hi,\n\nA quick nudge to finish setting up your Click profile; it only takes a few minutes and it's what powers your matches.\n\nThanks,\nPeople Development"
         );
         break;
       }
@@ -2326,8 +2326,8 @@ function wireEvents() {
 
     const meetingId = uid("meet");
     const calUid = `${meetingId}@gainforward.rategain.com`;
-    const title = `GainForward: ${stage ? stage.label : stageKey} conversation`;
-    const description = `${stage ? stage.detail : ""}\n\nScheduled from GainForward: ${journey.relationshipType}.`;
+    const title = `Click: ${stage ? stage.label : stageKey} conversation`;
+    const description = `${stage ? stage.detail : ""}\n\nScheduled from Click: ${journey.relationshipType}.`;
     const attendees = [
       { name: me.fullName, email: me.email },
       { name: partner?.fullName, email: partner?.email },
@@ -2354,7 +2354,7 @@ function wireEvents() {
 
     pendingInvite = {
       icsText,
-      filename: `gainforward-${stageKey}-conversation.ics`,
+      filename: `click-${stageKey}-conversation.ics`,
       googleUrl: googleCalendarLink({ title, description, location: "", start, durationMins }),
       outlookUrl: outlookWebLink({ title, description, location: "", start, durationMins, attendees }),
     };

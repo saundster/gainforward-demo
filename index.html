@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GainForward · RateGain</title>
+<title>Click · RateGain</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -18,19 +18,22 @@
   <div class="login-card">
     <svg width="40" height="40" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
-        <linearGradient id="ms-grad-login" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+        <linearGradient id="ck-grad-login" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
           <stop offset="0" stop-color="#8E6EFA"/>
           <stop offset="1" stop-color="#401E86"/>
         </linearGradient>
       </defs>
-      <circle cx="32" cy="32" r="32" fill="url(#ms-grad-login)"/>
-      <g transform="rotate(-28 32 32)">
-        <ellipse cx="32" cy="32" rx="19" ry="9.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.6"/>
-        <circle cx="51" cy="32" r="4.4" fill="#FFFFFF"/>
+      <circle cx="32" cy="32" r="32" fill="url(#ck-grad-login)"/>
+      <circle cx="32" cy="32" r="13" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.6"/>
+      <g stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.6" stroke-linecap="round">
+        <line x1="44.02" y1="44.02" x2="48.26" y2="48.26"/>
+        <line x1="19.98" y1="44.02" x2="15.74" y2="48.26"/>
+        <line x1="19.98" y1="19.98" x2="15.74" y2="15.74"/>
+        <line x1="44.02" y1="19.98" x2="48.26" y2="15.74"/>
       </g>
       <circle cx="32" cy="32" r="7" fill="#FFFFFF"/>
     </svg>
-    <h1>GainForward</h1>
+    <h1>Click</h1>
     <p class="login-sub">Sign in with the demo credentials you were given.</p>
     <p class="login-note hidden" id="login-timeout-note">You were signed out after an hour of inactivity.</p>
     <form id="form-login" class="form-stack">
@@ -47,20 +50,23 @@
   <div class="brand">
     <svg width="28" height="28" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
-        <linearGradient id="ms-grad-header" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+        <linearGradient id="ck-grad-header" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
           <stop offset="0" stop-color="#8E6EFA"/>
           <stop offset="1" stop-color="#401E86"/>
         </linearGradient>
       </defs>
-      <circle cx="32" cy="32" r="32" fill="url(#ms-grad-header)"/>
-      <g transform="rotate(-28 32 32)">
-        <ellipse cx="32" cy="32" rx="19" ry="9.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.6"/>
-        <circle cx="51" cy="32" r="4.4" fill="#FFFFFF"/>
+      <circle cx="32" cy="32" r="32" fill="url(#ck-grad-header)"/>
+      <circle cx="32" cy="32" r="13" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.6"/>
+      <g stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.6" stroke-linecap="round">
+        <line x1="44.02" y1="44.02" x2="48.26" y2="48.26"/>
+        <line x1="19.98" y1="44.02" x2="15.74" y2="48.26"/>
+        <line x1="19.98" y1="19.98" x2="15.74" y2="15.74"/>
+        <line x1="44.02" y1="19.98" x2="48.26" y2="15.74"/>
       </g>
       <circle cx="32" cy="32" r="7" fill="#FFFFFF"/>
     </svg>
     <div class="brand-text">
-      <span class="brand-name">GainForward</span>
+      <span class="brand-name">Click</span>
       <span class="brand-sub">by RateGain</span>
     </div>
   </div>
@@ -100,6 +106,40 @@
   <!-- ===================== HOME ===================== -->
   <section id="tab-home" class="tab-panel">
     <div class="hero">
+      <div class="hero-bg" aria-hidden="true">
+        <svg viewBox="0 0 1200 420" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="heroBlob1" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#8E6EFA" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#8E6EFA" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="heroBlob2" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#401E86" stop-opacity="0.28"/>
+              <stop offset="100%" stop-color="#401E86" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="heroNode" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#8E6EFA"/>
+              <stop offset="1" stop-color="#401E86"/>
+            </linearGradient>
+            <filter id="heroBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="45"/>
+            </filter>
+          </defs>
+          <circle cx="140" cy="70" r="170" fill="url(#heroBlob1)" filter="url(#heroBlur)"/>
+          <circle cx="1080" cy="360" r="220" fill="url(#heroBlob2)" filter="url(#heroBlur)"/>
+          <circle cx="640" cy="380" r="130" fill="url(#heroBlob1)" filter="url(#heroBlur)" opacity="0.6"/>
+          <path d="M380,220 Q600,120 820,220" fill="none" stroke="url(#heroNode)" stroke-opacity="0.28" stroke-width="3"/>
+          <circle cx="380" cy="220" r="44" fill="url(#heroNode)" fill-opacity="0.16" stroke="url(#heroNode)" stroke-opacity="0.32" stroke-width="2.6"/>
+          <circle cx="820" cy="220" r="44" fill="url(#heroNode)" fill-opacity="0.16" stroke="url(#heroNode)" stroke-opacity="0.32" stroke-width="2.6"/>
+          <g stroke="url(#heroNode)" stroke-opacity="0.4" stroke-width="2.6" stroke-linecap="round">
+            <circle cx="600" cy="150" r="12" fill="none"/>
+            <line x1="617" y1="167" x2="623" y2="173"/>
+            <line x1="583" y1="167" x2="577" y2="173"/>
+            <line x1="583" y1="133" x2="577" y2="127"/>
+            <line x1="617" y1="133" x2="623" y2="127"/>
+          </g>
+        </svg>
+      </div>
       <h1 id="home-greeting">What would you like to do?</h1>
       <p class="hero-sub">Everyone has something to learn. Everyone has something to contribute.</p>
       <p class="muted small hidden" id="home-locked-hint">Pick one to get started. Everything else unlocks once your profile is set up.</p>
@@ -828,7 +868,7 @@
     <label>Would you continue this partnership informally?
       <select name="wouldContinue"><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select>
     </label>
-    <label>Would you recommend GainForward to a colleague?
+    <label>Would you recommend Click to a colleague?
       <select name="wouldRecommend"><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select>
     </label>
     <label>What would you change before this scales?<textarea name="whatToChange" rows="2"></textarea></label>
@@ -853,7 +893,7 @@
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
   <p class="muted small modal-body-lead">
-    Point GainForward at your own employee-data API. Until this is configured, the directory runs on the demo roster below.
+    Point Click at your own employee-data API. Until this is configured, the directory runs on the demo roster below.
   </p>
   <form id="form-settings" class="modal-body">
     <label>Provider
@@ -879,10 +919,10 @@
 <!-- Print-only report layout, used by the PDF export (browser "Save as PDF"). -->
 <div id="print-report" class="print-report"></div>
 
-<!-- Ask GainForward: a rule-based assistant that answers only from the
+<!-- Ask Click: a rule-based assistant that answers only from the
      Learning Resources content already in this app (FAQs, tips, Skills
      Directory) — no external API calls, so there's no key to secure. -->
-<button id="chat-fab" class="chat-fab hidden" aria-label="Ask GainForward" title="Ask GainForward">
+<button id="chat-fab" class="chat-fab hidden" aria-label="Ask Click" title="Ask Click">
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="M4 5.5C4 4.67 4.67 4 5.5 4h13c.83 0 1.5.67 1.5 1.5v10c0 .83-.67 1.5-1.5 1.5H9l-4 3.5v-3.5H5.5C4.67 16.5 4 15.83 4 15v-9.5Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/>
     <circle cx="9" cy="10" r="1" fill="white"/>
@@ -891,13 +931,13 @@
   </svg>
 </button>
 
-<div id="chat-panel" class="chat-panel hidden" role="dialog" aria-label="Ask GainForward">
+<div id="chat-panel" class="chat-panel hidden" role="dialog" aria-label="Ask Click">
   <div class="chat-panel-head">
-    <span>Ask GainForward</span>
+    <span>Ask Click</span>
     <button type="button" id="chat-close" aria-label="Close">✕</button>
   </div>
   <div id="chat-log" class="chat-log">
-    <div class="chat-msg chat-msg--bot">Hi! Ask me about the program, mentoring, or how to use GainForward — try one of these, or type your own question.</div>
+    <div class="chat-msg chat-msg--bot">Hi! Ask me about the program, mentoring, or how to use Click. Try one of these, or type your own question.</div>
   </div>
   <div id="chat-suggestions" class="chat-suggestions"></div>
   <form id="chat-form" class="chat-form">

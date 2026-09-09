@@ -1,4 +1,4 @@
-/* GainForward — stakeholder reports.
+/* Click: stakeholder reports.
    Everything here runs client-side, in the browser that clicks the button —
    there's no server rendering the file. Excel export uses SheetJS, PNG
    export uses html2canvas (both loaded via CDN in index.html), and PDF
@@ -81,7 +81,7 @@ function exportExcelReport() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildCohortRows((e) => e.geography)), "Cohort by region");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildRosterRows()), "Roster");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildRequestRows()), "Requests");
-    XLSX.writeFile(wb, `GainForward-Report-${reportDateStamp()}.xlsx`);
+    XLSX.writeFile(wb, `Click-Report-${reportDateStamp()}.xlsx`);
     statusEl.textContent = "";
     toast("Excel report downloaded.", "success");
   } catch (err) {
@@ -101,7 +101,7 @@ function buildPrintReportHTML() {
     </table>`;
 
   return `
-    <h1>GainForward: Program Report</h1>
+    <h1>Click: Program Report</h1>
     <p class="print-meta">Generated ${new Date().toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" })}</p>
     <h2>Program scorecard</h2>
     ${table(["Category", "Metric", "Value", "Target"], kpiRows)}
@@ -109,7 +109,7 @@ function buildPrintReportHTML() {
     ${table(["Group", "Participants"], deptRows)}
     <h2>Cohort by region</h2>
     ${table(["Group", "Participants"], geoRows)}
-    <p class="print-footer">GainForward · RateGain Mentorship &amp; Peer Learning Ecosystem</p>`;
+    <p class="print-footer">Click · RateGain Mentorship &amp; Peer Learning Ecosystem</p>`;
 }
 
 function exportPDFReport() {
@@ -133,7 +133,7 @@ function exportPNGReport() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `GainForward-Insights-${reportDateStamp()}.png`;
+        a.download = `Click-Insights-${reportDateStamp()}.png`;
         document.body.appendChild(a);
         a.click();
         a.remove();
