@@ -155,34 +155,8 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .hero-sub { animation: heroFadeUp 0.6s ease both; animation-delay: 0.08s; }
 .hero-actions { animation: heroFadeUp 0.6s ease both; animation-delay: 0.16s; }
 
-/* Glowing ring centerpiece: a bigger, more vivid echo of the logo's ring
-   mark, built from a conic gradient masked into a ring band. Positioned
-   low in the hero so its bright band sits mostly behind the (opaque)
-   CTA cards, with just the soft outer glow bleeding upward, rather than
-   crossing the text the way the earlier line-art version did. */
-.hero-ring {
-  position: absolute; width: 380px; height: 380px; left: 50%; top: 86%; transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, #401E86, #8012FF, #C13FD6, #FF6F91, #FFB37A, #8012FF, #401E86);
-  -webkit-mask: radial-gradient(circle, transparent 52%, black 58%, black 74%, transparent 80%);
-  mask: radial-gradient(circle, transparent 52%, black 58%, black 74%, transparent 80%);
-  filter: blur(22px);
-  opacity: 0.55;
-  animation: heroRingSpin 26s linear infinite;
-}
-.hero-ring-glow {
-  position: absolute; width: 460px; height: 460px; left: 50%; top: 86%; transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(128,18,255,0.32) 0%, rgba(193,63,214,0.18) 45%, transparent 72%);
-  filter: blur(30px);
-}
-@keyframes heroRingSpin {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .hero-blob, .hero h1, .hero-sub, .hero-actions, .hero-ring { animation: none !important; }
+  .hero-blob, .hero h1, .hero-sub, .hero-actions { animation: none !important; }
 }
 
 .cta-card {
