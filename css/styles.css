@@ -132,6 +132,30 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .hero-sub { color: var(--rg-gray-muted); margin-bottom: 26px; font-size: 1rem; }
 .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 
+/* Ambient hero motion: blobs slowly drift/breathe, content gently fades
+   up on load. Purely decorative, so it backs off for anyone who's asked
+   the OS for reduced motion. */
+.hero-blob { transform-box: fill-box; transform-origin: center; }
+@keyframes heroBlobDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(18px, -14px) scale(1.08); }
+}
+.hero-blob--a { animation: heroBlobDrift 15s ease-in-out infinite; }
+.hero-blob--b { animation: heroBlobDrift 19s ease-in-out infinite; animation-delay: -6s; }
+.hero-blob--c { animation: heroBlobDrift 17s ease-in-out infinite; animation-delay: -3s; }
+
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero h1 { animation: heroFadeUp 0.6s ease both; }
+.hero-sub { animation: heroFadeUp 0.6s ease both; animation-delay: 0.08s; }
+.hero-actions { animation: heroFadeUp 0.6s ease both; animation-delay: 0.16s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-blob, .hero h1, .hero-sub, .hero-actions { animation: none !important; }
+}
+
 .cta-card {
   width: 220px; text-align: left; background: white; border: 1px solid var(--rg-lavender-200);
   border-radius: var(--radius-lg); padding: 20px; cursor: pointer; font-family: var(--font);
