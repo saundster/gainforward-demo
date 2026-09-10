@@ -1,6 +1,6 @@
-# GainForward — RateGain Mentorship Dashboard (prototype)
+# Waypoint — RateGain Mentorship Dashboard (prototype)
 
-A working HTML/CSS/JS prototype of the "GainForward" mentorship & peer-learning
+A working HTML/CSS/JS prototype of the "Waypoint" mentorship & peer-learning
 dashboard described in the RateGain Mentorship & Peer Learning Ecosystem deck
 and SOP. No build step, no dependencies — open `index.html` or serve the folder.
 
@@ -101,28 +101,6 @@ scheduling/reminder UX can be solved today (this app does it), but silent,
 bidirectional sync needs the OAuth + backend piece above regardless of what
 frontend sits in front of it.
 
-## Plugging in real employee data
-
-Click **Data source** in the header. Point it at any REST endpoint that
-returns:
-
-```json
-{ "employees": [ { "id": "...", "fullName": "...", "displayName": "...",
-  "department": "...", "geography": "...", "learningGoals": ["..."],
-  "offeredSkills": ["..."], "preferredFormat": "mentor|mentee|peer|reverse",
-  "engagementStatus": "available|active|paused|closed", "rating": 4.8,
-  "menteeCount": 3 } ] }
-```
-
-Field names match `js/data.js` — the rest of the app needs no changes if your
-API returns them as-is. The key is stored in `localStorage` and sent as
-`Authorization: Bearer <key>` (see `js/api.js`).
-
-**Before deploying this beyond a local prototype:** don't ship a real API key
-in client-side code. Put a small backend/proxy in front of your employee-data
-API so the key never reaches the browser, and point `endpoint` at that proxy
-instead.
-
 ## Files
 
 - `index.html` — markup for all 5 tabs + 9 modals
@@ -132,11 +110,10 @@ instead.
 - `js/data.js` — mock roster + program constants (stages, KPI targets,
   match weights, decision gates, resources) sourced from the deck/SOP
 - `js/matching.js` — the weighted match-scoring engine
-- `js/api.js` — pluggable AI/HRIS data-source adapter
 - `js/calendar.js` — `.ics` generation, Google/Outlook quick-add links,
   cancellation builder, and the nudge `mailto:` composer
 - `js/app.js` — all UI logic, state, and persistence
-- `assets/logo.svg` — the GainForward mark (also used as the favicon)
+- `assets/logo.svg` — the Waypoint mark (also used as the favicon)
 - `docs/GainForward Participant Questionnaire.md` — the profile-setup
   questionnaire mentors and mentees complete; the onboarding form and "My
   profile" screen are built directly from these fields

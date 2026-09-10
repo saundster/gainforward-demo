@@ -1,4 +1,4 @@
-/* Click: RateGain "Pop Purple" brand kit
+/* Waypoint: RateGain "Pop Purple" brand kit
    Palette + type extracted from the RateGain Mentorship & Peer Learning
    Ecosystem deck (theme: "Pop Purple", font: Manrope). No separate brand-kit
    file existed on disk, so these are the values actually used in the deck. */
@@ -100,10 +100,6 @@ h1, h2, h3 { color: var(--rg-purple-deep); margin: 0; }
 .tab-btn.is-active { background: var(--rg-lavender-100); color: var(--rg-purple-deep); }
 
 .topbar-actions { display: flex; align-items: center; gap: 14px; position: relative; }
-.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
-.status-dot--seed { background: #C9A6FF; }
-.status-dot--ai { background: var(--rg-success); }
-.status-dot--error { background: var(--rg-danger); }
 
 .avatar-menu { position: relative; }
 .avatar {
@@ -367,7 +363,6 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
 .calendar-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
 .form-stack { display: flex; flex-direction: column; gap: 14px; }
-.security-note { background: #FDF3E4; color: #8A6414; font-size: 0.76rem; padding: 10px 12px; border-radius: var(--radius-sm); margin: 0; }
 .pause-banner { background: #FDF3E4; color: #8A6414; font-size: 0.82rem; padding: 10px 12px; border-radius: var(--radius-sm); margin: -8px 0 18px; }
 .journey-note { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.82rem; line-height: 1.5; padding: 12px 14px; border-radius: var(--radius-sm); margin: -8px 0 18px; }
 .journey-note strong { color: var(--rg-purple-deep); }
@@ -391,10 +386,6 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
   .print-table th, .print-table td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
   .print-table th { background: #F4EEFF; color: #401E86; }
 }
-.settings-test-result { font-size: 0.8rem; padding: 4px 0; min-height: 1.2em; }
-.settings-test-result.ok { color: var(--rg-success); }
-.settings-test-result.error { color: var(--rg-danger); }
-
 .accordion-item { border: 1px solid var(--rg-lavender-200); border-radius: var(--radius-md); overflow: hidden; }
 .accordion-trigger {
   width: 100%; background: var(--rg-lavender-bg); border: none; text-align: left; padding: 12px 14px;
@@ -527,7 +518,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .tour-step-title { font-weight: 700; color: var(--rg-purple-deep); font-size: 1.05rem; margin: 0 0 6px; }
 .tour-step-body { font-size: 0.9rem; color: var(--rg-gray-dark); line-height: 1.6; margin: 0; }
 
-/* Ask Click: floating rule-based assistant. */
+/* Ask Waypoint: floating rule-based assistant. */
 .chat-fab {
   position: fixed; bottom: 24px; right: 24px; z-index: 55;
   width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer;

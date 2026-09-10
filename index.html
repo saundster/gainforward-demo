@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Click · RateGain</title>
+<title>Waypoint</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -33,7 +33,7 @@
       </g>
       <circle cx="32" cy="32" r="7" fill="#FFFFFF"/>
     </svg>
-    <h1>Click</h1>
+    <h1>Waypoint</h1>
     <p class="login-sub">Sign in with the demo credentials you were given.</p>
     <p class="login-note hidden" id="login-timeout-note">You were signed out after an hour of inactivity.</p>
     <form id="form-login" class="form-stack">
@@ -67,7 +67,7 @@
       <circle cx="32" cy="32" r="7" fill="#FFFFFF"/>
     </svg>
     <div class="brand-text">
-      <span class="brand-name">Click</span>
+      <span class="brand-name">Waypoint</span>
     </div>
   </div>
 
@@ -92,9 +92,6 @@
           </div>
         </div>
         <button class="dropdown-item" data-action="view-profile">My profile</button>
-        <button class="dropdown-item admin-only-control" data-action="open-settings" title="Configure AI employee-data source">
-          <span id="data-source-dot" class="status-dot status-dot--seed"></span> Data source settings
-        </button>
         <button class="dropdown-item dropdown-item--muted" data-action="reset-demo-data">Reset demo data</button>
         <button class="dropdown-item dropdown-item--muted" data-action="sign-out">Sign out (demo)</button>
       </div>
@@ -964,7 +961,7 @@
     <label>Would you continue this partnership informally?
       <select name="wouldContinue"><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select>
     </label>
-    <label>Would you recommend Click to a colleague?
+    <label>Would you recommend Waypoint to a colleague?
       <select name="wouldRecommend"><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select>
     </label>
     <label>What would you change before this scales?<textarea name="whatToChange" rows="2"></textarea></label>
@@ -983,42 +980,13 @@
   </form>
 </div>
 
-<div id="modal-settings" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-head">
-    <h2>Employee data source</h2>
-    <button class="modal-close" data-action="close-modal">✕</button>
-  </div>
-  <p class="muted small modal-body-lead">
-    Connect Click to your employee-data API. Until this is configured, the directory uses the demo roster below.
-  </p>
-  <form id="form-settings" class="modal-body">
-    <label>Provider
-      <select name="provider">
-        <option value="custom">Custom REST / internal HRIS API</option>
-        <option value="anthropic">Anthropic-backed service</option>
-        <option value="other">Other</option>
-      </select>
-    </label>
-    <label>Endpoint URL<input type="url" name="endpoint" placeholder="https://your-service.example.com/api/employees" /></label>
-    <label>API key<input type="password" name="apiKey" placeholder="Paste key (stored only in this browser)" autocomplete="off" /></label>
-    <label class="checkbox-row"><input type="checkbox" name="enabled" /> Use this source instead of the demo roster</label>
-    <p class="security-note">⚠️ Prototype only: the key is stored in this browser's local storage so the demo can call your endpoint directly. Before deploying beyond a prototype, proxy this call through a backend so the key never reaches the browser.</p>
-    <div id="settings-test-result" class="settings-test-result"></div>
-    <div class="modal-actions">
-      <button type="button" class="btn btn-ghost" data-action="clear-settings">Clear</button>
-      <button type="button" id="btn-test-connection" class="btn btn-secondary">Test connection</button>
-      <button type="submit" class="btn btn-primary">Save</button>
-    </div>
-  </form>
-</div>
-
 <!-- Print-only report layout, used by the PDF export (browser "Save as PDF"). -->
 <div id="print-report" class="print-report"></div>
 
-<!-- Ask Click: a rule-based assistant that answers only from the
+<!-- Ask Waypoint: a rule-based assistant that answers only from the
      Learning Resources content already in this app (FAQs, tips, Skills
      Directory) — no external API calls, so there's no key to secure. -->
-<button id="chat-fab" class="chat-fab hidden" aria-label="Ask Click" title="Ask Click">
+<button id="chat-fab" class="chat-fab hidden" aria-label="Ask Waypoint" title="Ask Waypoint">
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="M4 5.5C4 4.67 4.67 4 5.5 4h13c.83 0 1.5.67 1.5 1.5v10c0 .83-.67 1.5-1.5 1.5H9l-4 3.5v-3.5H5.5C4.67 16.5 4 15.83 4 15v-9.5Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/>
     <circle cx="9" cy="10" r="1" fill="white"/>
@@ -1027,13 +995,13 @@
   </svg>
 </button>
 
-<div id="chat-panel" class="chat-panel hidden" role="dialog" aria-label="Ask Click">
+<div id="chat-panel" class="chat-panel hidden" role="dialog" aria-label="Ask Waypoint">
   <div class="chat-panel-head">
-    <span>Ask Click</span>
+    <span>Ask Waypoint</span>
     <button type="button" id="chat-close" aria-label="Close">✕</button>
   </div>
   <div id="chat-log" class="chat-log">
-    <div class="chat-msg chat-msg--bot">Hi! Ask me about the program, mentoring, or how to use Click. Try one of these, or type your own question.</div>
+    <div class="chat-msg chat-msg--bot">Hi! Ask me about the program, mentoring, or how to use Waypoint. Try one of these, or type your own question.</div>
   </div>
   <div id="chat-suggestions" class="chat-suggestions"></div>
   <form id="chat-form" class="chat-form">
@@ -1046,7 +1014,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="js/data.js"></script>
 <script src="js/matching.js"></script>
-<script src="js/api.js"></script>
 <script src="js/calendar.js"></script>
 <script src="js/reports.js"></script>
 <script src="js/app.js"></script>
