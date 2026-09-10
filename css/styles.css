@@ -239,6 +239,9 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .growth-row:first-child { padding-top: 0; }
 .growth-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: var(--rg-gray-muted); }
 .growth-value { font-size: 0.9rem; font-weight: 600; color: var(--rg-purple-deep); line-height: 1.45; }
+.growth-suggested { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rg-lavender-100); }
+.growth-suggested .growth-label { display: block; margin-bottom: 8px; }
+.growth-suggested .link-btn { margin-top: 8px; }
 
 /* ---------- Directory ---------- */
 .filter-bar { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
@@ -428,7 +431,9 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .phase-tip:last-child { border-bottom: none; }
 .phase-tag { flex-shrink: 0; width: 70px; font-weight: 800; color: var(--rg-purple-deep); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.02em; }
 
-.course-card { border: 1px solid var(--rg-lavender-200); border-radius: var(--radius-md); padding: 12px 14px; }
+.course-card { border: 1px solid var(--rg-lavender-200); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 10px; }
+.course-card:last-child { margin-bottom: 0; }
+.course-card .chip { margin-bottom: 6px; }
 .course-title { font-weight: 700; color: var(--rg-purple-deep); font-size: 0.92rem; }
 .course-meta { font-size: 0.78rem; color: var(--rg-gray-muted); margin-top: 2px; }
 .course-note { font-size: 0.85rem; color: var(--rg-gray-dark); margin-top: 6px; }

@@ -698,6 +698,99 @@ const RESOURCE_LIBRARY = {
   ],
 };
 
+/* Topic-matched learning content: when a mentee states a learning goal that's
+   new to them, this is what powers a pre-suggested LinkedIn Learning course
+   (real, verified titles/URLs, same bar as RESOURCE_LIBRARY.linkedinCourses
+   above) plus an optional YouTube pick for hybrid learning. `topicKeywords`
+   drives the match against a mentee's own `learningGoals` text and
+   `learningSkillCategory`. Every entry is verified English-language content —
+   `language` is checked defensively in recommendLearningContent() (matching.js)
+   so nothing in Hindi is ever surfaced, by policy. */
+const LEARNING_CONTENT = [
+  {
+    skillCategory: "Technical Skills",
+    topicKeywords: ["product strategy", "product management", "roadmap", "discovery frameworks"],
+    linkedin: { title: "Product Management: Building a Product Strategy", instructor: "Eldad Persky & Teg Grenager", language: "English", url: "https://www.linkedin.com/learning/product-management-building-a-product-strategy" },
+  },
+  {
+    skillCategory: "Technical Skills",
+    topicKeywords: ["data analysis", "data analytics", "dashboarding", "data storytelling"],
+    linkedin: { title: "Learning Data Analytics: 1 Foundations", instructor: "Robin Hunt", language: "English", url: "https://www.linkedin.com/learning/learning-data-analytics-1-foundations" },
+    youtube: { title: "StatQuest with Josh Starmer", channel: "StatQuest", language: "English", url: "https://www.youtube.com/c/joshstarmer" },
+  },
+  {
+    skillCategory: "Technical Skills",
+    topicKeywords: ["revenue forecasting", "demand forecasting", "financial forecasting", "pricing strategy"],
+    linkedin: { title: "Forecasting Using Financial Statements", instructor: "LinkedIn Learning", language: "English", url: "https://www.linkedin.com/learning/forecasting-using-financial-statements" },
+  },
+  {
+    skillCategory: "Technical Skills",
+    topicKeywords: ["ai-assisted workflows", "ai in marketing", "generative ai", "prompt engineering", "ai experimentation"],
+    linkedin: { title: "Introduction to Prompt Engineering for Generative AI", instructor: "Ronnie Sheer", language: "English", url: "https://www.linkedin.com/learning/introduction-to-prompt-engineering-for-generative-ai-24636124" },
+    youtube: { title: "What is Generative AI (LLM)? Explained simply for beginners", channel: "YouTube", language: "English", url: "https://www.youtube.com/watch?v=iCe4N2iNRrM" },
+  },
+  {
+    skillCategory: "Technical Skills",
+    topicKeywords: ["api design", "distributed systems", "ml model deployment"],
+    linkedin: { title: "Designing RESTful APIs", instructor: "LinkedIn Learning", language: "English", url: "https://www.linkedin.com/learning/designing-restful-apis" },
+  },
+  {
+    skillCategory: "Behavioural Skills",
+    topicKeywords: ["public speaking", "executive communication", "presenting", "storytelling"],
+    linkedin: { title: "Public Speaking Foundations", instructor: "Toastmasters International", language: "English", url: "https://www.linkedin.com/learning/public-speaking-foundations-2018" },
+    youtube: { title: "TED's secret to great public speaking", channel: "TED", language: "English", url: "https://www.youtube.com/watch?v=-FOCpMAww28" },
+  },
+  {
+    skillCategory: "Behavioural Skills",
+    topicKeywords: ["negotiation tactics", "enterprise negotiation", "deal strategy", "deal storytelling", "deal economics"],
+    linkedin: { title: "Negotiation Foundations", instructor: "Lisa Gates", language: "English", url: "https://www.linkedin.com/learning/negotiation-foundations" },
+    youtube: { title: "10 Tips on Negotiations with FBI Negotiator Chris Voss", channel: "YouTube", language: "English", url: "https://www.youtube.com/watch?v=1CsicKvtK60" },
+  },
+  {
+    skillCategory: "Behavioural Skills",
+    topicKeywords: ["escalation management", "client onboarding", "customer success playbooks", "client relationship management"],
+    linkedin: { title: "De-Escalating Conversations for Customer Service", instructor: "LinkedIn Learning", language: "English", url: "https://www.linkedin.com/learning/de-escalating-conversations-for-customer-service" },
+  },
+  {
+    skillCategory: "Leadership Skills",
+    topicKeywords: ["people management", "delegation", "team development"],
+    linkedin: { title: "Delegating Tasks", instructor: "LinkedIn Learning", language: "English", url: "https://www.linkedin.com/learning/delegating-tasks" },
+    youtube: { title: "Management vs. Leadership: What's the Real Difference?", channel: "Simon Sinek", language: "English", url: "https://www.youtube.com/watch?v=p4uNIirSPaE" },
+  },
+  {
+    skillCategory: "Leadership Skills",
+    topicKeywords: ["strategic decision-making", "leading through influence", "change management"],
+    linkedin: { title: "Decision Intelligence", instructor: "Cassie Kozyrkov", language: "English", url: "https://www.linkedin.com/learning/decision-intelligence" },
+  },
+  {
+    skillCategory: "Career Development",
+    topicKeywords: ["career planning", "navigating a promotion", "finding a career sponsor"],
+    linkedin: { title: "Creating a Career Plan", instructor: "Dr. Chaz Austin", language: "English", url: "https://www.linkedin.com/learning/creating-a-career-plan" },
+  },
+  {
+    skillCategory: "Career Development",
+    topicKeywords: ["personal branding", "building an internal network"],
+    linkedin: { title: "Accelerating Your Career with Personal Branding", instructor: "Shade Zahrai", language: "English", url: "https://www.linkedin.com/learning/accelerating-your-career-with-personal-branding" },
+  },
+  {
+    skillCategory: "Career Development",
+    topicKeywords: ["interview preparation", "working across functions"],
+    linkedin: { title: "Internal Interviewing", instructor: "Lida Citroën", language: "English", url: "https://www.linkedin.com/learning/internal-interviewing" },
+  },
+  {
+    skillCategory: "Hobbies & Interests",
+    topicKeywords: ["photography", "painting and drawing"],
+    linkedin: { title: "Introduction to Photography", instructor: "LinkedIn Learning", language: "English", url: "https://www.linkedin.com/learning/introduction-to-photography" },
+    youtube: { title: "Peter McKinnon", channel: "Peter McKinnon", language: "English", url: "https://www.youtube.com/@PeterMcKinnon" },
+  },
+  {
+    skillCategory: "Hobbies & Interests",
+    topicKeywords: ["personal finance and investing"],
+    linkedin: { title: "Managing Your Personal Finances", instructor: "LinkedIn Learning", language: "English", url: "https://www.linkedin.com/learning/managing-your-personal-finances-2021" },
+    youtube: { title: "Two Cents", channel: "Two Cents", language: "English", url: "https://www.youtube.com/channel/UCL8w_A8p8P1HWI3k6PR5Z6w" },
+  },
+];
+
 /* Skill categories — the same four buckets used in every skill-category
    dropdown across the app. Doubles as the "Skills Directory" article (so
    people can see what each category covers before picking one) and as the
@@ -769,5 +862,5 @@ const WALKTHROUGH_STEPS = [
   { title: "Home", body: "Your Home tab now shows people recommended for you, your active journey (once you have one), and your Growth Profile: a running summary of what you're learning or offering." },
   { title: "Directory", body: "Browse everyone in the program. Every card shows a live match score once you open it, explained in plain language, not just a number." },
   { title: "My Journey", body: "Once you're connected with someone, this is where you track conversations, schedule the next one, and log what happened." },
-  { title: "Learning Resources", body: "FAQs, best-practice tips for mentors and mentees, a Skills Directory, and curated LinkedIn Learning courses, all in one place." },
+  { title: "Learning Resources", body: "Courses and videos matched to what you want to learn, FAQs, and best-practice tips for mentors and mentees, all in one place." },
 ];

@@ -849,6 +849,8 @@ function renderGrowthProfileCard() {
     return;
   }
 
+  const suggested = recommendLearningContent(me, 1);
+
   card.innerHTML = `
     ${me.learningGoals?.length ? `<div class="growth-row"><span class="growth-label">Learning</span><span class="growth-value">${me.learningGoals.join(", ")}</span></div>` : ""}
     ${me.skillLevel ? `<div class="growth-row"><span class="growth-label">Skill level</span><span class="growth-value">${me.skillLevel}</span></div>` : ""}
@@ -862,6 +864,15 @@ function renderGrowthProfileCard() {
       <div class="progress-label"><span>Journey progress</span><span>${pct(progress)}</span></div>
     </div>`
         : `<p class="muted small" style="margin-top:10px">No active journey yet. Your progress will track here once you're matched.</p>`
+    }
+    ${
+      suggested.length
+        ? `<div class="growth-suggested">
+      <div class="growth-label">Suggested learning</div>
+      ${learningContentHTML(suggested[0])}
+      <button class="link-btn" data-action="open-resources">See more recommended learning ↗</button>
+    </div>`
+        : ""
     }`;
 }
 
@@ -1836,6 +1847,7 @@ function renderAdminLog() {
 /* Resources modal                                                    */
 /* ---------------------------------------------------------------- */
 const RESOURCE_TABS = [
+  { key: "recommended", label: "Recommended for you" },
   { key: "faqs", label: "FAQs" },
   { key: "bestPractices", label: "Best Practices" },
   { key: "mentorTips", label: "For Mentors" },
@@ -1847,9 +1859,30 @@ const RESOURCE_TABS = [
 let currentResourceTab = "faqs";
 
 function renderResources() {
-  currentResourceTab = "faqs";
+  const me = getCurrentUser();
+  currentResourceTab = me.learningGoals?.length ? "recommended" : "faqs";
   renderResourceTabs();
   renderResourcePanel();
+}
+
+/** One provider pick (LinkedIn Learning course or YouTube video) as a card.
+ * Content only ever comes from the curated LEARNING_CONTENT library, never
+ * a live API call, so every link is one we've verified by hand. */
+function learningPickHTML(pick) {
+  return `
+    <div class="course-card">
+      <span class="chip chip--skill">${pick.provider}</span>
+      <div class="course-title">${pick.title}</div>
+      <div class="course-meta">${pick.meta}</div>
+      <a class="course-link" href="${pick.url}" target="_blank" rel="noopener">Open ↗</a>
+    </div>`;
+}
+
+function learningContentHTML(entry) {
+  const picks = [];
+  if (entry.linkedin) picks.push({ provider: "LinkedIn Learning", title: entry.linkedin.title, meta: entry.linkedin.instructor, url: entry.linkedin.url });
+  if (entry.youtube) picks.push({ provider: "YouTube", title: entry.youtube.title, meta: entry.youtube.channel, url: entry.youtube.url });
+  return picks.map(learningPickHTML).join("");
 }
 
 function renderResourceTabs() {
@@ -1862,7 +1895,17 @@ function renderResourcePanel() {
   const panel = $("#resource-panel");
   const key = currentResourceTab;
 
-  if (key === "faqs") {
+  if (key === "recommended") {
+    const me = getCurrentUser();
+    const recs = recommendLearningContent(me, 4);
+    if (!recs.length) {
+      panel.innerHTML = `<p class="empty-state">Set a learning goal on your profile (what you want to learn) and we'll suggest a course and video here, matched to it.</p>`;
+    } else {
+      panel.innerHTML = `
+        <p class="muted small">Matched to what you said you want to learn: ${(me.learningGoals || []).join(", ")}. All picks are in English.</p>
+        ${recs.map(learningContentHTML).join("")}`;
+    }
+  } else if (key === "faqs") {
     panel.innerHTML = RESOURCE_LIBRARY.faqs
       .map(
         (item, i) => `
@@ -1960,6 +2003,7 @@ function buildChatKnowledgeBase() {
   kb.push({ a: "Go to My Journey and use \"Schedule a conversation\" to create a calendar invite (.ics, Google, or Outlook) with reminders.", primary: "schedule a conversation or meeting", secondary: "calendar invite booking reminders" });
   kb.push({ a: "From My Journey, use \"End connection (rematch)\". It's no-fault, no explanation required. A Super Admin can also end a connection on someone's behalf from the Admin console.", primary: "end a connection or request a rematch", secondary: "stop pause quit leave the relationship" });
   kb.push({ a: "Open your avatar menu in the top right and choose \"My profile\" to update what you're learning, offering, your availability, or your capacity.", primary: "edit or update my profile, hours, or frequency", secondary: "change settings capacity availability" });
+  kb.push({ a: "Open Learning Resources and check the \"Recommended for you\" tab — it matches a LinkedIn Learning course, and sometimes a YouTube video, to what you said you want to learn on your profile. Set a learning goal there first if nothing shows up.", primary: "find a course or video for what I'm learning", secondary: "linkedin learning youtube recommended course video training" });
   kb.push({ a: "You're signed out automatically after an hour with no activity, as a security precaution. Just log back in with your same credentials.", primary: "why was I signed out or logged out", secondary: "session timeout inactive expire" });
   return kb;
 }

@@ -236,3 +236,32 @@ function matchQualityAnswerDefaults(seeker, candidate) {
     return { question, checked: false, autofilled: false };
   });
 }
+
+/**
+ * Pre-suggests learning content for a topic that's new to someone, from the
+ * curated LEARNING_CONTENT library (real LinkedIn Learning courses, plus a
+ * YouTube pick for hybrid learning) — reuses the same keyword-overlap logic
+ * as mentor/mentee matching, scored against the person's own stated
+ * learningGoals and learningSkillCategory. Never returns anything tagged as
+ * Hindi-language content, by policy, regardless of how good the topic match is.
+ */
+function recommendLearningContent(person, limit = 2) {
+  const goals = person?.learningGoals || [];
+  if (!goals.length) return [];
+
+  const isAllowedLanguage = (entry) => entry.linkedin?.language !== "Hindi" && entry.youtube?.language !== "Hindi";
+
+  const scored = LEARNING_CONTENT.filter(isAllowedLanguage)
+    .map((entry) => {
+      const textScore = keywordOverlapScore(goals, entry.topicKeywords);
+      // The category only ever breaks a tie between two already-relevant
+      // picks — it never qualifies a topic on its own, so "Leadership
+      // Skills" doesn't drag in an unrelated leadership course.
+      const categoryBonus = textScore > 0 && person.learningSkillCategory && person.learningSkillCategory === entry.skillCategory ? 0.2 : 0;
+      return { entry, score: textScore + categoryBonus };
+    })
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  return scored.slice(0, limit).map((s) => s.entry);
+}
