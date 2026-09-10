@@ -39,6 +39,17 @@ function persistProxySession() {
   else sessionStorage.removeItem(STORAGE.proxy);
 }
 
+/** Wipes every piece of this browser's demo state (journeys, requests, nudges,
+ * roster overrides, admin log, the signed-in account) back to a clean slate,
+ * since there's no backend to reset it from and a rematch/status change has
+ * no other way to undo. Reachable from the login screen (signed out) and the
+ * account dropdown (signed in), since either can be the one who needs it. */
+function resetDemoData() {
+  Object.values(STORAGE).forEach((key) => localStorage.removeItem(key));
+  sessionStorage.removeItem(STORAGE.proxy);
+  location.reload();
+}
+
 function loadPersisted(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -2303,6 +2314,18 @@ function wireEvents() {
         persistProxySession();
         CURRENT_USER_ID = null;
         showLoginScreen();
+        break;
+      case "reset-demo-data":
+        $("#user-menu").classList.add("hidden");
+        openConfirmModal(
+          {
+            title: "Reset demo data?",
+            body: "This clears every connection, journey, nudge, and status change made in this browser and brings the demo accounts back to their starting state. You'll be signed out. This can't be undone.",
+            confirmLabel: "Reset demo data",
+            danger: true,
+          },
+          resetDemoData
+        );
         break;
       case "request-mentor":
         openMatchModalFor(el.dataset.id);
