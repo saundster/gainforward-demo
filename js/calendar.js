@@ -79,8 +79,10 @@ function downloadICS(filename, icsText) {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-/** Google's public "quick add" URL — no API key required. Reminders default to the viewer's own Google Calendar settings. */
-function googleCalendarLink({ title, description, location, start, durationMins }) {
+/** Google's public "quick add" URL — no API key required. Reminders default to
+ * the viewer's own Google Calendar settings. `add` is Google's own param for
+ * pre-filling guests, same idea as `to` on the Outlook link below. */
+function googleCalendarLink({ title, description, location, start, durationMins, attendees }) {
   const end = new Date(start.getTime() + durationMins * 60000);
   const params = new URLSearchParams({
     action: "TEMPLATE",
@@ -89,6 +91,8 @@ function googleCalendarLink({ title, description, location, start, durationMins 
     details: description,
     location: location || "",
   });
+  const guestEmails = (attendees || []).map((a) => a.email).filter(Boolean);
+  if (guestEmails.length) params.set("add", guestEmails.join(","));
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 

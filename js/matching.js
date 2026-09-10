@@ -32,18 +32,21 @@ function keywordOverlapScore(listA, listB) {
 
 /**
  * Blends free-text goal/skill overlap with the structured skill-category
- * dropdown (Technical / Behavioural / Leadership / Career Development).
- * Category is the coarse, reliable commonality; free text is specific but
- * fuzzy — together they're a much more accurate "do these two actually
- * line up" signal than either alone.
+ * checkboxes (Technical / Behavioural / Leadership / Career Development /
+ * Hobbies & Interests). Category is the coarse, reliable commonality; free
+ * text is specific but fuzzy — together they're a much more accurate "do
+ * these two actually line up" signal than either alone. Both sides can now
+ * hold more than one category (someone mentoring across two areas, say), so
+ * this checks for any shared category rather than an exact match.
  */
 function goalFitScore(seeker, candidate) {
   const textScore = keywordOverlapScore(seeker.learningGoals, candidate.offeredSkills);
-  const seekerCategory = seeker.learningSkillCategory;
-  const candidateCategory = candidate.mentorSkillCategory;
+  const seekerCategories = seeker.learningSkillCategory || [];
+  const candidateCategories = candidate.mentorSkillCategory || [];
 
-  if (!seekerCategory || !candidateCategory) return textScore;
-  if (seekerCategory === candidateCategory) return Math.max(textScore, 0.75);
+  if (!seekerCategories.length || !candidateCategories.length) return textScore;
+  const sharesCategory = seekerCategories.some((c) => candidateCategories.includes(c));
+  if (sharesCategory) return Math.max(textScore, 0.75);
   return textScore * 0.7;
 }
 
@@ -141,9 +144,9 @@ function matchReasons(seeker, candidate, breakdown) {
   const reasons = [];
   const byKey = Object.fromEntries(breakdown.map((b) => [b.key, b.score]));
 
-  const sameCategory = seeker.learningSkillCategory && seeker.learningSkillCategory === candidate.mentorSkillCategory;
-  if (sameCategory) {
-    reasons.push(`Both focused on ${seeker.learningSkillCategory}`);
+  const sharedCategories = (seeker.learningSkillCategory || []).filter((c) => (candidate.mentorSkillCategory || []).includes(c));
+  if (sharedCategories.length) {
+    reasons.push(`Both focused on ${sharedCategories.join(" and ")}`);
   }
 
   if (byKey.goal >= 0.34) {
@@ -226,7 +229,7 @@ function recommendLearningContent(person, limit = 2) {
       // The category only ever breaks a tie between two already-relevant
       // picks — it never qualifies a topic on its own, so "Leadership
       // Skills" doesn't drag in an unrelated leadership course.
-      const categoryBonus = textScore > 0 && person.learningSkillCategory && person.learningSkillCategory === entry.skillCategory ? 0.2 : 0;
+      const categoryBonus = textScore > 0 && (person.learningSkillCategory || []).includes(entry.skillCategory) ? 0.2 : 0;
       return { entry, score: textScore + categoryBonus };
     })
     .filter((s) => s.score > 0)

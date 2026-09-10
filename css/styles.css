@@ -359,6 +359,16 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .checkbox-row { flex-direction: row !important; align-items: flex-start; font-weight: 500 !important; font-size: 0.8rem !important; }
+.field-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--rg-gray-dark); margin-bottom: -6px; }
+.chip-toggle-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-toggle-group input[type="checkbox"] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.modal-body .chip-toggle-group label {
+  display: inline-flex; flex-direction: row; align-items: center; padding: 6px 13px; border-radius: 999px;
+  background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--rg-lavender-200); user-select: none;
+}
+.chip-toggle-group input:checked + label { background: var(--rg-purple); color: #fff; border-color: var(--rg-purple); }
+.chip-toggle-group input:focus-visible + label { outline: 2px solid var(--rg-purple); outline-offset: 2px; }
 .checkbox-row input { width: auto; margin-top: 3px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
 .calendar-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }

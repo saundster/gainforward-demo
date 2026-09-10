@@ -265,10 +265,10 @@ function openProfileModal({ onboarding }) {
   if (me.geography) form.geography.value = me.geography;
   applyIdentityLock(form, me);
   form.learningGoals.value = (me.learningGoals || []).join(", ");
-  form.learningSkillCategory.value = me.learningSkillCategory || "";
+  setCheckedValues(form, "learningSkillCategory", me.learningSkillCategory);
   form.skillLevel.value = me.skillLevel || "";
   form.offeredSkills.value = (me.offeredSkills || []).join(", ");
-  form.mentorSkillCategory.value = me.mentorSkillCategory || "";
+  setCheckedValues(form, "mentorSkillCategory", me.mentorSkillCategory);
   if (me.menteeCapacity) form.menteeCapacity.value = me.menteeCapacity;
   form.goalStatement.value = me.goalStatement || "";
   form.purpose.value = me.purpose || "";
@@ -406,16 +406,19 @@ function handleBecomeMenteeEntry() {
 
 /** AI-recommended skill chips: reads the same SKILL_CATEGORIES list used by
  * the Skills Directory article, filters out what's already typed in, and
- * lets a click append the suggestion to the field instead of typing it. */
-function renderSkillSuggestions(container, category, inputEl) {
-  const cat = SKILL_CATEGORIES.find((c) => c.key === category);
-  if (!cat) {
+ * lets a click append the suggestion to the field instead of typing it.
+ * `categories` can be more than one now that the picker allows multiple —
+ * the suggestion pool is just the union of whichever categories are checked. */
+function renderSkillSuggestions(container, categories, inputEl) {
+  const cats = SKILL_CATEGORIES.filter((c) => (categories || []).includes(c.key));
+  if (!cats.length) {
     container.classList.add("hidden");
     container.innerHTML = "";
     return;
   }
   const current = (inputEl.value || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  const suggestions = cat.examples.filter((s) => !current.includes(s.toLowerCase())).slice(0, 6);
+  const pool = [...new Set(cats.flatMap((c) => c.examples))];
+  const suggestions = pool.filter((s) => !current.includes(s.toLowerCase())).slice(0, 6);
   if (!suggestions.length) {
     container.classList.add("hidden");
     container.innerHTML = "";
@@ -430,22 +433,23 @@ function renderSkillSuggestions(container, category, inputEl) {
       const existing = (inputEl.value || "").split(",").map((s) => s.trim()).filter(Boolean);
       existing.push(chip.dataset.skill);
       inputEl.value = existing.join(", ");
-      renderSkillSuggestions(container, category, inputEl);
+      renderSkillSuggestions(container, categories, inputEl);
     });
   });
 }
 
-/** Wires a skill-category <select> to its suggestion strip so picking a
- * category (or opening the modal with one already picked) refreshes the
+/** Wires a skill-category checkbox group to its suggestion strip so checking
+ * a category (or opening the modal with some already checked) refreshes the
  * chips for whichever text field that category feeds. Also attaches a
  * type-as-you-go autocomplete to the same text field. */
-function wireSkillSuggestions(formEl, selectName, containerId, targetName) {
-  const select = formEl.querySelector(`[name="${selectName}"]`);
+function wireSkillSuggestions(formEl, groupName, containerId, targetName) {
+  const boxes = formEl.querySelectorAll(`input[name="${groupName}"]`);
   const container = document.getElementById(containerId);
   const input = formEl.querySelector(`[name="${targetName}"]`);
-  if (!select || !container || !input) return;
-  select.addEventListener("change", () => renderSkillSuggestions(container, select.value, input));
-  attachSkillTypeahead(input, () => renderSkillSuggestions(container, select.value, input));
+  if (!boxes.length || !container || !input) return;
+  const checkedValues = () => Array.from(boxes).filter((b) => b.checked).map((b) => b.value);
+  boxes.forEach((box) => box.addEventListener("change", () => renderSkillSuggestions(container, checkedValues(), input)));
+  attachSkillTypeahead(input, () => renderSkillSuggestions(container, checkedValues(), input));
 }
 
 /** Type-as-you-go autocomplete for a comma-separated skill/goal field: as
@@ -498,12 +502,23 @@ function attachSkillTypeahead(inputEl, onPick) {
   });
 }
 
-function refreshSkillSuggestions(formEl, selectName, containerId, targetName) {
-  const select = formEl.querySelector(`[name="${selectName}"]`);
+function refreshSkillSuggestions(formEl, groupName, containerId, targetName) {
+  const boxes = formEl.querySelectorAll(`input[name="${groupName}"]`);
   const container = document.getElementById(containerId);
   const input = formEl.querySelector(`[name="${targetName}"]`);
-  if (!select || !container || !input) return;
-  renderSkillSuggestions(container, select.value, input);
+  if (!boxes.length || !container || !input) return;
+  const checked = Array.from(boxes).filter((b) => b.checked).map((b) => b.value);
+  renderSkillSuggestions(container, checked, input);
+}
+
+/** Checks whichever boxes in a checkbox group match the given values, and
+ * unchecks the rest — the array-valued equivalent of setting a <select>'s
+ * .value, since a RadioNodeList of checkboxes doesn't support that directly. */
+function setCheckedValues(formEl, groupName, values) {
+  const wanted = new Set(values || []);
+  formEl.querySelectorAll(`input[name="${groupName}"]`).forEach((box) => {
+    box.checked = wanted.has(box.value);
+  });
 }
 
 /** Quick tour: a handful of static steps shown once, right after someone
@@ -532,7 +547,7 @@ function openBecomeMentorRoleModal() {
   if (me.geography) form.geography.value = me.geography;
   applyIdentityLock(form, me);
   form.purpose.value = me.purpose || "";
-  if (me.mentorSkillCategory) form.mentorSkillCategory.value = me.mentorSkillCategory;
+  setCheckedValues(form, "mentorSkillCategory", me.mentorSkillCategory);
   form.offeredSkills.value = (me.offeredSkills || []).join(", ");
   if (me.menteeCapacity) form.menteeCapacity.value = me.menteeCapacity;
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
@@ -554,7 +569,7 @@ function openBecomeMenteeRoleModal() {
   if (me.geography) form.geography.value = me.geography;
   applyIdentityLock(form, me);
   form.learningGoals.value = (me.learningGoals || []).join(", ");
-  if (me.learningSkillCategory) form.learningSkillCategory.value = me.learningSkillCategory;
+  setCheckedValues(form, "learningSkillCategory", me.learningSkillCategory);
   if (me.skillLevel) form.skillLevel.value = me.skillLevel;
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
   if (me.availability?.hours) form.hours.value = me.availability.hours;
@@ -1004,13 +1019,13 @@ function openMatchModalFor(candidateId) {
         ? `<p class="muted small">You already have an active journey. You'll need a rematch before starting a new one.</p>`
         : candidateBusy
         ? `<p class="muted small">${candidate.displayName} ${candidate.preferredFormat === "mentor" && candidate.menteeCapacity ? "is at capacity right now" : "already has an active journey right now"}.</p>`
-        : `<label class="match-prep-label">Topic for your first conversation
+        : `<label class="match-prep-label">Topic for your first conversation (optional)
              <input type="text" id="match-prep-topic" placeholder="e.g. Getting a first enterprise deal narrative right" />
            </label>
-           <label class="match-prep-label">What have you already tried, read, or thought through on your own about this?
+           <label class="match-prep-label">What have you already tried, read, or thought through on your own about this? (optional)
              <textarea id="match-prep-note" rows="2" placeholder="e.g. I've read a beginner's guide and worked through a few practice questions on my own"></textarea>
            </label>
-           <p class="muted small">A little groundwork means the first conversation builds on something, instead of starting from zero. ${candidate.displayName} will see this agenda before you meet.</p>
+           <p class="muted small">Not sure yet what to bring? Skip this — you can always work it out on the call. ${candidate.displayName} will see whatever you add here before you meet.</p>
            <button class="btn btn-primary" id="btn-send-request">Connect now</button>
            <p class="muted small" style="margin-top:6px">This connects you right away, no approval needed. People Development can review it anytime and step in if something looks off.</p>`
     }
@@ -1024,16 +1039,6 @@ function openMatchModalFor(candidateId) {
       const noteEl = $("#match-prep-note");
       const prepTopic = (topicEl?.value || "").trim();
       const prepNote = (noteEl?.value || "").trim();
-      if (prepTopic.length < 3) {
-        toast("Add a short topic for your first conversation.", "error");
-        topicEl?.focus();
-        return;
-      }
-      if (prepNote.length < 10) {
-        toast("Add a quick note on what you've already tried or thought through; a sentence is enough.", "error");
-        noteEl?.focus();
-        return;
-      }
       sendRequest(candidateId, total, breakdown, prepTopic, prepNote);
     });
   }
@@ -1269,11 +1274,26 @@ function renderJourney() {
   }
 }
 
+/** Connect and Transfer are one-time bookends (the first and last conversation);
+ * Goal, Challenge, and Apply can repeat as many times as the pair needs. Once a
+ * one-time stage has been logged or has a meeting on the calendar, it drops out
+ * of both the "log a conversation" and "schedule a conversation" pickers so a
+ * pair can't end up with two "Connect" entries or schedule a second "Transfer". */
+const SINGLE_OCCURRENCE_STAGES = new Set(["connect", "transfer"]);
+function availableStagesFor(journey) {
+  if (!journey) return PROGRAM_META.stages;
+  const usedKeys = new Set([
+    ...journey.sessions.map((s) => s.stage),
+    ...(journey.meetings || []).filter((m) => m.status === "scheduled").map((m) => m.stage),
+  ]);
+  return PROGRAM_META.stages.filter((s) => !SINGLE_OCCURRENCE_STAGES.has(s.key) || !usedKeys.has(s.key));
+}
+
 function openLogSessionModal() {
   const journey = findActiveJourneyFor(CURRENT_USER_ID);
   const startDate = journey ? getJourneyStartDate(journey) : null;
   const select = $("#log-session-stage");
-  select.innerHTML = PROGRAM_META.stages
+  select.innerHTML = availableStagesFor(journey)
     .map((s) => `<option value="${s.key}">${s.label}${startDate ? ` (${stageDateRange(startDate, s)})` : ""}</option>`)
     .join("");
   $('#form-log-session input[name="date"]').value = new Date().toISOString().slice(0, 10);
@@ -1283,6 +1303,53 @@ function openLogSessionModal() {
 
 function meetingTimeLabel(startISO) {
   return new Date(startISO).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+/** The date/time picker takes whatever's typed in as the browser's own local
+ * time — there's no way around that without asking the OS, so at least name
+ * that zone instead of leaving it ambiguous. */
+function browserTimeZoneLabel() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const offset = new Intl.DateTimeFormat("en-US", { timeZoneName: "shortOffset" }).formatToParts(new Date()).find((p) => p.type === "timeZoneName")?.value;
+    return offset ? `${tz} (${offset})` : tz;
+  } catch {
+    return null;
+  }
+}
+
+/** Pulls a plain UTC offset out of a free-text timezone string like
+ * "IST (UTC+5:30)" — there's no real IANA zone on file, just this, so offset
+ * math is as precise as this can get without asking the person directly. */
+function parseUtcOffsetMinutes(tzText) {
+  const m = /UTC([+-])(\d{1,2})(?::(\d{2}))?/i.exec(tzText || "");
+  if (!m) return null;
+  const sign = m[1] === "-" ? -1 : 1;
+  return sign * (Number(m[2]) * 60 + Number(m[3] || 0));
+}
+
+/** Shows what the picked date/time reads as in the partner's own stated
+ * timezone, computed purely from UTC-offset text — no live sync, just enough
+ * to stop someone double-booking themselves at 3am for the other person. */
+function updateScheduleTzHint(partner) {
+  const hint = $("#schedule-tz-hint");
+  if (!hint) return;
+  const form = $("#form-schedule-meeting");
+  const myTz = browserTimeZoneLabel();
+  const base = myTz ? `Times are in your local timezone (${myTz}).` : "";
+  const dateVal = form.date.value;
+  const timeVal = form.time.value;
+  const partnerOffset = parseUtcOffsetMinutes(partner?.availability?.timezone);
+  if (dateVal && timeVal && partnerOffset !== null) {
+    const start = new Date(`${dateVal}T${timeVal}:00`);
+    if (!isNaN(start.getTime())) {
+      const partnerMs = start.getTime() + partnerOffset * 60000;
+      const partnerLabel = new Date(partnerMs).toLocaleString("en-US", { timeZone: "UTC", hour: "numeric", minute: "2-digit" });
+      hint.textContent = `${base} That's about ${partnerLabel} for ${partner.displayName} (${partner.availability.timezone}).`;
+      return;
+    }
+  }
+  hint.textContent = base;
 }
 
 function renderUpcomingMeetings(journey) {
@@ -1303,10 +1370,15 @@ function renderUpcomingMeetings(journey) {
   const rows = upcoming.map((m) => {
     const stage = PROGRAM_META.stages.find((s) => s.key === m.stage);
     const isPast = new Date(m.startISO) < now;
+    const hasLink = m.meetingLink && /^https?:\/\//i.test(m.meetingLink);
     return `
       <div class="session-item">
         <div class="session-item-head"><span>${stage ? stage.label : m.stage} conversation</span><span class="muted small">${meetingTimeLabel(m.startISO)}</span></div>
-        <div class="session-item-notes">${isPast ? "This time has passed. Log it in your conversation log, or cancel it below." : "Invite sent to both calendars."}</div>
+        <div class="session-item-notes">
+          ${isPast ? "This time has passed. Log it in your conversation log, or cancel it below." : "Invite sent to both calendars."}
+          ${!isPast && hasLink ? ` · <a href="${m.meetingLink}" target="_blank" rel="noopener">Join video call ↗</a>` : ""}
+          ${!isPast && m.meetingLink && !hasLink ? ` · Meeting link: ${m.meetingLink}` : ""}
+        </div>
         <div class="match-actions" style="margin-top:8px">
           <button class="btn btn-danger-outline btn-sm" data-action="cancel-meeting" data-id="${m.id}">Cancel meeting</button>
         </div>
@@ -1460,9 +1532,10 @@ function openScheduleMeetingModal() {
   const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
   const completed = journey.sessions.filter((s) => s.completed).length;
   const nextStageIndex = clamp(completed, 0, PROGRAM_META.stages.length - 1);
+  const nextStageKey = PROGRAM_META.stages[nextStageIndex].key;
 
-  $("#schedule-stage-select").innerHTML = PROGRAM_META.stages
-    .map((s, i) => `<option value="${s.key}" ${i === nextStageIndex ? "selected" : ""}>${s.label}</option>`)
+  $("#schedule-stage-select").innerHTML = availableStagesFor(journey)
+    .map((s) => `<option value="${s.key}" ${s.key === nextStageKey ? "selected" : ""}>${s.label}</option>`)
     .join("");
   $("#schedule-with-line").textContent = `With ${partner ? partner.displayName : "your partner"}${partner?.email ? ` (${partner.email})` : ""}.`;
   const agendaNote = $("#schedule-agenda-note");
@@ -1473,6 +1546,9 @@ function openScheduleMeetingModal() {
   const form = $("#form-schedule-meeting");
   form.reset();
   form.date.value = new Date().toISOString().slice(0, 10);
+  updateScheduleTzHint(partner);
+  form.date.oninput = () => updateScheduleTzHint(partner);
+  form.time.oninput = () => updateScheduleTzHint(partner);
   $("#schedule-step-form").classList.remove("hidden");
   $("#schedule-step-result").classList.add("hidden");
   pendingInvite = null;
@@ -2099,9 +2175,9 @@ function ensureCurrentUser() {
       careerLevel: "—",
       tenureBand: "—",
       learningGoals: [],
-      learningSkillCategory: "",
+      learningSkillCategory: [],
       offeredSkills: [],
-      mentorSkillCategory: "",
+      mentorSkillCategory: [],
       menteeCapacity: null,
       goalStatement: "",
       purpose: "",
@@ -2509,14 +2585,14 @@ function wireEvents() {
         .filter(Boolean)
         .slice(0, 3),
       skillLevel: fd.get("skillLevel"),
-      learningSkillCategory: fd.get("learningSkillCategory"),
+      learningSkillCategory: fd.getAll("learningSkillCategory"),
       offeredSkills: fd
         .get("offeredSkills")
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean)
         .slice(0, 5),
-      mentorSkillCategory: fd.get("mentorSkillCategory"),
+      mentorSkillCategory: fd.getAll("mentorSkillCategory"),
       menteeCapacity: Number(fd.get("menteeCapacity")) || 1,
       goalStatement: fd.get("goalStatement").trim(),
       purpose: fd.get("purpose").trim(),
@@ -2543,6 +2619,10 @@ function wireEvents() {
   $("#form-become-mentor-role").addEventListener("submit", (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
+    if (!fd.getAll("mentorSkillCategory").length) {
+      toast("Pick at least one skill category.", "error");
+      return;
+    }
     const me = getCurrentUser();
     const wasComplete = me.profileComplete;
     const fullName = fd.get("fullName").trim();
@@ -2556,7 +2636,7 @@ function wireEvents() {
       division: fd.get("department").trim(),
       geography: fd.get("geography"),
       purpose: fd.get("purpose").trim(),
-      mentorSkillCategory: fd.get("mentorSkillCategory"),
+      mentorSkillCategory: fd.getAll("mentorSkillCategory"),
       offeredSkills: fd
         .get("offeredSkills")
         .split(",")
@@ -2584,6 +2664,10 @@ function wireEvents() {
   $("#form-become-mentee-role").addEventListener("submit", (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
+    if (!fd.getAll("learningSkillCategory").length) {
+      toast("Pick at least one skill category.", "error");
+      return;
+    }
     const me = getCurrentUser();
     const wasComplete = me.profileComplete;
     const fullName = fd.get("fullName").trim();
@@ -2603,7 +2687,7 @@ function wireEvents() {
         .filter(Boolean)
         .slice(0, 3),
       skillLevel: fd.get("skillLevel"),
-      learningSkillCategory: fd.get("learningSkillCategory"),
+      learningSkillCategory: fd.getAll("learningSkillCategory"),
       deliveryFormat: fd.get("deliveryFormat"),
       preferredLanguage: fd.get("preferredLanguage"),
       availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
@@ -2660,6 +2744,8 @@ function wireEvents() {
     const calUid = `${meetingId}@gainforward.rategain.com`;
     const title = `Waypoint: ${stage ? stage.label : stageKey} conversation`;
     const description = `${stage ? stage.detail : ""}\n\nScheduled from Waypoint: ${journey.relationshipType}.`;
+    const meetingLink = fd.get("meetingLink").trim();
+    const location = meetingLink || "No video link added — confirm one with your partner separately.";
     const attendees = [
       { name: me.fullName, email: me.email },
       { name: partner?.fullName, email: partner?.email },
@@ -2672,7 +2758,7 @@ function wireEvents() {
       status: "CONFIRMED",
       title,
       description,
-      location: "Video call (link shared separately)",
+      location,
       start,
       durationMins,
       organizer: { name: me.fullName, email: me.email },
@@ -2681,14 +2767,14 @@ function wireEvents() {
     });
 
     journey.meetings = journey.meetings || [];
-    journey.meetings.push({ id: meetingId, uid: calUid, stage: stageKey, startISO: start.toISOString(), durationMins, status: "scheduled", sequence: 0, organizerId: CURRENT_USER_ID });
+    journey.meetings.push({ id: meetingId, uid: calUid, stage: stageKey, startISO: start.toISOString(), durationMins, status: "scheduled", sequence: 0, organizerId: CURRENT_USER_ID, meetingLink: meetingLink || "" });
     savePersisted(STORAGE.journeys, journeys);
 
     pendingInvite = {
       icsText,
-      filename: `click-${stageKey}-conversation.ics`,
-      googleUrl: googleCalendarLink({ title, description, location: "", start, durationMins }),
-      outlookUrl: outlookWebLink({ title, description, location: "", start, durationMins, attendees }),
+      filename: `waypoint-${stageKey}-conversation.ics`,
+      googleUrl: googleCalendarLink({ title, description, location, start, durationMins, attendees }),
+      outlookUrl: outlookWebLink({ title, description, location, start, durationMins, attendees }),
     };
 
     $("#schedule-result-summary").textContent = `Invite ready for your ${stage ? stage.label.toLowerCase() : stageKey} conversation, ${meetingTimeLabel(start.toISOString())}.`;

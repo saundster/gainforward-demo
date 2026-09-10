@@ -409,24 +409,21 @@
           <select name="geography" required>
             <option value="APAC">APAC</option>
             <option value="EMEA">EMEA</option>
-            <option value="LATAM">LATAM</option>
-            <option value="NA">NA</option>
+            <option value="Americas">Americas</option>
           </select>
         </label>
       </div>
     </div>
     <div id="profile-extended-fields" class="form-stack">
       <label>I want to learn (up to 3, comma-separated)<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting" /></label>
-      <label>Category of what I want to learn
-        <select name="learningSkillCategory">
-          <option value="">Not sure yet</option>
-          <option value="Technical Skills">Technical Skills</option>
-          <option value="Behavioural Skills">Behavioural Skills</option>
-          <option value="Leadership Skills">Leadership Skills</option>
-          <option value="Career Development">Career Development</option>
-          <option value="Hobbies & Interests">Hobbies &amp; Interests</option>
-        </select>
-      </label>
+      <span class="field-label">Category of what I want to learn (pick any that apply)</span>
+      <div class="chip-toggle-group">
+        <input type="checkbox" name="learningSkillCategory" value="Technical Skills" id="pl-tech" /><label for="pl-tech">Technical Skills</label>
+        <input type="checkbox" name="learningSkillCategory" value="Behavioural Skills" id="pl-behav" /><label for="pl-behav">Behavioural Skills</label>
+        <input type="checkbox" name="learningSkillCategory" value="Leadership Skills" id="pl-lead" /><label for="pl-lead">Leadership Skills</label>
+        <input type="checkbox" name="learningSkillCategory" value="Career Development" id="pl-career" /><label for="pl-career">Career Development</label>
+        <input type="checkbox" name="learningSkillCategory" value="Hobbies & Interests" id="pl-hobbies" /><label for="pl-hobbies">Hobbies &amp; Interests</label>
+      </div>
       <div class="skill-suggestions hidden" id="profile-learning-suggestions" data-target="learningGoals"></div>
       <label>My level of understanding or skill
         <select name="skillLevel">
@@ -438,16 +435,14 @@
       </label>
       <label>My goal: one concise, time-bound outcome<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" /></label>
       <label>I can offer (up to 5, comma-separated)<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching" /></label>
-      <label>Category of what I can offer
-        <select name="mentorSkillCategory">
-          <option value="">Not applicable</option>
-          <option value="Technical Skills">Technical Skills</option>
-          <option value="Behavioural Skills">Behavioural Skills</option>
-          <option value="Leadership Skills">Leadership Skills</option>
-          <option value="Career Development">Career Development</option>
-          <option value="Hobbies & Interests">Hobbies &amp; Interests</option>
-        </select>
-      </label>
+      <span class="field-label">Category of what I can offer (pick any that apply)</span>
+      <div class="chip-toggle-group">
+        <input type="checkbox" name="mentorSkillCategory" value="Technical Skills" id="po-tech" /><label for="po-tech">Technical Skills</label>
+        <input type="checkbox" name="mentorSkillCategory" value="Behavioural Skills" id="po-behav" /><label for="po-behav">Behavioural Skills</label>
+        <input type="checkbox" name="mentorSkillCategory" value="Leadership Skills" id="po-lead" /><label for="po-lead">Leadership Skills</label>
+        <input type="checkbox" name="mentorSkillCategory" value="Career Development" id="po-career" /><label for="po-career">Career Development</label>
+        <input type="checkbox" name="mentorSkillCategory" value="Hobbies & Interests" id="po-hobbies" /><label for="po-hobbies">Hobbies &amp; Interests</label>
+      </div>
       <div class="skill-suggestions hidden" id="profile-offering-suggestions" data-target="offeredSkills"></div>
       <label>Why would you want to mentor someone? (optional)<textarea name="purpose" rows="2" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned"></textarea></label>
       <label>How many 1:1 mentees can you support at once?
@@ -558,22 +553,20 @@
           <select name="geography" required>
             <option value="APAC">APAC</option>
             <option value="EMEA">EMEA</option>
-            <option value="LATAM">LATAM</option>
-            <option value="NA">NA</option>
+            <option value="Americas">Americas</option>
           </select>
         </label>
       </div>
     </div>
     <label>Reason to become a Mentor<textarea name="purpose" rows="3" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned" required></textarea></label>
-    <label>Skill category
-      <select name="mentorSkillCategory" required>
-        <option value="Technical Skills">Technical Skills</option>
-        <option value="Behavioural Skills">Behavioural Skills</option>
-        <option value="Leadership Skills">Leadership Skills</option>
-        <option value="Career Development">Career Development</option>
-          <option value="Hobbies & Interests">Hobbies &amp; Interests</option>
-      </select>
-    </label>
+    <span class="field-label">Skill category (pick any that apply)</span>
+    <div class="chip-toggle-group">
+      <input type="checkbox" name="mentorSkillCategory" value="Technical Skills" id="mro-tech" /><label for="mro-tech">Technical Skills</label>
+      <input type="checkbox" name="mentorSkillCategory" value="Behavioural Skills" id="mro-behav" /><label for="mro-behav">Behavioural Skills</label>
+      <input type="checkbox" name="mentorSkillCategory" value="Leadership Skills" id="mro-lead" /><label for="mro-lead">Leadership Skills</label>
+      <input type="checkbox" name="mentorSkillCategory" value="Career Development" id="mro-career" /><label for="mro-career">Career Development</label>
+      <input type="checkbox" name="mentorSkillCategory" value="Hobbies & Interests" id="mro-hobbies" /><label for="mro-hobbies">Hobbies &amp; Interests</label>
+    </div>
     <label>What skills do you want to mentor on?<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching (up to 5, comma-separated)" required /></label>
     <div class="skill-suggestions hidden" id="mentor-role-suggestions" data-target="offeredSkills"></div>
     <label>How many 1:1 mentees can you support at once?
@@ -664,22 +657,20 @@
           <select name="geography" required>
             <option value="APAC">APAC</option>
             <option value="EMEA">EMEA</option>
-            <option value="LATAM">LATAM</option>
-            <option value="NA">NA</option>
+            <option value="Americas">Americas</option>
           </select>
         </label>
       </div>
     </div>
     <label>What do you want to learn?<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting (up to 3, comma-separated)" required /></label>
-    <label>Skill category
-      <select name="learningSkillCategory" required>
-        <option value="Technical Skills">Technical Skills</option>
-        <option value="Behavioural Skills">Behavioural Skills</option>
-        <option value="Leadership Skills">Leadership Skills</option>
-        <option value="Career Development">Career Development</option>
-          <option value="Hobbies & Interests">Hobbies &amp; Interests</option>
-      </select>
-    </label>
+    <span class="field-label">Skill category (pick any that apply)</span>
+    <div class="chip-toggle-group">
+      <input type="checkbox" name="learningSkillCategory" value="Technical Skills" id="mrl-tech" /><label for="mrl-tech">Technical Skills</label>
+      <input type="checkbox" name="learningSkillCategory" value="Behavioural Skills" id="mrl-behav" /><label for="mrl-behav">Behavioural Skills</label>
+      <input type="checkbox" name="learningSkillCategory" value="Leadership Skills" id="mrl-lead" /><label for="mrl-lead">Leadership Skills</label>
+      <input type="checkbox" name="learningSkillCategory" value="Career Development" id="mrl-career" /><label for="mrl-career">Career Development</label>
+      <input type="checkbox" name="learningSkillCategory" value="Hobbies & Interests" id="mrl-hobbies" /><label for="mrl-hobbies">Hobbies &amp; Interests</label>
+    </div>
     <div class="skill-suggestions hidden" id="mentee-role-suggestions" data-target="learningGoals"></div>
     <label>My level of understanding or skill
       <select name="skillLevel" required>
@@ -859,6 +850,7 @@
           <label>Date<input type="date" name="date" required /></label>
           <label>Time<input type="time" name="time" required /></label>
         </div>
+        <p class="muted small" id="schedule-tz-hint"></p>
         <label>Duration
           <select name="duration">
             <option value="30">30 minutes</option>
@@ -866,6 +858,7 @@
             <option value="60">60 minutes</option>
           </select>
         </label>
+        <label>Video call link (optional)<input type="url" name="meetingLink" placeholder="Paste a Zoom, Meet, or Teams link" /></label>
         <p class="muted small">This builds a calendar invite for both of you, with reminders one day and 30 minutes before.</p>
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
