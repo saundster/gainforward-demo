@@ -247,28 +247,17 @@ function applyAvatarVisual(el, person) {
   }
 }
 
-/** Simulates SSO/HRIS-sourced identity: locks name/email/department/region
- * as read-only once the account already has that data, instead of letting
- * people self-edit fields that would really come from HR. A real deploy
- * would populate these from the actual identity provider on login; there's
- * no backend here to do that, so this only locks what's already on the
- * account (a brand-new demo persona with nothing on file stays editable). */
+/** Simulates SSO/HRIS-sourced identity: hides name/email/department/region
+ * once the account already has that data, since there's nothing for people
+ * to do with fields that just repeat their own information back to them.
+ * A real deploy would populate these from the identity provider on login;
+ * there's no backend here to do that, so this only hides what's already on
+ * the account (a brand-new demo persona with nothing on file sees and fills
+ * in the fields itself). */
 function applyIdentityLock(form, me) {
   const known = !!(me.fullName && me.email && me.department && me.geography);
-  ["fullName", "email", "department"].forEach((name) => {
-    const input = form.elements[name];
-    if (!input) return;
-    input.readOnly = known;
-    input.classList.toggle("field-locked", known);
-  });
-  const geo = form.elements["geography"];
-  if (geo) {
-    geo.classList.toggle("field-locked", known);
-    geo.style.pointerEvents = known ? "none" : "";
-    geo.tabIndex = known ? -1 : 0;
-  }
-  const note = form.querySelector(".identity-lock-note");
-  if (note) note.classList.toggle("hidden", !known);
+  const block = form.querySelector(".identity-block");
+  if (block) block.classList.toggle("hidden", known);
 }
 
 function renderUserChrome() {
@@ -695,7 +684,7 @@ function renderAdoptionList() {
 function sendBulkNudge(recipients, subject, body) {
   const withEmail = recipients.filter((e) => e?.email);
   if (!withEmail.length) {
-    toast("No one to nudge; nobody in this list has an email on file.", "error");
+    toast("Nobody in this list has an email on file to nudge.", "error");
     return;
   }
   const bcc = withEmail.map((e) => e.email).join(",");
@@ -961,7 +950,7 @@ function sendRequest(candidateId, total, breakdown, prepNote) {
   const toBusy = isAtCapacity(candidateId);
   if (fromBusy || toBusy) {
     const busyName = fromBusy ? me.displayName : candidate.displayName;
-    toast(`${busyName} ${fromBusy ? "would need a rematch before starting a new relationship" : "is at capacity right now"}.`, "error");
+    toast(`${busyName} ${fromBusy ? "would need a rematch before starting a new relationship" : "is at capacity"}.`, "error");
     return;
   }
 
@@ -2193,7 +2182,7 @@ function wireEvents() {
         clearAIConfig();
         openSettingsModal();
         refreshEmployeeSource().then(renderHome);
-        toast("Data source cleared, back to the demo roster.");
+        toast("Data source cleared. Back to the demo roster.");
         break;
     }
   });
@@ -2478,7 +2467,7 @@ function wireEvents() {
       submittedAt: new Date().toISOString().slice(0, 10),
     };
     savePersisted(STORAGE.journeys, journeys);
-    toast("Pulse check submitted. Thanks for the honest signal.", "success");
+    toast("Pulse check submitted.", "success");
     closeAllModals();
     renderJourney();
   });
