@@ -288,6 +288,10 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .stage-label { font-weight: 700; font-size: 0.82rem; color: var(--rg-purple-deep); overflow-wrap: break-word; }
 .stage-weeks { font-size: 0.75rem; color: var(--rg-gray-muted); overflow-wrap: break-word; }
 .stage-detail { font-size: 0.75rem; color: var(--rg-gray-muted); margin-top: 2px; overflow-wrap: break-word; }
+.stage-milestone {
+  font-size: 0.7rem; font-weight: 600; color: var(--rg-purple-deep); background: var(--rg-lavender-bg);
+  border-radius: 999px; padding: 3px 8px; margin-top: 8px; display: inline-block;
+}
 
 .session-log { display: flex; flex-direction: column; gap: 10px; }
 .session-item { border: 1px solid var(--rg-lavender-100); border-radius: var(--radius-md); padding: 10px 12px; }

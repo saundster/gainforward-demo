@@ -167,6 +167,14 @@ function findActiveJourneysFor(userId) {
 function getPartnerId(journey, userId) {
   return journey.participantA === userId ? journey.participantB : journey.participantA;
 }
+/** Journeys don't store "who's the mentor" directly — each person's own
+ * preferredFormat already says it, so derive the pairing's roles from that
+ * instead of adding a redundant field that could drift out of sync. */
+function journeyRoleLabel(me, partner) {
+  if (me.preferredFormat === "mentor" && partner?.preferredFormat === "mentee") return "You're mentoring";
+  if (me.preferredFormat === "mentee" && partner?.preferredFormat === "mentor") return "You're being mentored by";
+  return "With";
+}
 /** Mentors can hold multiple concurrent connections up to their stated capacity;
  * everyone else (mentees, peers, reverse) is still capped at one at a time. */
 function isAtCapacity(userId) {
@@ -795,12 +803,21 @@ function renderActiveJourneyCard() {
   const card = $("#active-journey-card");
   const journey = findActiveJourneyFor(CURRENT_USER_ID);
   if (!journey) {
-    card.innerHTML = `
-      <p class="muted small">No active journey yet. Start one from the Directory or by becoming a mentor.</p>
-      <button class="btn btn-primary btn-sm" data-action="goto-directory">Find a mentor</button>`;
+    const me = getCurrentUser();
+    const lookingFor = me.preferredFormat === "mentor" ? "mentee" : me.preferredFormat === "mentee" ? "mentor" : null;
+    card.innerHTML = lookingFor
+      ? `<p class="muted small">No active journey yet. Head to the Directory to find a ${lookingFor}.</p>
+      <button class="btn btn-primary btn-sm" data-action="goto-directory">Find a ${lookingFor}</button>`
+      : `<p class="muted small">No active journey yet. Become a mentor or mentee to get matched.</p>
+      <div class="row-actions">
+        <button class="btn btn-secondary btn-sm" data-action="open-become-mentor-role">Become a mentor</button>
+        <button class="btn btn-secondary btn-sm" data-action="open-become-mentee-role">Become a mentee</button>
+      </div>`;
     return;
   }
+  const me = getCurrentUser();
   const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
+  const roleLabel = journeyRoleLabel(me, partner);
   const completed = journey.sessions.filter((s) => s.completed).length;
   const progress = clamp(completed / 5, 0, 1);
   const stageIndex = clamp(completed, 0, PROGRAM_META.stages.length - 1);
@@ -828,7 +845,7 @@ function renderActiveJourneyCard() {
   card.innerHTML = `
     <div class="journey-summary">
       <div>
-        <div class="journey-partner">With ${partner ? partner.displayName : "—"}</div>
+        <div class="journey-partner">${roleLabel} ${partner ? partner.displayName : "—"}</div>
         <div class="journey-type">${journey.relationshipType} · Week ${weekNumber} of 12${paused ? ` <span class="chip chip--paused">Paused</span>` : ""}</div>
       </div>
       <div class="progress-track"><div class="progress-fill" style="width:${pct(progress)}"></div></div>
@@ -1173,7 +1190,9 @@ function renderJourney() {
   empty.classList.add("hidden");
   content.classList.remove("hidden");
 
+  const me = getCurrentUser();
   const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
+  const roleLabel = journeyRoleLabel(me, partner);
   const realStartDate = getJourneyStartDate(journey);
   const startDate = getJourneyEffectiveStartDate(journey);
   const completed = journey.sessions.filter((s) => s.completed).length;
@@ -1184,7 +1203,7 @@ function renderJourney() {
   const allMine = findActiveJourneysFor(CURRENT_USER_ID);
   const extraCount = allMine.length - 1;
   $("#journey-subtitle").textContent =
-    `With ${partner ? partner.displayName : "your partner"} · Week ${weekNumber} of 12 · started ${formatDateShort(
+    `${roleLabel} ${partner ? partner.displayName : "your partner"} · Week ${weekNumber} of 12 · started ${formatDateShort(
       new Date(`${realStartDate}T00:00:00`)
     )} · wraps up around ${pilotEndDate(startDate)}.` +
     (extraCount > 0 ? ` You also have ${extraCount} other active mentee${extraCount === 1 ? "" : "s"}; this shows the most recent.` : "");
@@ -1217,12 +1236,18 @@ function renderJourney() {
   $("#stage-tracker").innerHTML = PROGRAM_META.stages
     .map((stage, i) => {
       const state = i < completed ? "is-complete" : i === currentIndex ? "is-current" : "";
+      // The midpoint pulse check unlocks after the 2nd logged conversation
+      // (see pulseEligible below) — flagging it here too, not just in the
+      // pulse-check status line further down the page, since testers didn't
+      // expect a milestone that isn't shown anywhere on the timeline.
+      const pulseNote = i === 1 ? `<div class="stage-milestone">${journey.pulse ? "✓ Pulse check submitted" : "Midpoint pulse check unlocks after this"}</div>` : "";
       return `
       <div class="stage-step ${state}">
         <div class="stage-dot">${i < completed ? "✓" : i + 1}</div>
         <div class="stage-label">${stage.label}</div>
         <div class="stage-weeks">${stageDateRange(startDate, stage)}</div>
         <div class="stage-detail">${stage.detail}</div>
+        ${pulseNote}
       </div>`;
     })
     .join("");
@@ -1289,15 +1314,36 @@ function availableStagesFor(journey) {
   return PROGRAM_META.stages.filter((s) => !SINGLE_OCCURRENCE_STAGES.has(s.key) || !usedKeys.has(s.key));
 }
 
+/** What each stage's conversation is actually meant to produce — shown as the
+ * notes placeholder so "log a conversation" doesn't read as one generic form
+ * regardless of stage (e.g. Goal is meant to capture the agreed focus, not
+ * just "notes"). */
+const STAGE_NOTES_PROMPTS = {
+  connect: "How did the first conversation go? Any ground rules or expectations you agreed on?",
+  goal: "What did you agree as the learning/contribution goal for this relationship?",
+  challenge: "What real situation or case did you work through together?",
+  apply: "What workplace action (or AI experiment) did you try since your last conversation?",
+  transfer: "How are you closing out — continuing, wrapping up, or sharing what you learned?",
+};
+
 function openLogSessionModal() {
   const journey = findActiveJourneyFor(CURRENT_USER_ID);
   const startDate = journey ? getJourneyStartDate(journey) : null;
+  const completed = journey ? journey.sessions.filter((s) => s.completed).length : 0;
+  const nextStageIndex = clamp(completed, 0, PROGRAM_META.stages.length - 1);
+  const nextStageKey = PROGRAM_META.stages[nextStageIndex].key;
   const select = $("#log-session-stage");
   select.innerHTML = availableStagesFor(journey)
-    .map((s) => `<option value="${s.key}">${s.label}${startDate ? ` (${stageDateRange(startDate, s)})` : ""}</option>`)
+    .map((s) => `<option value="${s.key}" ${s.key === nextStageKey ? "selected" : ""}>${s.label}${startDate ? ` (${stageDateRange(startDate, s)})` : ""}</option>`)
     .join("");
+  const notesEl = $('#form-log-session textarea[name="notes"]');
+  const updateNotesPlaceholder = () => {
+    notesEl.placeholder = STAGE_NOTES_PROMPTS[select.value] || "What did you cover? Any real workplace application?";
+  };
+  select.onchange = updateNotesPlaceholder;
+  updateNotesPlaceholder();
   $('#form-log-session input[name="date"]').value = new Date().toISOString().slice(0, 10);
-  $('#form-log-session textarea[name="notes"]').value = "";
+  notesEl.value = "";
   openModal("modal-log-session");
 }
 
