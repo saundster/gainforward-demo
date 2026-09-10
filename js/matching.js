@@ -159,7 +159,7 @@ function matchReasons(seeker, candidate, breakdown) {
     const diffs = [];
     if (seeker.department !== candidate.department) diffs.push("a different function");
     if (seeker.geography !== candidate.geography) diffs.push("a different region");
-    reasons.push(diffs.length ? `Brings ${diffs.join(" and ")}: a genuinely different perspective` : "Brings a different perspective than your immediate team");
+    reasons.push(diffs.length ? `Brings ${diffs.join(" and ")} — a perspective outside your own immediate circle` : "Brings a different perspective than your immediate team");
   }
 
   if (byKey.format === 1) {
@@ -173,7 +173,7 @@ function matchReasons(seeker, candidate, breakdown) {
   }
 
   if (byKey.other === 1 && seeker.matchNote) {
-    reasons.push(`Matches a stated preference: "${seeker.matchNote}"`);
+    reasons.push(`Matches a stated preference: “${seeker.matchNote}”`);
   }
 
   if (byKey.deliveryFormat === 1 && seeker.deliveryFormat) {

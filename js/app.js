@@ -688,8 +688,8 @@ function getAttentionReasons(journey) {
   if (journey.pulse) {
     const avg = pulseAverageScore(journey.pulse);
     if (avg !== null && avg <= 2.5) reasons.push(`Pulse check averaged ${avg.toFixed(1)}/5`);
-    if (journey.pulse.continuation === "no") reasons.push('Someone answered "no" to continuing');
-    else if (journey.pulse.continuation === "maybe") reasons.push('Someone answered "maybe" to continuing');
+    if (journey.pulse.continuation === "no") reasons.push("Someone answered “no” to continuing");
+    else if (journey.pulse.continuation === "maybe") reasons.push("Someone answered “maybe” to continuing");
   }
   const lastSession = journey.sessions.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
   const lastActivityDate = lastSession ? lastSession.date : getJourneyStartDate(journey);
@@ -774,7 +774,7 @@ function sendBulkNudge(recipients, subject, body) {
     nudges.unshift({ id: uid("nudge"), fromId: CURRENT_USER_ID, toId: e.id, message: body, sentAt: new Date().toISOString() });
   });
   savePersisted(STORAGE.nudges, nudges);
-  toast(`Email draft opened, ${withEmail.length} people BCC'd.`, "success");
+  toast(`Email draft opened — ${withEmail.length} people BCC'd.`, "success");
   renderNudgeLog();
 }
 
@@ -808,9 +808,9 @@ function renderActiveJourneyCard() {
     ? `Schedule your first conversation: ${stage.label.toLowerCase()} is up first.`
     : completed >= 5
     ? journey.reflection
-      ? "All five conversations logged, reflection submitted."
+      ? "All five conversations logged — reflection submitted."
       : "All five conversations logged. Complete your final reflection."
-    : `Next up: your ${stage.label.toLowerCase()} conversation. Nothing on the calendar yet.`;
+    : `Next up: your ${stage.label.toLowerCase()} conversation — not on the calendar yet.`;
 
   card.innerHTML = `
     <div class="journey-summary">
@@ -1126,7 +1126,7 @@ function renderJourneyCleanup() {
         return `
         <div class="session-item">
           <div class="session-item-head"><span>${stage ? stage.label : m.stage} with ${partner ? partner.displayName : "your partner"}</span><span class="muted small">${meetingTimeLabel(m.startISO)}</span></div>
-          <div class="session-item-notes">Cancelled, still needs to be cleared from your real calendar.</div>
+          <div class="session-item-notes">Cancelled here, but still needs to be cleared from your calendar.</div>
           <div class="match-actions" style="margin-top:8px">
             <button class="btn btn-ghost btn-sm" data-action="download-cancel-ics" data-id="${m.id}">Download cancellation (.ics)</button>
           </div>
@@ -1147,7 +1147,7 @@ function agendaHTML(journey) {
   const who = isMine ? "you" : from?.displayName || "they";
   return `<strong>First conversation agenda</strong> <span class="muted small">(shared by ${who})</span>${
     journey.prepTopic ? `<div class="journey-agenda-topic">${journey.prepTopic}</div>` : ""
-  }${journey.prepNote ? `<div>Already looked into: "${journey.prepNote}"</div>` : ""}`;
+  }${journey.prepNote ? `<div>Already looked into: “${journey.prepNote}”</div>` : ""}`;
 }
 
 function renderJourney() {
@@ -1183,7 +1183,7 @@ function renderJourney() {
   $("#journey-subtitle").textContent =
     `With ${partner ? partner.displayName : "your partner"} · Week ${weekNumber} of 12 · started ${formatDateShort(
       new Date(`${realStartDate}T00:00:00`)
-    )}, wraps up around ${pilotEndDate(startDate)}.` +
+    )} · wraps up around ${pilotEndDate(startDate)}.` +
     (extraCount > 0 ? ` You also have ${extraCount} other active mentee${extraCount === 1 ? "" : "s"}; this shows the most recent.` : "");
 
   const pauseBtn = $("#btn-toggle-pause");
@@ -1263,7 +1263,7 @@ function renderJourney() {
     reflectionStatus.textContent = `Submitted${journey.reflection.submittedAt ? ` ${daysAgoLabel(journey.reflection.submittedAt)}` : ""}. You chose to ${OUTCOME_LABELS[journey.outcome] || "continue"}.`;
     reflectionBtn.textContent = "View final reflection";
   } else if (completed < 4) {
-    reflectionStatus.textContent = `${completed} of 4 conversations logged, ${4 - completed} more to unlock.`;
+    reflectionStatus.textContent = `${completed} of 4 conversations logged — ${4 - completed} more to unlock.`;
     reflectionBtn.textContent = "Complete final reflection";
   } else {
     reflectionStatus.textContent = "Unlocked, ready when you are.";
@@ -1405,7 +1405,7 @@ function openNudgeModal({ toId }) {
     body = `Hi ${firstName},\n\nJust a quick reminder about our ${stage ? stage.label.toLowerCase() : upcoming.stage} conversation, ${meetingTimeLabel(upcoming.startISO)}. Let me know if the time still works.\n\n${me.fullName}`;
   } else if (journey) {
     subject = "Checking in on Click";
-    body = `Hi ${firstName},\n\nJust checking in on our mentoring journey, would you like to schedule our next conversation?\n\n${me.fullName}`;
+    body = `Hi ${firstName},\n\nJust checking in on our mentoring journey — would you like to schedule our next conversation?\n\n${me.fullName}`;
   } else {
     subject = "Click: following up";
     body = `Hi ${firstName},\n\nFollowing up on Click. Let us know if there's anything you need to get started.\n\n${me.fullName}`;
@@ -1995,10 +1995,10 @@ function buildChatKnowledgeBase() {
   RESOURCE_LIBRARY.makingTheMost.phases.forEach((p) => kb.push({ a: p.tip, primary: `${p.phase} of a conversation`, secondary: p.tip }));
   SKILL_CATEGORIES.forEach((c) => kb.push({ a: `${c.description} Examples: ${c.examples.join(", ")}.`, primary: `${c.key} skill category`, secondary: `${c.description} ${c.examples.join(" ")}` }));
   kb.push({ a: "Go to Directory, browse or search by name, goal, or skill, and open a card to see your match score and connect. Connecting forms the relationship right away, no approval needed.", primary: "find a mentor in the directory", secondary: "search browse connect match score" });
-  kb.push({ a: "Go to My Journey and use \"Schedule a conversation\" to create a calendar invite (.ics, Google, or Outlook) with reminders.", primary: "schedule a conversation or meeting", secondary: "calendar invite booking reminders" });
-  kb.push({ a: "From My Journey, use \"End connection (rematch)\". It's no-fault, no explanation required. A Super Admin can also end a connection on someone's behalf from the Admin console.", primary: "end a connection or request a rematch", secondary: "stop pause quit leave the relationship" });
-  kb.push({ a: "Open your avatar menu in the top right and choose \"My profile\" to update what you're learning, offering, your availability, or your capacity.", primary: "edit or update my profile, hours, or frequency", secondary: "change settings capacity availability" });
-  kb.push({ a: "Open Learning Resources and check the \"Recommended for you\" tab — it matches a LinkedIn Learning course, and sometimes a YouTube video, to what you said you want to learn on your profile. Set a learning goal there first if nothing shows up.", primary: "find a course or video for what I'm learning", secondary: "linkedin learning youtube recommended course video training" });
+  kb.push({ a: "Go to My Journey and use “Schedule a conversation” to create a calendar invite (.ics, Google, or Outlook) with reminders.", primary: "schedule a conversation or meeting", secondary: "calendar invite booking reminders" });
+  kb.push({ a: "From My Journey, use “End connection (rematch).” It's no-fault, no explanation required. A Super Admin can also end a connection on someone's behalf from the Admin console.", primary: "end a connection or request a rematch", secondary: "stop pause quit leave the relationship" });
+  kb.push({ a: "Open your avatar menu in the top right and choose “My profile” to update what you're learning, offering, your availability, or your capacity.", primary: "edit or update my profile, hours, or frequency", secondary: "change settings capacity availability" });
+  kb.push({ a: "Open Learning Resources and check the “Recommended for you” tab — it matches a LinkedIn Learning course, and sometimes a YouTube video, to what you said you want to learn on your profile. Set a learning goal there first if nothing shows up.", primary: "find a course or video for what I'm learning", secondary: "linkedin learning youtube recommended course video training" });
   kb.push({ a: "You're signed out automatically after an hour with no activity, as a security precaution. Just log back in with your same credentials.", primary: "why was I signed out or logged out", secondary: "session timeout inactive expire" });
   return kb;
 }
@@ -2229,7 +2229,7 @@ function ensureJourneysSeeded() {
       startDate: "2026-07-09",
       sessions: [
         { id: "s1", stage: "connect", date: "2026-07-09", notes: "Built trust, agreed on a bi-weekly cadence.", completed: true },
-        { id: "s2", stage: "goal", date: "2026-07-21", notes: "Set 'present forecasts to leadership' as the goal.", completed: true },
+        { id: "s2", stage: "goal", date: "2026-07-21", notes: "Set “present forecasts to leadership” as the goal.", completed: true },
         { id: "s3", stage: "challenge", date: "2026-08-04", notes: "Walked through a real leadership deck together.", completed: true },
       ],
       meetings: [
@@ -2475,7 +2475,7 @@ function wireEvents() {
         clearAIConfig();
         openSettingsModal();
         refreshEmployeeSource().then(renderHome);
-        toast("Data source cleared. Back to the demo roster.");
+        toast("Data source cleared — back to the demo roster.");
         break;
     }
   });

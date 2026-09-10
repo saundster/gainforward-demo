@@ -275,7 +275,7 @@ const SEED_EMPLOYEES = [
     menteeCapacity: 5,
     experience: "Owns the Click program design and SOP",
     goalStatement: "",
-    purpose: "PD lead: facilitates the ecosystem, matching and pulse checks",
+    purpose: "PD lead: facilitates the ecosystem, including matching and pulse checks",
     interests: ["AI Maturity Pathway"],
     preferredFormat: "mentor",
     deliveryFormat: "Hybrid",
@@ -427,7 +427,7 @@ const DEMO_ACCOUNTS = [
     username: "mentor1",
     password: "Demo@2026",
     id: "demo-mentor-1",
-    scenario: "An experienced mentor with mentees already: good for exploring the Directory from the other side, and the Admin console's active connections.",
+    scenario: "An experienced mentor with mentees already: good for seeing the Directory from the other side, and for checking the Admin console's active connections.",
     employee: {
       fullName: "Priya Nair", displayName: "P. Nair", avatarInitials: "PN", email: "priya.nair@demo.click.app",
       department: "Customer Experience", division: "CX", careerLevel: "L4: Principal", tenureBand: "5+ yrs", geography: "EMEA",
@@ -475,7 +475,7 @@ const DEMO_ACCOUNTS = [
     username: "admin1",
     password: "Demo@2026",
     id: "demo-admin-1",
-    scenario: "The Admin persona: full view of the Admin console (roster, active connections, adoption, exports) plus nudging and status edits. Can't end a relationship or proxy into another account, that's Super Admin only.",
+    scenario: "The Admin persona: full view of the Admin console (roster, active connections, adoption, exports) plus nudging and status edits — ending a relationship or proxying into another account is Super Admin only.",
     employee: {
       fullName: "Morgan Lee", displayName: "M. Lee", avatarInitials: "ML", email: "morgan.lee@demo.click.app",
       adminRole: "admin",
@@ -509,7 +509,7 @@ const DEMO_ACCOUNTS = [
     username: "newuser1",
     password: "Demo@2026",
     id: "demo-new-1",
-    scenario: "A brand-new employee who hasn't set up a profile yet: good for showing the locked-down Home screen, the role tutorial, and the two \"I want to become a...\" flows.",
+    scenario: "A brand-new employee who hasn't set up a profile yet: good for showing the locked-down Home screen, the role tutorial, and the two “I want to become a…” flows.",
     employee: {
       fullName: "", displayName: "", avatarInitials: "", email: "",
       department: "", division: "", careerLevel: "", tenureBand: "", geography: "",
@@ -589,7 +589,7 @@ const RESOURCE_LIBRARY = {
     },
     {
       q: "Can I be both a mentor and a mentee?",
-      a: "Yes. Plenty of people mentor in one area and are mentored in another: that's the whole idea behind \"everyone has something to learn, everyone has something to contribute.\"",
+      a: "Yes. Plenty of people mentor in one area and are mentored in another: that's the whole idea behind “Everyone has something to learn. Everyone has something to contribute.”",
     },
     {
       q: "What's the difference between Mentor, Mentee, Peer, and Reverse mentoring?",
@@ -618,10 +618,10 @@ const RESOURCE_LIBRARY = {
     sections: [
       { heading: "Match on fit, not hierarchy", body: "The instinct is to pair people by seniority: a director mentors an associate. But the strongest pairings match on a specific learning goal against a specific skill, regardless of title. A senior IC who's spent five years doing exactly the thing you're trying to learn is often a better match than a director three levels up who did it once, a decade ago." },
       { heading: "Agree on ground rules in the first conversation", body: "Before diving into content, spend five minutes agreeing on three things: how often you'll meet, what happens if either of you needs to reschedule, and what's confidential. Pairs that skip this step often drift, not because the relationship failed, but because nobody actually owned making it happen." },
-      { heading: "Put it on the calendar, not on hope", body: "\"Let's find time\" is where most informal mentoring quietly dies. A recurring 30-minute slot, even if it sometimes gets moved, beats an open-ended intention every time. Momentum comes from cadence, not from any single conversation being perfect." },
+      { heading: "Put it on the calendar, not on hope", body: "“Let's find time” is where most informal mentoring quietly dies. A recurring 30-minute slot, even if it sometimes gets moved, beats an open-ended intention every time. Momentum comes from cadence, not from any single conversation being perfect." },
       { heading: "Treat it as an exchange, not a favor", body: "The mentee isn't the only one who's supposed to walk away with something. Mentors regularly report learning as much as they teach: a different vantage point on the business, a sharper way of explaining their own thinking, or just a reason to reflect on how they actually got good at something. If it only flows one direction, something's off." },
-      { heading: "Check the relationship, not just the topic", body: "It's easy to spend every session on content and never ask \"is this actually working for both of us?\" The midpoint pulse exists for exactly this reason. But you don't have to wait for it. A two-minute check-in early catches most problems before they become a reason to quietly stop showing up." },
-      { heading: "Close the loop deliberately", body: "Relationships that end with a short, explicit reflection (even an informal one) consistently produce more lasting value than ones that just taper off. It's the difference between \"we sort of stopped meeting\" and \"we did the thing, here's what came of it, here's what's next.\"" },
+      { heading: "Check the relationship, not just the topic", body: "It's easy to spend every session on content and never ask “is this actually working for both of us?” The midpoint pulse exists for exactly this reason. But you don't have to wait for it. A two-minute check-in early catches most problems before they become a reason to quietly stop showing up." },
+      { heading: "Close the loop deliberately", body: "Relationships that end with a short, explicit reflection (even an informal one) consistently produce more lasting value than ones that just taper off. It's the difference between “we sort of stopped meeting” and “we did the thing, here's what came of it, here's what's next.”" },
     ],
   },
 
@@ -629,10 +629,10 @@ const RESOURCE_LIBRARY = {
     intro: "Mentoring well is a specific skill, and it's different from managing or from simply being the expert in the room. Most of what goes wrong comes down to advising too early or too much.",
     sections: [
       { heading: "Listen before you advise", body: "The instinct when someone describes a problem is to jump straight to how you'd solve it. Resist it for a minute. Ask what they've already tried and what's made it hard. You'll often find the real question is different from the one they opened with, and your eventual advice will land better for it." },
-      { heading: "Share the reasoning, not just the answer", body: "\"Here's what I'd do\" is less useful than \"here's what I was weighing when I decided what to do.\" The reasoning is what your mentee can actually reuse in a different situation next month, when you're not in the room." },
+      { heading: "Share the reasoning, not just the answer", body: "“Here's what I'd do” is less useful than “here's what I was weighing when I decided what to do.” The reasoning is what your mentee can actually reuse in a different situation next month, when you're not in the room." },
       { heading: "Guide, don't direct", body: "It's your mentee's goal, their career, their call on what to act on. Your job is to widen the range of options they can see and pressure-test the ones they're leaning toward, not to hand them a decision." },
       { heading: "Confidentiality is non-negotiable", body: "Anything shared about a specific colleague, a performance concern, or a workplace conflict stays with you. The moment a mentee suspects otherwise, the relationship stops being useful. They'll simply stop bringing you the real issues." },
-      { heading: "It's fine to say \"I don't know\"", body: "Mentoring isn't a certification that you have every answer: it's a willingness to think something through with someone else. \"I haven't dealt with that, but here's how I'd think about it\" is a completely legitimate answer." },
+      { heading: "It's fine to say “I don't know”", body: "Mentoring isn't a certification that you have every answer: it's a willingness to think something through with someone else. “I haven't dealt with that, but here's how I'd think about it” is a completely legitimate answer." },
       { heading: "Expect nothing back", body: "This isn't a two-way obligation with a receipt. Most mentors report getting something out of it anyway. But if you go in expecting repayment, it'll show, and it'll change the dynamic." },
     ],
   },
@@ -640,10 +640,10 @@ const RESOURCE_LIBRARY = {
   menteeTips: {
     intro: "Mentees who get the most out of this program tend to do a few things differently, mostly around ownership. Your mentor can point the way; only you can walk it.",
     sections: [
-      { heading: "Bring a specific goal, not a general request", body: "\"I want career advice\" is hard for anyone to act on. \"I want to get comfortable presenting financials to execs within 12 weeks\" gives your mentor something concrete to actually help with, and gives you both a way to know if it's working." },
+      { heading: "Bring a specific goal, not a general request", body: "“I want career advice” is hard for anyone to act on. “I want to get comfortable presenting financials to execs within 12 weeks” gives your mentor something concrete to actually help with, and gives you both a way to know if it's working." },
       { heading: "Own the logistics", body: "Schedule the sessions. Set the agenda. Send the follow-up. A mentor who has to chase you for the next meeting will quietly deprioritize it, not out of malice, just bandwidth. The relationships that last are the ones the mentee visibly drives." },
       { heading: "Do the work in between", body: "The conversation itself is not the value: trying something and coming back with what happened is. If you leave a session with an idea and never test it, the next conversation just repeats the last one." },
-      { heading: "Give context, not just questions", body: "\"How do I get promoted?\" is hard to answer. \"I got told I need more executive presence, here's the specific feedback I got, here's what I've tried\" lets your mentor actually help instead of guessing." },
+      { heading: "Give context, not just questions", body: "“How do I get promoted?” is hard to answer. “I was told I need more executive presence — here's the specific feedback, and here's what I've tried” lets your mentor actually help instead of guessing." },
       { heading: "Be willing to hear the answer you didn't want", body: "The most useful feedback is rarely the most comfortable. If every conversation just confirms what you already believed, you're probably not getting the full picture." },
       { heading: "Respect the time you're being given", body: "Show up prepared. If you need to reschedule, do it early rather than as a no-show. Your mentor is choosing to spend time on this. Most will keep choosing it if it feels respected." },
     ],
@@ -663,7 +663,7 @@ const RESOURCE_LIBRARY = {
     "Turn it into a performance review or a complaints channel",
     "Disappear without a word: say so if you need to step back",
     "Expect a mentor to have every answer",
-    "Skip the first \"getting to know you\" conversation to save time: it's what makes the rest work",
+    "Skip the first “getting to know you” conversation to save time: it's what makes the rest work",
   ],
   dosDontsIntro: "A quick-reference version of everything in Best Practices and the mentor/mentee guides. Pin this if you just want the short list.",
 
@@ -672,7 +672,7 @@ const RESOURCE_LIBRARY = {
     phases: [
       { phase: "Before", tip: "Send a short agenda the day before: even three bullet points signals you're prepared and gives your partner time to think." },
       { phase: "Start", tip: "Spend the first few minutes on rapport, not straight into business: trust is what makes the advice land." },
-      { phase: "End", tip: "Leave the last five minutes for \"what will I actually try before we next meet?\"" },
+      { phase: "End", tip: "Leave the last five minutes for “what will I actually try before we next meet?”" },
       { phase: "After", tip: "Send a one-line follow-up on what you took away or tried: it closes the loop and builds momentum for next time." },
       { phase: "Ongoing", tip: "Revisit your goal every few sessions: it's fine for it to evolve as you learn more about what you actually need." },
     ],
@@ -826,7 +826,7 @@ const ROLE_TUTORIALS = {
     title: "Before you sign up as a Mentor",
     subtitle: "Here's what to expect.",
     points: [
-      { heading: "What a mentor does", body: "You share what you've learned with someone a bit earlier on the same path. Think less \"manager,\" more experienced friend: a sounding board who's been there before." },
+      { heading: "What a mentor does", body: "You share what you've learned with someone a bit earlier on the same path. Think less “manager,” more experienced friend: a sounding board who's been there before." },
       { heading: "Time commitment", body: "Most conversations run 30–60 minutes, on whatever cadence works for you (weekly, bi-weekly, or monthly) over about 12 weeks. You'll pick your own frequency and hours on the next screen." },
       { heading: "What's expected of you", body: "Show up prepared, listen before jumping to advice, and keep things confidential. You don't need every answer, just a willingness to think it through together." },
       { heading: "How many mentees you can take on", body: "You choose, anywhere from 1 to 10, and can hold that many at once. You're free to adjust the number later from your profile." },
