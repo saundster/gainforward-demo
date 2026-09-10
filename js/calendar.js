@@ -1,4 +1,4 @@
-/* Waypoint: calendar scheduling.
+/* Ripple: calendar scheduling.
    What this actually does without a backend or OAuth:
      1. Generates a real, standards-compliant .ics invite (with reminders
         baked in as VALARM blocks) that opens in Outlook desktop, Apple
@@ -41,7 +41,7 @@ function buildICS(opts) {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Waypoint//RateGain//EN",
+    "PRODID:-//Ripple//RateGain//EN",
     `METHOD:${opts.method}`,
     "BEGIN:VEVENT",
     `UID:${opts.uid}`,

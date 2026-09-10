@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Waypoint</title>
+<title>Ripple</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -24,16 +24,12 @@
         </linearGradient>
       </defs>
       <circle cx="32" cy="32" r="32" fill="url(#ck-grad-login)"/>
-      <circle cx="32" cy="32" r="13" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.6"/>
-      <g stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.6" stroke-linecap="round">
-        <line x1="44.02" y1="44.02" x2="48.26" y2="48.26"/>
-        <line x1="19.98" y1="44.02" x2="15.74" y2="48.26"/>
-        <line x1="19.98" y1="19.98" x2="15.74" y2="15.74"/>
-        <line x1="44.02" y1="19.98" x2="48.26" y2="15.74"/>
-      </g>
-      <circle cx="32" cy="32" r="7" fill="#FFFFFF"/>
+      <circle cx="27" cy="38" r="21" fill="none" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="1.6"/>
+      <circle cx="27" cy="38" r="14.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.8"/>
+      <circle cx="27" cy="38" r="8.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="2"/>
+      <circle cx="27" cy="38" r="3.4" fill="#FFFFFF"/>
     </svg>
-    <h1>Waypoint</h1>
+    <h1>Ripple</h1>
     <p class="login-sub">Sign in with the demo credentials you were given.</p>
     <p class="login-note hidden" id="login-timeout-note">You were signed out after an hour of inactivity.</p>
     <form id="form-login" class="form-stack">
@@ -67,7 +63,7 @@
       <circle cx="32" cy="32" r="7" fill="#FFFFFF"/>
     </svg>
     <div class="brand-text">
-      <span class="brand-name">Waypoint</span>
+      <span class="brand-name">Ripple</span>
     </div>
   </div>
 
@@ -954,7 +950,7 @@
     <label>Would you continue this partnership informally?
       <select name="wouldContinue"><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select>
     </label>
-    <label>Would you recommend Waypoint to a colleague?
+    <label>Would you recommend Ripple to a colleague?
       <select name="wouldRecommend"><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select>
     </label>
     <label>What would you change before this scales?<textarea name="whatToChange" rows="2"></textarea></label>
@@ -976,10 +972,10 @@
 <!-- Print-only report layout, used by the PDF export (browser "Save as PDF"). -->
 <div id="print-report" class="print-report"></div>
 
-<!-- Ask Waypoint: a rule-based assistant that answers only from the
+<!-- Ask Ripple: a rule-based assistant that answers only from the
      Learning Resources content already in this app (FAQs, tips, Skills
      Directory) — no external API calls, so there's no key to secure. -->
-<button id="chat-fab" class="chat-fab hidden" aria-label="Ask Waypoint" title="Ask Waypoint">
+<button id="chat-fab" class="chat-fab hidden" aria-label="Ask Ripple" title="Ask Ripple">
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="M4 5.5C4 4.67 4.67 4 5.5 4h13c.83 0 1.5.67 1.5 1.5v10c0 .83-.67 1.5-1.5 1.5H9l-4 3.5v-3.5H5.5C4.67 16.5 4 15.83 4 15v-9.5Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/>
     <circle cx="9" cy="10" r="1" fill="white"/>
@@ -988,13 +984,13 @@
   </svg>
 </button>
 
-<div id="chat-panel" class="chat-panel hidden" role="dialog" aria-label="Ask Waypoint">
+<div id="chat-panel" class="chat-panel hidden" role="dialog" aria-label="Ask Ripple">
   <div class="chat-panel-head">
-    <span>Ask Waypoint</span>
+    <span>Ask Ripple</span>
     <button type="button" id="chat-close" aria-label="Close">✕</button>
   </div>
   <div id="chat-log" class="chat-log">
-    <div class="chat-msg chat-msg--bot">Hi! Ask me about the program, mentoring, or how to use Waypoint. Try one of these, or type your own question.</div>
+    <div class="chat-msg chat-msg--bot">Hi! Ask me about the program, mentoring, or how to use Ripple. Try one of these, or type your own question.</div>
   </div>
   <div id="chat-suggestions" class="chat-suggestions"></div>
   <form id="chat-form" class="chat-form">

@@ -1,4 +1,4 @@
-/* Waypoint: mock employee/participant dataset.
+/* Ripple: mock employee/participant dataset.
    Schema follows the SOP "Participant Profile" (Section 16) plus the roadmap
    extension fields called out for the AI-powered dashboard (division, tenure,
    geography, engagement status). */
@@ -272,7 +272,7 @@ const SEED_EMPLOYEES = [
     offeredSkills: ["Program design", "Facilitation", "Coaching"],
     mentorSkillCategory: ["Leadership Skills"],
     menteeCapacity: 5,
-    experience: "Owns the Waypoint program design and SOP",
+    experience: "Owns the Ripple program design and SOP",
     goalStatement: "",
     purpose: "PD lead: facilitates the ecosystem, including matching and pulse checks",
     interests: ["AI Maturity Pathway"],
@@ -428,7 +428,7 @@ const DEMO_ACCOUNTS = [
     id: "demo-mentor-1",
     scenario: "An experienced mentor with mentees already: good for seeing the Directory from the other side, and for checking the Admin console's active connections.",
     employee: {
-      fullName: "Priya Nair", displayName: "P. Nair", avatarInitials: "PN", email: "priya.nair@demo.waypoint.app",
+      fullName: "Priya Nair", displayName: "P. Nair", avatarInitials: "PN", email: "priya.nair@demo.ripple.app",
       department: "Customer Experience", division: "CX", careerLevel: "L4: Principal", tenureBand: "5+ yrs", geography: "EMEA",
       learningGoals: [], offeredSkills: ["Client escalation handling", "Coaching new CSMs"], mentorSkillCategory: ["Behavioural Skills"], menteeCapacity: 4,
       experience: "8 years leading enterprise CX for EMEA hotel groups",
@@ -444,7 +444,7 @@ const DEMO_ACCOUNTS = [
     id: "demo-mentee-1",
     scenario: "A fresh mentee with no journey yet: good for exploring Directory search and instantly connecting from scratch.",
     employee: {
-      fullName: "Sam Ortiz", displayName: "S. Ortiz", avatarInitials: "SO", email: "sam.ortiz@demo.waypoint.app",
+      fullName: "Sam Ortiz", displayName: "S. Ortiz", avatarInitials: "SO", email: "sam.ortiz@demo.ripple.app",
       department: "Sales", division: "Commercial", careerLevel: "L2: Associate", tenureBand: "0-2 yrs", geography: "Americas",
       learningGoals: ["Negotiation tactics", "Deal storytelling"], learningSkillCategory: ["Behavioural Skills"], offeredSkills: [],
       experience: "1.5 years in enterprise sales",
@@ -460,7 +460,7 @@ const DEMO_ACCOUNTS = [
     id: "demo-mentee-2",
     scenario: "A mentee already partway through an active journey: good for exploring My Journey, calendar scheduling, nudges, and Insights with real data already in place.",
     employee: {
-      fullName: "Jordan Blake", displayName: "J. Blake", avatarInitials: "JB", email: "jordan.blake@demo.waypoint.app",
+      fullName: "Jordan Blake", displayName: "J. Blake", avatarInitials: "JB", email: "jordan.blake@demo.ripple.app",
       department: "MarTech", division: "MarTech", careerLevel: "L3: Senior", tenureBand: "3-5 yrs", geography: "APAC",
       learningGoals: ["Executive communication", "Revenue forecasting"], learningSkillCategory: ["Leadership Skills"], offeredSkills: ["Campaign analytics"], mentorSkillCategory: ["Technical Skills"],
       experience: "Marketing automation, lifecycle campaigns",
@@ -476,11 +476,11 @@ const DEMO_ACCOUNTS = [
     id: "demo-admin-1",
     scenario: "The Admin persona: full view of the Admin console (roster, active connections, adoption, exports) plus nudging and status edits — ending a relationship or proxying into another account is Super Admin only.",
     employee: {
-      fullName: "Morgan Lee", displayName: "M. Lee", avatarInitials: "ML", email: "morgan.lee@demo.waypoint.app",
+      fullName: "Morgan Lee", displayName: "M. Lee", avatarInitials: "ML", email: "morgan.lee@demo.ripple.app",
       adminRole: "admin",
       department: "People Development", division: "People & Culture", careerLevel: "L4: Principal", tenureBand: "5+ yrs", geography: "Americas",
       learningGoals: [], offeredSkills: ["Program facilitation", "Coaching"], mentorSkillCategory: ["Leadership Skills"], menteeCapacity: 3,
-      experience: "Runs the Waypoint program end to end",
+      experience: "Runs the Ripple program end to end",
       goalStatement: "", purpose: "I own the program design and review how connections are going.", skillLevel: "",
       interests: [], preferredFormat: "mentor", deliveryFormat: "Hybrid", preferredLanguage: "English", aiConfidence: "Practitioner",
       availability: { frequency: "Bi-weekly", hours: 1, timezone: "ET (UTC-5)", windows: "Mon/Wed afternoons" },
@@ -493,11 +493,11 @@ const DEMO_ACCOUNTS = [
     id: "demo-superadmin-1",
     scenario: "The Super Admin persona: everything Admin can do, plus ending a relationship on someone else's behalf and proxying into any account to see the app exactly as that person does.",
     employee: {
-      fullName: "Elena Vance", displayName: "E. Vance", avatarInitials: "EV", email: "elena.vance@demo.waypoint.app",
+      fullName: "Elena Vance", displayName: "E. Vance", avatarInitials: "EV", email: "elena.vance@demo.ripple.app",
       adminRole: "superadmin",
       department: "People Systems", division: "People & Culture", careerLevel: "L5: Director", tenureBand: "5+ yrs", geography: "Americas",
       learningGoals: [], offeredSkills: ["Program administration", "HRIS/SSO integration"], mentorSkillCategory: ["Leadership Skills"], menteeCapacity: 2,
-      experience: "Owns the Waypoint platform configuration and the HRIS/SSO integration",
+      experience: "Owns the Ripple platform configuration and the HRIS/SSO integration",
       goalStatement: "", purpose: "I administer the platform and step in when something needs an admin's hand.", skillLevel: "",
       interests: [], preferredFormat: "mentor", deliveryFormat: "Virtual", preferredLanguage: "English", aiConfidence: "Practitioner",
       availability: { frequency: "Monthly", hours: 1, timezone: "ET (UTC-5)", windows: "Fri mornings" },
@@ -596,7 +596,7 @@ const RESOURCE_LIBRARY = {
     },
     {
       q: "Does this affect my performance review?",
-      a: "No. Waypoint is explicitly not a performance-management tool. Conversations here are confidential and separate from any formal review process, and won't be used to make career or promotion decisions.",
+      a: "No. Ripple is explicitly not a performance-management tool. Conversations here are confidential and separate from any formal review process, and won't be used to make career or promotion decisions.",
     },
     {
       q: "What if I don't have much time?",

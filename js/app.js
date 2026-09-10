@@ -1,4 +1,4 @@
-/* Waypoint: app logic (tabs, forms, matching, journeys, insights, admin). */
+/* Ripple: app logic (tabs, forms, matching, journeys, insights, admin). */
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -284,7 +284,7 @@ function openProfileModal({ onboarding }) {
 
   // Sign-up builds the full profile in one go; this is the only place all of
   // this is asked, so there's nothing left to fill in piecemeal later.
-  $("#profile-modal-title").textContent = onboarding ? "Welcome to Waypoint, let's build your profile" : "Your profile";
+  $("#profile-modal-title").textContent = onboarding ? "Welcome to Ripple, let's build your profile" : "Your profile";
   $("#profile-modal-intro").textContent = onboarding
     ? "This is what powers your matches (about 5–7 minutes)."
     : "Update what you're learning, offering, and how you'd like to participate.";
@@ -1391,7 +1391,7 @@ function renderUpcomingMeetings(journey) {
       return `
       <div class="session-item">
         <div class="session-item-head"><span>${stage ? stage.label : m.stage} conversation (cancelled)</span><span class="muted small">${meetingTimeLabel(m.startISO)}</span></div>
-        <div class="session-item-notes">Removed from Waypoint. Download the cancellation file to also remove it from your calendar.</div>
+        <div class="session-item-notes">Removed from Ripple. Download the cancellation file to also remove it from your calendar.</div>
         <div class="match-actions" style="margin-top:8px">
           <button class="btn btn-ghost btn-sm" data-action="download-cancel-ics" data-id="${m.id}">Download cancellation (.ics)</button>
         </div>
@@ -1418,7 +1418,7 @@ function cancelMeeting(journey, meeting, reasonText) {
     sequence: meeting.sequence,
     method: "CANCEL",
     status: "CANCELLED",
-    title: `Waypoint: ${stage ? stage.label : meeting.stage} conversation`,
+    title: `Ripple: ${stage ? stage.label : meeting.stage} conversation`,
     description: reasonText || "This conversation was cancelled.",
     start: new Date(meeting.startISO),
     durationMins: meeting.durationMins,
@@ -1474,11 +1474,11 @@ function openNudgeModal({ toId }) {
     subject = `Reminder: your ${stage ? stage.label : upcoming.stage} conversation`;
     body = `Hi ${firstName},\n\nJust a quick reminder about our ${stage ? stage.label.toLowerCase() : upcoming.stage} conversation, ${meetingTimeLabel(upcoming.startISO)}. Let me know if the time still works.\n\n${me.fullName}`;
   } else if (journey) {
-    subject = "Checking in on Waypoint";
+    subject = "Checking in on Ripple";
     body = `Hi ${firstName},\n\nJust checking in on our mentoring journey — would you like to schedule our next conversation?\n\n${me.fullName}`;
   } else {
-    subject = "Waypoint: following up";
-    body = `Hi ${firstName},\n\nFollowing up on Waypoint. Let us know if there's anything you need to get started.\n\n${me.fullName}`;
+    subject = "Ripple: following up";
+    body = `Hi ${firstName},\n\nFollowing up on Ripple. Let us know if there's anything you need to get started.\n\n${me.fullName}`;
   }
 
   pendingNudge = { toId: recipientId, subject };
@@ -2028,7 +2028,7 @@ function renderResourcePanel() {
 }
 
 /* ---------------------------------------------------------------- */
-/* Ask Waypoint: rule-based assistant                                 */
+/* Ask Ripple: rule-based assistant                                 */
 /* Answers strictly from content already in RESOURCE_LIBRARY /        */
 /* SKILL_CATEGORIES — no external calls, so there's no API key to     */
 /* protect. Matching is plain keyword overlap, not real NLP.          */
@@ -2471,8 +2471,8 @@ function wireEvents() {
         const incomplete = getIncompleteProfiles();
         sendBulkNudge(
           incomplete,
-          "Finish setting up your Waypoint profile",
-          "Hi,\n\nA quick nudge to finish setting up your Waypoint profile; it only takes a few minutes and it's what powers your matches.\n\nThanks,\nPeople Development"
+          "Finish setting up your Ripple profile",
+          "Hi,\n\nA quick nudge to finish setting up your Ripple profile; it only takes a few minutes and it's what powers your matches.\n\nThanks,\nPeople Development"
         );
         break;
       }
@@ -2742,8 +2742,8 @@ function wireEvents() {
 
     const meetingId = uid("meet");
     const calUid = `${meetingId}@gainforward.rategain.com`;
-    const title = `Waypoint: ${stage ? stage.label : stageKey} conversation`;
-    const description = `${stage ? stage.detail : ""}\n\nScheduled from Waypoint: ${journey.relationshipType}.`;
+    const title = `Ripple: ${stage ? stage.label : stageKey} conversation`;
+    const description = `${stage ? stage.detail : ""}\n\nScheduled from Ripple: ${journey.relationshipType}.`;
     const meetingLink = fd.get("meetingLink").trim();
     const location = meetingLink || "No video link added — confirm one with your partner separately.";
     const attendees = [
@@ -2772,7 +2772,7 @@ function wireEvents() {
 
     pendingInvite = {
       icsText,
-      filename: `waypoint-${stageKey}-conversation.ics`,
+      filename: `ripple-${stageKey}-conversation.ics`,
       googleUrl: googleCalendarLink({ title, description, location, start, durationMins, attendees }),
       outlookUrl: outlookWebLink({ title, description, location, start, durationMins, attendees }),
     };

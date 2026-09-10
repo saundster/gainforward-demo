@@ -1,4 +1,4 @@
-/* Waypoint: RateGain "Pop Purple" brand kit
+/* Ripple: RateGain "Pop Purple" brand kit
    Palette + type extracted from the RateGain Mentorship & Peer Learning
    Ecosystem deck (theme: "Pop Purple", font: Manrope). No separate brand-kit
    file existed on disk, so these are the values actually used in the deck. */
@@ -528,7 +528,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .tour-step-title { font-weight: 700; color: var(--rg-purple-deep); font-size: 1.05rem; margin: 0 0 6px; }
 .tour-step-body { font-size: 0.9rem; color: var(--rg-gray-dark); line-height: 1.6; margin: 0; }
 
-/* Ask Waypoint: floating rule-based assistant. */
+/* Ask Ripple: floating rule-based assistant. */
 .chat-fab {
   position: fixed; bottom: 24px; right: 24px; z-index: 55;
   width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer;

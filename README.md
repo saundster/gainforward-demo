@@ -1,6 +1,6 @@
-# Waypoint — RateGain Mentorship Dashboard (prototype)
+# Ripple — RateGain Mentorship Dashboard (prototype)
 
-A working HTML/CSS/JS prototype of the "Waypoint" mentorship & peer-learning
+A working HTML/CSS/JS prototype of the "Ripple" mentorship & peer-learning
 dashboard described in the RateGain Mentorship & Peer Learning Ecosystem deck
 and SOP. No build step, no dependencies — open `index.html` or serve the folder.
 
@@ -113,7 +113,7 @@ frontend sits in front of it.
 - `js/calendar.js` — `.ics` generation, Google/Outlook quick-add links,
   cancellation builder, and the nudge `mailto:` composer
 - `js/app.js` — all UI logic, state, and persistence
-- `assets/logo.svg` — the Waypoint mark (also used as the favicon)
+- `assets/logo.svg` — the Ripple mark (also used as the favicon)
 - `docs/GainForward Participant Questionnaire.md` — the profile-setup
   questionnaire mentors and mentees complete; the onboarding form and "My
   profile" screen are built directly from these fields
