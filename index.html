@@ -201,6 +201,7 @@
     </div>
     <p class="muted" id="journey-subtitle">Once you're matched, your conversations and progress will show up here.</p>
     <div id="journey-pause-banner" class="pause-banner hidden"></div>
+    <div id="journey-prep-note" class="journey-note hidden"></div>
 
     <div id="journey-empty" class="panel hidden">
       <p>You don't have an active mentoring journey yet. Head to <strong>Find a Mentor</strong> or <strong>Become a Mentor</strong> to start one.</p>
@@ -402,6 +403,7 @@
         </select>
       </label>
     </div>
+    <p class="muted small identity-lock-note hidden">Synced from your HR profile via single sign-on and locked here.</p>
     <div id="profile-extended-fields" class="form-stack">
       <label>I want to learn (up to 3, comma-separated)<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting" /></label>
       <label>Category of what I want to learn
@@ -411,6 +413,7 @@
           <option value="Behavioural Skills">Behavioural Skills</option>
           <option value="Leadership Skills">Leadership Skills</option>
           <option value="Career Development">Career Development</option>
+          <option value="Hobbies & Interests">Hobbies &amp; Interests</option>
         </select>
       </label>
       <div class="skill-suggestions hidden" id="profile-learning-suggestions" data-target="learningGoals"></div>
@@ -431,11 +434,12 @@
           <option value="Behavioural Skills">Behavioural Skills</option>
           <option value="Leadership Skills">Leadership Skills</option>
           <option value="Career Development">Career Development</option>
+          <option value="Hobbies & Interests">Hobbies &amp; Interests</option>
         </select>
       </label>
       <div class="skill-suggestions hidden" id="profile-offering-suggestions" data-target="offeredSkills"></div>
       <label>Why would you want to mentor someone? (optional)<textarea name="purpose" rows="2" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned"></textarea></label>
-      <label>How many mentees could you take on?
+      <label>How many 1:1 mentees can you support at once?
         <select name="menteeCapacity">
           <option value="1">1 mentee</option>
           <option value="2">2 mentees</option>
@@ -449,7 +453,7 @@
           <option value="10">10 mentees</option>
         </select>
       </label>
-      <p class="muted small">Hours you can commit (below) is per mentee, not split between them; three mentees at two hours each is about six hours total.</p>
+      <p class="muted small">Every relationship is still one-on-one; nobody is grouped together. This just sets how many separate 1:1s you can hold at the same time. Hours you can commit (below) is per relationship, so three mentees at two hours each is about six hours of your time in total.</p>
       <div class="form-row">
         <label>Preferred format <span class="info-icon" tabindex="0">i<span class="info-tooltip">Mentor: you guide someone else. Mentee: someone guides you. Peer: two people at a similar level learning from each other, neither guiding. Reverse mentoring: someone earlier in their career teaches you something newer (a tool, a trend) while you mentor them using your experience.</span></span>
           <select name="preferredFormat">
@@ -524,6 +528,7 @@
         </select>
       </label>
     </div>
+    <p class="muted small identity-lock-note hidden">Synced from your HR profile via single sign-on and locked here.</p>
     <label>Reason to become a Mentor<textarea name="purpose" rows="3" placeholder="e.g. Reconnect with early-career craft, pay forward what I learned" required></textarea></label>
     <label>Skill category
       <select name="mentorSkillCategory" required>
@@ -531,11 +536,12 @@
         <option value="Behavioural Skills">Behavioural Skills</option>
         <option value="Leadership Skills">Leadership Skills</option>
         <option value="Career Development">Career Development</option>
+          <option value="Hobbies & Interests">Hobbies &amp; Interests</option>
       </select>
     </label>
     <label>What skills do you want to mentor on?<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching (up to 5, comma-separated)" required /></label>
     <div class="skill-suggestions hidden" id="mentor-role-suggestions" data-target="offeredSkills"></div>
-    <label>How many mentees could you take on?
+    <label>How many 1:1 mentees can you support at once?
       <select name="menteeCapacity" required>
         <option value="1">1 mentee</option>
         <option value="2">2 mentees</option>
@@ -549,7 +555,7 @@
         <option value="10">10 mentees</option>
       </select>
     </label>
-    <p class="muted small">Hours you can commit (below) is per mentee, not split between them; three mentees at two hours each is about six hours total.</p>
+    <p class="muted small">Every relationship is still one-on-one; nobody is grouped together. This just sets how many separate 1:1s you can hold at the same time. Hours you can commit (below) is per relationship, so three mentees at two hours each is about six hours of your time in total.</p>
     <div class="form-row">
       <label>Frequency
         <select name="frequency" required>
@@ -604,6 +610,7 @@
         </select>
       </label>
     </div>
+    <p class="muted small identity-lock-note hidden">Synced from your HR profile via single sign-on and locked here.</p>
     <label>What do you want to learn?<input type="text" name="learningGoals" placeholder="e.g. Executive communication, Revenue forecasting (up to 3, comma-separated)" required /></label>
     <label>Skill category
       <select name="learningSkillCategory" required>
@@ -611,6 +618,7 @@
         <option value="Behavioural Skills">Behavioural Skills</option>
         <option value="Leadership Skills">Leadership Skills</option>
         <option value="Career Development">Career Development</option>
+          <option value="Hobbies & Interests">Hobbies &amp; Interests</option>
       </select>
     </label>
     <div class="skill-suggestions hidden" id="mentee-role-suggestions" data-target="learningGoals"></div>

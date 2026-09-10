@@ -669,6 +669,11 @@ const SKILL_CATEGORIES = [
     description: "Navigating your own growth: building a career path, a personal brand, and the visibility that comes with both.",
     examples: ["Career planning", "Personal branding", "Interview preparation", "Building an internal network", "Navigating a promotion", "Working across functions", "Finding a career sponsor"],
   },
+  {
+    key: "Hobbies & Interests",
+    description: "Mentoring doesn't have to be about work. Share or pick up a personal interest with someone else who's into it.",
+    examples: ["Photography", "Cooking and baking", "Personal finance and investing", "Running or fitness training", "Playing an instrument", "Creative writing", "Gardening", "Home improvement / DIY", "Painting and drawing", "Public speaking for fun (storytelling, improv)"],
+  },
 ];
 
 /* Flattened, deduped skill list across all categories, used to power
@@ -681,7 +686,7 @@ const ALL_SKILL_EXAMPLES = [...new Set(SKILL_CATEGORIES.flatMap((c) => c.example
 const ROLE_TUTORIALS = {
   mentor: {
     title: "Before you sign up as a Mentor",
-    subtitle: "Here's what to expect, in five quick points.",
+    subtitle: "Here's what to expect.",
     points: [
       { heading: "What a mentor does", body: "You share what you've learned with someone a bit earlier on the same path. Think less \"manager,\" more experienced friend: a sounding board who's been there before." },
       { heading: "Time commitment", body: "Most conversations run 30–60 minutes, on whatever cadence works for you (weekly, bi-weekly, or monthly) over about 12 weeks. You'll pick your own frequency and hours on the next screen." },
@@ -692,7 +697,7 @@ const ROLE_TUTORIALS = {
   },
   mentee: {
     title: "Before you sign up as a Mentee",
-    subtitle: "Here's what to expect, in five quick points.",
+    subtitle: "Here's what to expect.",
     points: [
       { heading: "What a mentee does", body: "You bring the goal, whether it's a skill to build or a decision to think through, and drive things forward. Your mentor guides; the follow-through is on you." },
       { heading: "Time commitment", body: "Most conversations run 30–60 minutes, on whatever cadence works for you (weekly, bi-weekly, or monthly) over about 12 weeks. You'll pick your own frequency and hours on the next screen." },

@@ -235,21 +235,28 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 }
 #directory-search { flex: 1; min-width: 200px; }
 
-.directory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.directory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 20px; }
 .employee-card {
   background: white; border: 1px solid var(--rg-lavender-200); border-radius: var(--radius-lg);
-  padding: 18px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 10px;
+  padding: 22px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.employee-card-head { display: flex; gap: 10px; align-items: center; }
-.employee-name { font-weight: 700; color: var(--rg-purple-deep); font-size: 0.95rem; }
-.employee-meta { font-size: 0.78rem; color: var(--rg-gray-muted); }
-.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.75rem; font-weight: 600; padding: 4px 9px; border-radius: 999px; }
+.employee-card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(64,30,134,0.16); }
+.employee-card-head { display: flex; gap: 12px; align-items: center; }
+.employee-name { font-weight: 700; color: var(--rg-purple-deep); font-size: 1rem; }
+.employee-meta { font-size: 0.8rem; color: var(--rg-gray-muted); margin-top: 2px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
 .chip--available { background: #E6F4EA; color: var(--rg-success); }
 .chip--active { background: var(--rg-lavender-100); color: var(--rg-purple-deep); }
+.chip--skill { background: white; border: 1px solid var(--rg-lavender-200); color: var(--rg-gray-dark); font-weight: 500; }
 .chip--paused { background: #FDF3E4; color: var(--rg-warning); }
 .chip--closed { background: #F2F2F2; color: var(--rg-gray-muted); }
-.employee-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+.employee-card-footer {
+  display: flex; justify-content: space-between; align-items: center; margin-top: auto;
+  padding-top: 12px; border-top: 1px solid var(--rg-lavender-100);
+}
+.employee-card-footer .btn { width: 100%; }
 
 /* ---------- Stage tracker ---------- */
 .stage-tracker { display: flex; justify-content: space-between; gap: 6px; }
@@ -336,6 +343,9 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
   font-family: var(--font); font-weight: 400; padding: 9px 11px; border-radius: var(--radius-sm);
   border: 1px solid var(--rg-lavender-200); font-size: 0.88rem; color: var(--rg-gray-dark);
 }
+/* Identity fields synced from HR/SSO: read-only, visually locked. */
+.field-locked { background: #F2F2F2 !important; color: var(--rg-gray-muted) !important; cursor: not-allowed; }
+.identity-lock-note { margin-top: -4px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .checkbox-row { flex-direction: row !important; align-items: flex-start; font-weight: 500 !important; font-size: 0.8rem !important; }
 .checkbox-row input { width: auto; margin-top: 3px; }
@@ -344,6 +354,8 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .form-stack { display: flex; flex-direction: column; gap: 14px; }
 .security-note { background: #FDF3E4; color: #8A6414; font-size: 0.76rem; padding: 10px 12px; border-radius: var(--radius-sm); margin: 0; }
 .pause-banner { background: #FDF3E4; color: #8A6414; font-size: 0.82rem; padding: 10px 12px; border-radius: var(--radius-sm); margin: -8px 0 18px; }
+.journey-note { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.82rem; line-height: 1.5; padding: 12px 14px; border-radius: var(--radius-sm); margin: -8px 0 18px; }
+.journey-note strong { color: var(--rg-purple-deep); }
 .privacy-note { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.76rem; padding: 8px 12px; border-radius: var(--radius-sm); margin: -6px 0 0; }
 
 /* ---------- Reports / export ---------- */

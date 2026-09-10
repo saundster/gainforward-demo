@@ -196,6 +196,7 @@ function openProfileModal({ onboarding }) {
   form.email.value = me.email || "";
   form.department.value = me.department || "";
   if (me.geography) form.geography.value = me.geography;
+  applyIdentityLock(form, me);
   form.learningGoals.value = (me.learningGoals || []).join(", ");
   form.learningSkillCategory.value = me.learningSkillCategory || "";
   form.skillLevel.value = me.skillLevel || "";
@@ -244,6 +245,30 @@ function applyAvatarVisual(el, person) {
     el.style.backgroundImage = "";
     el.textContent = person?.avatarInitials || "?";
   }
+}
+
+/** Simulates SSO/HRIS-sourced identity: locks name/email/department/region
+ * as read-only once the account already has that data, instead of letting
+ * people self-edit fields that would really come from HR. A real deploy
+ * would populate these from the actual identity provider on login; there's
+ * no backend here to do that, so this only locks what's already on the
+ * account (a brand-new demo persona with nothing on file stays editable). */
+function applyIdentityLock(form, me) {
+  const known = !!(me.fullName && me.email && me.department && me.geography);
+  ["fullName", "email", "department"].forEach((name) => {
+    const input = form.elements[name];
+    if (!input) return;
+    input.readOnly = known;
+    input.classList.toggle("field-locked", known);
+  });
+  const geo = form.elements["geography"];
+  if (geo) {
+    geo.classList.toggle("field-locked", known);
+    geo.style.pointerEvents = known ? "none" : "";
+    geo.tabIndex = known ? -1 : 0;
+  }
+  const note = form.querySelector(".identity-lock-note");
+  if (note) note.classList.toggle("hidden", !known);
 }
 
 function renderUserChrome() {
@@ -441,6 +466,7 @@ function openBecomeMentorRoleModal() {
   form.email.value = me.email || "";
   form.department.value = me.department || "";
   if (me.geography) form.geography.value = me.geography;
+  applyIdentityLock(form, me);
   form.purpose.value = me.purpose || "";
   if (me.mentorSkillCategory) form.mentorSkillCategory.value = me.mentorSkillCategory;
   form.offeredSkills.value = (me.offeredSkills || []).join(", ");
@@ -460,6 +486,7 @@ function openBecomeMenteeRoleModal() {
   form.email.value = me.email || "";
   form.department.value = me.department || "";
   if (me.geography) form.geography.value = me.geography;
+  applyIdentityLock(form, me);
   form.learningGoals.value = (me.learningGoals || []).join(", ");
   if (me.learningSkillCategory) form.learningSkillCategory.value = me.learningSkillCategory;
   if (me.skillLevel) form.skillLevel.value = me.skillLevel;
@@ -811,10 +838,12 @@ function renderDirectory() {
   grid.innerHTML = results
     .map((e) => {
       const existing = requests.find((r) => r.fromId === CURRENT_USER_ID && r.toId === e.id && r.status !== "declined");
-      const skillsChips = (e.offeredSkills && e.offeredSkills.length ? e.offeredSkills : e.learningGoals || [])
-        .slice(0, 4)
-        .map((s) => `<span class="chip">${s}</span>`)
+      const allSkills = e.offeredSkills && e.offeredSkills.length ? e.offeredSkills : e.learningGoals || [];
+      const skillsChips = allSkills
+        .slice(0, 3)
+        .map((s) => `<span class="chip chip--skill">${s}</span>`)
         .join("");
+      const extraSkills = allSkills.length - 3;
       return `
       <div class="employee-card">
         <div class="employee-card-head">
@@ -829,7 +858,7 @@ function renderDirectory() {
           <span class="chip">${formatLabel(e.preferredFormat)}</span>
           ${e.rating ? `<span class="chip">★ ${e.rating.toFixed(1)} · ${e.menteeCount} mentees</span>` : ""}
         </div>
-        <div class="chip-row">${skillsChips}</div>
+        <div class="chip-row">${skillsChips}${extraSkills > 0 ? `<span class="chip chip--skill">+${extraSkills} more</span>` : ""}</div>
         <div class="employee-card-footer">
           <button class="btn btn-secondary btn-sm" data-action="request-mentor" data-id="${e.id}">
             ${existing ? "View connection" : "View match & connect"}
@@ -896,20 +925,35 @@ function openMatchModalFor(candidateId) {
         ? `<p class="muted small">You already have an active journey. You'll need a rematch before starting a new one.</p>`
         : candidateBusy
         ? `<p class="muted small">${candidate.displayName} ${candidate.preferredFormat === "mentor" && candidate.menteeCapacity ? "is at capacity right now" : "already has an active journey right now"}.</p>`
-        : `<button class="btn btn-primary" id="btn-send-request">Connect now</button>
+        : `<label class="match-prep-label">Before you connect: what have you already tried, read, or thought through on your own about this?
+             <textarea id="match-prep-note" rows="2" placeholder="e.g. I've read a beginner's guide and worked through a few practice questions on my own"></textarea>
+           </label>
+           <p class="muted small">A little groundwork means the first conversation builds on something, instead of starting from zero. ${candidate.displayName} will see what you share here.</p>
+           <button class="btn btn-primary" id="btn-send-request">Connect now</button>
            <p class="muted small" style="margin-top:6px">This connects you right away, no approval needed. People Development can review it anytime and step in if something looks off.</p>`
     }
   `;
 
   openModal("modal-match");
   const sendBtn = $("#btn-send-request");
-  if (sendBtn) sendBtn.addEventListener("click", () => sendRequest(candidateId, total, breakdown));
+  if (sendBtn) {
+    sendBtn.addEventListener("click", () => {
+      const noteEl = $("#match-prep-note");
+      const prepNote = (noteEl?.value || "").trim();
+      if (prepNote.length < 10) {
+        toast("Add a quick note on what you've already tried or thought through; a sentence is enough.", "error");
+        noteEl?.focus();
+        return;
+      }
+      sendRequest(candidateId, total, breakdown, prepNote);
+    });
+  }
 }
 
 /** Connections form immediately on request, no admin approval gate. Admin can
  * still review any active connection and end it (no-fault rematch) at any time;
  * that's the guardrail, not a pre-approval step. */
-function sendRequest(candidateId, total, breakdown) {
+function sendRequest(candidateId, total, breakdown, prepNote) {
   const candidate = getEmployeeById(candidateId);
   const me = getCurrentUser();
 
@@ -949,6 +993,8 @@ function sendRequest(candidateId, total, breakdown) {
     reflection: null,
     pausedAt: null,
     pausedDays: 0,
+    prepNote: prepNote || "",
+    prepNoteFromId: CURRENT_USER_ID,
   });
   if (candidate.menteeCount != null) candidate.menteeCount += 1;
 
@@ -1009,6 +1055,7 @@ function renderJourney() {
     $("#journey-subtitle").textContent = "Once you're matched, your conversations and progress will show up here.";
     $("#btn-toggle-pause").classList.add("hidden");
     $("#journey-pause-banner").classList.add("hidden");
+    $("#journey-prep-note").classList.add("hidden");
     renderJourneyCleanup();
     return;
   }
@@ -1044,6 +1091,17 @@ function renderJourney() {
     banner.textContent = `Paused since ${formatDateShort(new Date(`${journey.pausedAt}T00:00:00`))}. Meetings are on hold until you resume.`;
   } else {
     banner.classList.add("hidden");
+  }
+
+  const prepNoteEl = $("#journey-prep-note");
+  if (journey.prepNote) {
+    const isMine = journey.prepNoteFromId === CURRENT_USER_ID;
+    const from = getEmployeeById(journey.prepNoteFromId);
+    const who = isMine ? "you" : from?.displayName || "they";
+    prepNoteEl.classList.remove("hidden");
+    prepNoteEl.innerHTML = `<strong>Before connecting, ${who} shared:</strong> "${journey.prepNote}"`;
+  } else {
+    prepNoteEl.classList.add("hidden");
   }
 
   renderUpcomingMeetings(journey);
