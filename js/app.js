@@ -10,6 +10,8 @@ const STORAGE = {
   overrides: "gainforward.employeeOverrides",
   nudges: "gainforward.nudges",
   activeDemoUser: "gainforward.activeDemoUser",
+  adminLog: "gainforward.adminLog",
+  proxy: "gainforward.proxySession",
 };
 
 let CURRENT_USER_ID = null;
@@ -17,7 +19,25 @@ let employees = [];
 let requests = loadPersisted(STORAGE.requests, []);
 let journeys = loadPersisted(STORAGE.journeys, null); // null = not yet seeded this browser
 let nudges = loadPersisted(STORAGE.nudges, []);
+let adminLog = loadPersisted(STORAGE.adminLog, []);
 let dataSourceInfo = { source: "seed" };
+
+/** A Super Admin viewing the app as someone else: { adminId, targetId }.
+ * Kept in sessionStorage (not localStorage) so it's scoped to this tab and
+ * never survives closing the browser, but does survive an accidental reload. */
+let PROXY = null;
+function restoreProxySession() {
+  try {
+    const raw = sessionStorage.getItem(STORAGE.proxy);
+    PROXY = raw ? JSON.parse(raw) : null;
+  } catch {
+    PROXY = null;
+  }
+}
+function persistProxySession() {
+  if (PROXY) sessionStorage.setItem(STORAGE.proxy, JSON.stringify(PROXY));
+  else sessionStorage.removeItem(STORAGE.proxy);
+}
 
 function loadPersisted(key, fallback) {
   try {
@@ -101,6 +121,30 @@ function getEmployeeById(id) {
 function getCurrentUser() {
   return getEmployeeById(CURRENT_USER_ID) || employees[0];
 }
+/** Two admin tiers: Admin (full view + export + nudging + status edits) and
+ * Super Admin (all of that, plus ending a relationship on someone else's
+ * behalf and proxying into another account). */
+function isAdminUser(me) {
+  return me.adminRole === "admin" || me.adminRole === "superadmin";
+}
+function isSuperAdminUser(me) {
+  return me.adminRole === "superadmin";
+}
+function roleLabel(me) {
+  if (me.adminRole === "superadmin") return "Super Admin";
+  if (me.adminRole === "admin") return "Admin";
+  return "";
+}
+
+/** Lightweight, visible record of who did what with elevated access (ending
+ * a relationship on someone else's behalf, proxying into an account), so
+ * Admins can see it happened even though only Super Admin can trigger it. */
+function logAdminAction(message, actorId) {
+  const actor = getEmployeeById(actorId || CURRENT_USER_ID);
+  adminLog.unshift({ id: uid("log"), ts: new Date().toISOString(), actorName: actor?.displayName || "Someone", message });
+  adminLog = adminLog.slice(0, 50);
+  savePersisted(STORAGE.adminLog, adminLog);
+}
 function isJourneyOpen(j) {
   return j.formalStatus !== "closed";
 }
@@ -148,6 +192,19 @@ function openModal(id) {
   $(`#${id}`).classList.remove("hidden");
 }
 let isOnboarding = false;
+
+/** Generic yes/cancel confirmation, reused for any destructive action
+ * (right now just ending a relationship) instead of a one-off modal each time. */
+let pendingConfirmAction = null;
+function openConfirmModal({ title, body, confirmLabel = "Confirm", danger = false }, onConfirm) {
+  pendingConfirmAction = onConfirm;
+  $("#confirm-title").textContent = title;
+  $("#confirm-body").textContent = body;
+  const btn = $("#confirm-yes");
+  btn.textContent = confirmLabel;
+  btn.className = `btn btn-sm ${danger ? "btn-danger" : "btn-primary"}`;
+  openModal("modal-confirm");
+}
 
 /** Profile photo: undefined = untouched this session, null = explicitly
  * removed, a data URL = a new photo just picked. Resized/cropped client-side
@@ -266,7 +323,14 @@ function renderUserChrome() {
   applyAvatarVisual($("#dropdown-avatar"), me);
   $("#dropdown-name").textContent = me.fullName || "Your name";
   $("#dropdown-role").textContent = me.profileComplete ? `${me.department || "—"} · ${me.geography || "—"}` : "Profile not set up yet";
+  const badge = $("#dropdown-role-badge");
+  const label = roleLabel(me);
+  badge.textContent = label;
+  badge.classList.toggle("hidden", !label);
+  badge.classList.toggle("chip--superadmin", me.adminRole === "superadmin");
+  badge.classList.toggle("chip--admin", me.adminRole === "admin");
   applyAccessGate();
+  renderProxyBanner();
 }
 
 /** Before a profile exists, a new user can only pick a role, nothing else,
@@ -274,7 +338,7 @@ function renderUserChrome() {
 function applyAccessGate() {
   const me = getCurrentUser();
   const locked = !me.profileComplete;
-  const isAdmin = !!me.isAdmin;
+  const isAdmin = isAdminUser(me);
   $all(".nav-tab-gated").forEach((btn) => {
     const needsAdmin = btn.classList.contains("nav-tab-admin");
     btn.classList.toggle("hidden", locked || (needsAdmin && !isAdmin));
@@ -494,7 +558,7 @@ function openBecomeMenteeRoleModal() {
 function switchTab(tab) {
   const me = getCurrentUser();
   if (!me.profileComplete && tab !== "home") tab = "home";
-  if ((tab === "insights" || tab === "admin") && !me.isAdmin) tab = "home";
+  if ((tab === "insights" || tab === "admin") && !isAdminUser(me)) tab = "home";
   $all(".tab-btn").forEach((b) => {
     const active = b.dataset.tab === tab;
     b.classList.toggle("is-active", active);
@@ -642,7 +706,7 @@ function renderAttentionList() {
         <div class="match-actions">
           <button class="btn btn-ghost btn-sm" data-action="open-nudge" data-id="${from?.id || ""}">Nudge ${from?.displayName || ""}</button>
           <button class="btn btn-ghost btn-sm" data-action="open-nudge" data-id="${to?.id || ""}">Nudge ${to?.displayName || ""}</button>
-          <button class="btn btn-danger-outline btn-sm" data-action="rematch" data-id="${j.id}">End connection (rematch)</button>
+          ${isSuperAdminUser(getCurrentUser()) ? `<button class="btn btn-danger-outline btn-sm" data-action="rematch" data-id="${j.id}">End connection (rematch)</button>` : ""}
         </div>
       </div>`;
     })
@@ -939,9 +1003,9 @@ function openMatchModalFor(candidateId) {
   }
 }
 
-/** Connections form immediately on request, no admin approval gate. Admin can
- * still review any active connection and end it (no-fault rematch) at any time;
- * that's the guardrail, not a pre-approval step. */
+/** Connections form immediately on request, no admin approval gate. A Super
+ * Admin can still review any active connection and end it (no-fault rematch)
+ * at any time; that's the guardrail, not a pre-approval step. */
 function sendRequest(candidateId, total, breakdown, prepNote) {
   const candidate = getEmployeeById(candidateId);
   const me = getCurrentUser();
@@ -1043,6 +1107,7 @@ function renderJourney() {
     content.classList.add("hidden");
     $("#journey-subtitle").textContent = "Once you're matched, your conversations and progress will show up here.";
     $("#btn-toggle-pause").classList.add("hidden");
+    $("#btn-end-connection").classList.add("hidden");
     $("#journey-pause-banner").classList.add("hidden");
     $("#journey-prep-note").classList.add("hidden");
     renderJourneyCleanup();
@@ -1073,6 +1138,10 @@ function renderJourney() {
   pauseBtn.textContent = paused ? "Resume relationship" : "Pause relationship";
   pauseBtn.className = `btn btn-sm ${paused ? "btn-primary" : "btn-secondary"}`;
   pauseBtn.id = "btn-toggle-pause";
+
+  const endBtn = $("#btn-end-connection");
+  endBtn.classList.remove("hidden");
+  endBtn.dataset.id = journey.id;
 
   const banner = $("#journey-pause-banner");
   if (paused) {
@@ -1504,8 +1573,9 @@ function renderInsights() {
 /* Admin · PD Console                                                 */
 /* ---------------------------------------------------------------- */
 /** Not a pre-approval gate; connections are already live by the time they show up
- * here. This is PD's guardrail: review why the system paired two people, and end
- * (no-fault rematch) a connection at any point if something looks off. */
+ * here. This is PD's guardrail: review why the system paired two people. Only a
+ * Super Admin can end (no-fault rematch) a connection from here if something
+ * looks off; a plain Admin can review and nudge but not end it. */
 function renderMatchingQueue() {
   const container = $("#matching-queue");
   const search = ($("#matching-queue-search").value || "").trim().toLowerCase();
@@ -1557,7 +1627,7 @@ function renderMatchingQueue() {
           </div>
         </details>
         <div class="match-actions">
-          <button class="btn btn-danger-outline btn-sm" data-action="rematch" data-id="${j.id}">End connection (rematch)</button>
+          ${isSuperAdminUser(getCurrentUser()) ? `<button class="btn btn-danger-outline btn-sm" data-action="rematch" data-id="${j.id}">End connection (rematch)</button>` : ""}
         </div>
       </div>`;
     })
@@ -1602,7 +1672,7 @@ function renderRoster() {
       const extraCount = allJourneys.length - 1;
       return `
       <tr>
-        <td>${e.displayName}${e.id === CURRENT_USER_ID ? " (you)" : ""}</td>
+        <td>${e.displayName}${e.id === CURRENT_USER_ID ? " (you)" : ""}${roleLabel(e) ? ` <span class="chip chip--${e.adminRole}">${roleLabel(e)}</span>` : ""}</td>
         <td>${e.department}</td>
         <td>${e.geography}</td>
         <td>${formatLabel(e.preferredFormat)}</td>
@@ -1615,7 +1685,8 @@ function renderRoster() {
         <td>
           <div class="row-actions">
             ${e.id !== CURRENT_USER_ID ? `<button class="btn btn-ghost btn-sm" data-action="open-nudge" data-id="${e.id}">Nudge</button>` : ""}
-            ${journey ? `<button class="btn btn-ghost btn-sm" data-action="rematch" data-id="${journey.id}">Rematch</button>` : ""}
+            ${journey && isSuperAdminUser(getCurrentUser()) ? `<button class="btn btn-ghost btn-sm" data-action="rematch" data-id="${journey.id}">Rematch</button>` : ""}
+            ${e.id !== CURRENT_USER_ID && isSuperAdminUser(getCurrentUser()) ? `<button class="btn btn-ghost btn-sm" data-action="proxy-user" data-id="${e.id}">Proxy</button>` : ""}
           </div>
         </td>
       </tr>`;
@@ -1647,13 +1718,36 @@ function saveCurrentUserProfile(fields) {
   savePersisted(STORAGE.overrides, overrides);
 }
 
+/** Confirms before ending a relationship, since there's no undo. Wording
+ * differs depending on whether you're ending your own relationship (My
+ * Journey) or someone else's on their behalf (Admin console). */
+function confirmRematch(journeyId) {
+  const journey = journeys.find((j) => j.id === journeyId);
+  if (!journey) return;
+  const me = getCurrentUser();
+  const isMine = journey.participantA === me.id || journey.participantB === me.id;
+  const a = getEmployeeById(journey.participantA);
+  const b = getEmployeeById(journey.participantB);
+  const body = isMine
+    ? "This ends your current relationship and cancels any upcoming meetings. You'll both be free to find a new match. This can't be undone."
+    : `This ends the relationship between ${a?.displayName || "this participant"} and ${b?.displayName || "their partner"} and cancels any upcoming meetings. This can't be undone.`;
+  openConfirmModal({ title: "End this connection?", body, confirmLabel: "End connection", danger: true }, () => triggerRematch(journeyId));
+}
+
 function triggerRematch(journeyId) {
   const journey = journeys.find((j) => j.id === journeyId);
   if (!journey) return;
+  const actor = getCurrentUser();
+  const isAdminAction = actor.id !== journey.participantA && actor.id !== journey.participantB;
   journey.formalStatus = "closed";
   journey.outcome = "rematch";
   const cancelledCount = cancelUpcomingMeetings(journey, "This relationship was rematched before this conversation happened.");
   savePersisted(STORAGE.journeys, journeys);
+  if (isAdminAction) {
+    const a = getEmployeeById(journey.participantA);
+    const b = getEmployeeById(journey.participantB);
+    logAdminAction(`Ended the relationship between ${a?.displayName || "someone"} and ${b?.displayName || "someone"}.`);
+  }
   toast(
     cancelledCount
       ? `No-fault rematch recorded. ${cancelledCount} upcoming calendar invite${cancelledCount === 1 ? "" : "s"} cancelled automatically. Download the cancellation file${cancelledCount === 1 ? "" : "s"} from My Journey to clear ${cancelledCount === 1 ? "it" : "them"} off your calendar.`
@@ -1671,6 +1765,26 @@ function renderAdmin() {
   renderAdoptionList();
   renderRoster();
   renderNudgeLog();
+  renderAdminLog();
+}
+
+function renderAdminLog() {
+  const container = $("#admin-log-list");
+  if (!container) return;
+  if (!adminLog.length) {
+    container.innerHTML = `<p class="empty-state">No admin activity yet.</p>`;
+    return;
+  }
+  container.innerHTML = adminLog
+    .slice(0, 15)
+    .map(
+      (entry) => `
+      <div class="session-item">
+        <div class="session-item-head"><span>${entry.actorName}</span><span class="muted small">${daysAgoLabel(entry.ts.slice(0, 10))}</span></div>
+        <div class="session-item-notes">${entry.message}</div>
+      </div>`
+    )
+    .join("");
 }
 
 /* ---------------------------------------------------------------- */
@@ -1799,7 +1913,7 @@ function buildChatKnowledgeBase() {
   SKILL_CATEGORIES.forEach((c) => kb.push({ a: `${c.description} Examples: ${c.examples.join(", ")}.`, primary: `${c.key} skill category`, secondary: `${c.description} ${c.examples.join(" ")}` }));
   kb.push({ a: "Go to Directory, browse or search by name, goal, or skill, and open a card to see your match score and connect. Connecting forms the relationship right away, no approval needed.", primary: "find a mentor in the directory", secondary: "search browse connect match score" });
   kb.push({ a: "Go to My Journey and use \"Schedule a conversation\" to create a calendar invite (.ics, Google, or Outlook) with reminders.", primary: "schedule a conversation or meeting", secondary: "calendar invite booking reminders" });
-  kb.push({ a: "From My Journey (or the Admin console if you're an admin), use the rematch option. It's no-fault, no explanation required.", primary: "end a connection or request a rematch", secondary: "stop pause quit leave the relationship" });
+  kb.push({ a: "From My Journey, use \"End connection (rematch)\". It's no-fault, no explanation required. A Super Admin can also end a connection on someone's behalf from the Admin console.", primary: "end a connection or request a rematch", secondary: "stop pause quit leave the relationship" });
   kb.push({ a: "Open your avatar menu in the top right and choose \"My profile\" to update what you're learning, offering, your availability, or your capacity.", primary: "edit or update my profile, hours, or frequency", secondary: "change settings capacity availability" });
   kb.push({ a: "You're signed out automatically after an hour with no activity, as a security precaution. Just log back in with your same credentials.", primary: "why was I signed out or logged out", secondary: "session timeout inactive expire" });
   return kb;
@@ -1946,6 +2060,74 @@ function ensureCurrentUser() {
   }
 
   CURRENT_USER_ID = current.id;
+
+  // A Super Admin's proxy session overrides which account is "current",
+  // without touching activeDemoUser, so the admin's own login survives it.
+  if (PROXY) {
+    if (getEmployeeById(PROXY.targetId)) {
+      CURRENT_USER_ID = PROXY.targetId;
+    } else {
+      PROXY = null;
+      persistProxySession();
+    }
+  }
+}
+
+/** A brand-new account (like the newuser1 demo persona) has no name yet, so
+ * fall back to its login username rather than showing a blank in the banner/log. */
+function proxyLabel(emp) {
+  if (!emp) return "this account";
+  if (emp.displayName) return emp.displayName;
+  if (emp.fullName) return emp.fullName;
+  const account = DEMO_ACCOUNTS.find((a) => a.id === emp.id);
+  return account ? `${account.username} (no profile yet)` : "this account";
+}
+
+/** Lets a Super Admin see (and act in) the app exactly as another account
+ * would, for troubleshooting or finishing a stuck task on someone's behalf.
+ * The original admin identity is remembered so "Exit proxy" can restore it. */
+function startProxy(targetId) {
+  const anchorAdminId = PROXY ? PROXY.adminId : CURRENT_USER_ID;
+  const admin = getEmployeeById(anchorAdminId);
+  const target = getEmployeeById(targetId);
+  if (!admin || !isSuperAdminUser(admin) || !target || targetId === anchorAdminId) return;
+  PROXY = { adminId: anchorAdminId, targetId };
+  persistProxySession();
+  CURRENT_USER_ID = targetId;
+  logAdminAction(`Started viewing the app as ${proxyLabel(target)}.`, anchorAdminId);
+  toast(`Viewing as ${proxyLabel(target)}.`, "success");
+  renderUserChrome();
+  switchTab("home");
+  renderHome();
+}
+
+function exitProxy() {
+  if (!PROXY) return;
+  const admin = getEmployeeById(PROXY.adminId);
+  const target = getEmployeeById(PROXY.targetId);
+  if (admin && target) logAdminAction(`Stopped viewing the app as ${proxyLabel(target)}.`, admin.id);
+  CURRENT_USER_ID = PROXY.adminId;
+  PROXY = null;
+  persistProxySession();
+  toast("Exited proxy view.");
+  renderUserChrome();
+  switchTab("admin");
+  renderHome();
+}
+
+function renderProxyBanner() {
+  const banner = $("#proxy-banner");
+  const exitBtn = $("#exit-proxy-btn");
+  if (PROXY) {
+    const admin = getEmployeeById(PROXY.adminId);
+    const target = getEmployeeById(PROXY.targetId);
+    $("#proxy-banner-text").textContent = `Viewing as ${proxyLabel(target)} — proxied by ${proxyLabel(admin)}. Actions you take here are attributed to them.`;
+    banner.classList.remove("hidden");
+    exitBtn.classList.remove("hidden");
+  } else {
+    banner.classList.add("hidden");
+    exitBtn.classList.add("hidden");
+  }
 }
 
 /* ---------------------------------------------------------------- */
@@ -2108,7 +2290,7 @@ function wireEvents() {
         break;
       case "open-settings":
         $("#user-menu").classList.add("hidden");
-        if (getCurrentUser().isAdmin) openSettingsModal();
+        if (isAdminUser(getCurrentUser())) openSettingsModal();
         break;
       case "view-profile":
         $("#user-menu").classList.add("hidden");
@@ -2117,6 +2299,8 @@ function wireEvents() {
       case "sign-out":
         $("#user-menu").classList.add("hidden");
         localStorage.removeItem(STORAGE.activeDemoUser);
+        PROXY = null;
+        persistProxySession();
         CURRENT_USER_ID = null;
         showLoginScreen();
         break;
@@ -2171,7 +2355,20 @@ function wireEvents() {
         break;
       }
       case "rematch":
-        triggerRematch(el.dataset.id);
+        confirmRematch(el.dataset.id);
+        break;
+      case "confirm-yes": {
+        const action = pendingConfirmAction;
+        pendingConfirmAction = null;
+        closeAllModals();
+        if (action) action();
+        break;
+      }
+      case "proxy-user":
+        startProxy(el.dataset.id);
+        break;
+      case "exit-proxy":
+        exitProxy();
         break;
       case "toggle-accordion": {
         const panel = $(`[data-panel="${el.dataset.idx}"]`);
@@ -2567,6 +2764,7 @@ async function startApp() {
 
 async function init() {
   wireEvents();
+  restoreProxySession();
   const activeId = localStorage.getItem(STORAGE.activeDemoUser);
   if (activeId && DEMO_ACCOUNTS.some((a) => a.id === activeId)) {
     await startApp();
@@ -2588,6 +2786,8 @@ setInterval(() => {
   if (!CURRENT_USER_ID) return;
   if (Date.now() - lastActivityAt < IDLE_LIMIT_MS) return;
   localStorage.removeItem(STORAGE.activeDemoUser);
+  PROXY = null;
+  persistProxySession();
   CURRENT_USER_ID = null;
   $("#login-timeout-note").classList.remove("hidden");
   showLoginScreen();

@@ -80,13 +80,14 @@
   </nav>
 
   <div class="topbar-actions">
+    <button class="btn btn-primary btn-sm hidden" id="exit-proxy-btn" data-action="exit-proxy">Exit proxy</button>
     <div class="avatar-menu">
       <button id="user-avatar-btn" class="avatar" aria-haspopup="true" aria-expanded="false">JD</button>
       <div id="user-menu" class="dropdown hidden">
         <div class="dropdown-header">
           <div class="avatar avatar--sm" id="dropdown-avatar">JD</div>
           <div>
-            <div class="dropdown-name" id="dropdown-name">John Doe</div>
+            <div class="dropdown-name"><span id="dropdown-name">John Doe</span> <span class="chip hidden" id="dropdown-role-badge"></span></div>
             <div class="dropdown-role" id="dropdown-role">Profile not set up yet</div>
           </div>
         </div>
@@ -99,6 +100,10 @@
     </div>
   </div>
 </header>
+
+<div id="proxy-banner" class="proxy-banner hidden">
+  <span id="proxy-banner-text"></span>
+</div>
 
 <main>
 
@@ -197,6 +202,7 @@
       <h2>My Journey</h2>
       <div class="panel-head-actions">
         <button class="btn btn-secondary btn-sm hidden" id="btn-toggle-pause" data-action="toggle-pause">Pause relationship</button>
+        <button class="btn btn-danger-outline btn-sm hidden" id="btn-end-connection" data-action="rematch" data-id="">End connection (rematch)</button>
       </div>
     </div>
     <p class="muted" id="journey-subtitle">Once you're matched, your conversations and progress will show up here.</p>
@@ -363,6 +369,12 @@
     <div class="panel">
       <div class="panel-head"><h2>Recent nudges</h2></div>
       <div id="nudge-log-list" class="session-log"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Recent admin activity</h2></div>
+      <p class="muted small">Relationships ended, and proxy sessions started or ended, by an Admin or Super Admin.</p>
+      <div id="admin-log-list" class="session-log"></div>
     </div>
   </section>
 
@@ -703,6 +715,20 @@
   </div>
   <div class="resource-tabs" id="resource-tabs"></div>
   <div id="resource-panel" class="modal-body resource-panel"></div>
+</div>
+
+<div id="modal-confirm" class="modal hidden" role="alertdialog" aria-modal="true">
+  <div class="modal-head">
+    <h2 id="confirm-title">Are you sure?</h2>
+    <button class="modal-close" data-action="close-modal">✕</button>
+  </div>
+  <div class="modal-body">
+    <p class="muted small" id="confirm-body"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirm-yes" data-action="confirm-yes">Confirm</button>
+    </div>
+  </div>
 </div>
 
 <div id="modal-nudge" class="modal hidden" role="dialog" aria-modal="true">

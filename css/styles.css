@@ -74,6 +74,15 @@ h1, h2, h3 { color: var(--rg-purple-deep); margin: 0; }
   top: 0;
   z-index: 30;
 }
+.proxy-banner {
+  background: #FDF3E4;
+  color: var(--rg-warning);
+  border-bottom: 1px solid #F3E0B8;
+  padding: 8px 28px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+}
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
 .brand-name { font-weight: 800; font-size: 1.05rem; color: var(--rg-purple-deep); }
@@ -111,7 +120,7 @@ h1, h2, h3 { color: var(--rg-purple-deep); margin: 0; }
   padding: 10px; z-index: 40;
 }
 .dropdown-header { display: flex; gap: 10px; align-items: center; padding: 6px 8px 12px; border-bottom: 1px solid var(--rg-lavender-100); margin-bottom: 6px; }
-.dropdown-name { font-weight: 700; font-size: 0.9rem; color: var(--rg-purple-deep); }
+.dropdown-name { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-weight: 700; font-size: 0.9rem; color: var(--rg-purple-deep); }
 .dropdown-role { font-size: 0.75rem; color: var(--rg-gray-muted); }
 .dropdown-item {
   display: block; width: 100%; text-align: left; background: none; border: none; padding: 9px 8px;
@@ -200,6 +209,8 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .btn-ghost:hover { background: var(--rg-lavender-bg); }
 .btn-danger-outline { background: transparent; color: var(--rg-danger); border: 1px solid #F0CFCB; }
 .btn-danger-outline:hover { background: #FBF0EF; }
+.btn-danger { background: var(--rg-danger); color: white; }
+.btn-danger:hover { filter: brightness(1.08); }
 
 /* ---------- Mentor list / cards ---------- */
 .mentor-list { display: flex; flex-direction: column; gap: 10px; }
@@ -246,11 +257,13 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .employee-name { font-weight: 700; color: var(--rg-purple-deep); font-size: 1rem; }
 .employee-meta { font-size: 0.8rem; color: var(--rg-gray-muted); margin-top: 2px; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 7px; }
-.chip { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+.chip { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
 .chip--available { background: #E6F4EA; color: var(--rg-success); }
 .chip--active { background: var(--rg-lavender-100); color: var(--rg-purple-deep); }
 .chip--skill { background: white; border: 1px solid var(--rg-lavender-200); color: var(--rg-gray-dark); font-weight: 500; }
 .chip--paused { background: #FDF3E4; color: var(--rg-warning); }
+.chip--admin { background: var(--rg-lavender-100); color: var(--rg-purple-deep); font-size: 0.68rem; vertical-align: middle; }
+.chip--superadmin { background: var(--rg-purple-deep); color: white; font-size: 0.68rem; vertical-align: middle; }
 .chip--closed { background: #F2F2F2; color: var(--rg-gray-muted); }
 .employee-card-footer {
   display: flex; justify-content: space-between; align-items: center; margin-top: auto;
