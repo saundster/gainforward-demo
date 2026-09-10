@@ -272,14 +272,12 @@ function openProfileModal({ onboarding }) {
   form.mentorSkillCategory.value = me.mentorSkillCategory || "";
   if (me.menteeCapacity) form.menteeCapacity.value = me.menteeCapacity;
   form.goalStatement.value = me.goalStatement || "";
-  form.preferredMentorLevel.value = me.preferredMentorLevel || "";
   form.purpose.value = me.purpose || "";
   if (me.preferredFormat) form.preferredFormat.value = me.preferredFormat;
   if (me.aiConfidence) form.aiConfidence.value = me.aiConfidence;
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
   if (me.availability?.hours) form.hours.value = me.availability.hours;
   form.timezone.value = me.availability?.timezone || "";
-  form.windows.value = me.availability?.windows || "";
   form.deliveryFormat.value = me.deliveryFormat || "";
   form.preferredLanguage.value = me.preferredLanguage || "";
   form.matchNote.value = me.matchNote || "";
@@ -542,7 +540,6 @@ function openBecomeMentorRoleModal() {
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
   if (me.availability?.hours) form.hours.value = me.availability.hours;
   form.timezone.value = me.availability?.timezone || "";
-  form.windows.value = me.availability?.windows || "";
   form.deliveryFormat.value = me.deliveryFormat || "";
   form.preferredLanguage.value = me.preferredLanguage || "";
   form.consentAck.checked = !!me.consentAck;
@@ -561,11 +558,9 @@ function openBecomeMenteeRoleModal() {
   form.learningGoals.value = (me.learningGoals || []).join(", ");
   if (me.learningSkillCategory) form.learningSkillCategory.value = me.learningSkillCategory;
   if (me.skillLevel) form.skillLevel.value = me.skillLevel;
-  form.preferredMentorLevel.value = me.preferredMentorLevel || "";
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
   if (me.availability?.hours) form.hours.value = me.availability.hours;
   form.timezone.value = me.availability?.timezone || "";
-  form.windows.value = me.availability?.windows || "";
   form.deliveryFormat.value = me.deliveryFormat || "";
   form.preferredLanguage.value = me.preferredLanguage || "";
   form.goalStatement.value = me.goalStatement || "";
@@ -2564,11 +2559,10 @@ function wireEvents() {
       goalStatement: fd.get("goalStatement").trim(),
       purpose: fd.get("purpose").trim(),
       preferredFormat: fd.get("preferredFormat"),
-      preferredMentorLevel: fd.get("preferredMentorLevel"),
       deliveryFormat: fd.get("deliveryFormat"),
       preferredLanguage: fd.get("preferredLanguage"),
       aiConfidence: fd.get("aiConfidence"),
-      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—", windows: fd.get("windows").trim() },
+      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
       matchNote: fd.get("matchNote").trim(),
       photoUrl: pendingPhotoUrl === undefined ? me.photoUrl : pendingPhotoUrl,
     };
@@ -2610,7 +2604,7 @@ function wireEvents() {
       menteeCapacity: Number(fd.get("menteeCapacity")) || 1,
       deliveryFormat: fd.get("deliveryFormat"),
       preferredLanguage: fd.get("preferredLanguage"),
-      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—", windows: fd.get("windows").trim() },
+      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
       consentAck: fd.get("consentAck") === "on",
       preferredFormat: "mentor",
       engagementStatus: me.engagementStatus === "closed" ? "available" : me.engagementStatus,
@@ -2648,10 +2642,9 @@ function wireEvents() {
         .slice(0, 3),
       skillLevel: fd.get("skillLevel"),
       learningSkillCategory: fd.get("learningSkillCategory"),
-      preferredMentorLevel: fd.get("preferredMentorLevel"),
       deliveryFormat: fd.get("deliveryFormat"),
       preferredLanguage: fd.get("preferredLanguage"),
-      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—", windows: fd.get("windows").trim() },
+      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
       goalStatement: fd.get("goalStatement").trim(),
       consentAck: fd.get("consentAck") === "on",
       preferredFormat: "mentee",
