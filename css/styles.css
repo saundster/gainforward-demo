@@ -368,6 +368,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .pause-banner { background: #FDF3E4; color: #8A6414; font-size: 0.82rem; padding: 10px 12px; border-radius: var(--radius-sm); margin: -8px 0 18px; }
 .journey-note { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.82rem; line-height: 1.5; padding: 12px 14px; border-radius: var(--radius-sm); margin: -8px 0 18px; }
 .journey-note strong { color: var(--rg-purple-deep); }
+.journey-agenda-topic { font-weight: 700; color: var(--rg-purple-deep); margin: 4px 0 2px; }
 .privacy-note { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.76rem; padding: 8px 12px; border-radius: var(--radius-sm); margin: -6px 0 0; }
 
 /* ---------- Reports / export ---------- */

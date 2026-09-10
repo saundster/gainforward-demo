@@ -272,12 +272,16 @@ function openProfileModal({ onboarding }) {
   form.mentorSkillCategory.value = me.mentorSkillCategory || "";
   if (me.menteeCapacity) form.menteeCapacity.value = me.menteeCapacity;
   form.goalStatement.value = me.goalStatement || "";
+  form.preferredMentorLevel.value = me.preferredMentorLevel || "";
   form.purpose.value = me.purpose || "";
   if (me.preferredFormat) form.preferredFormat.value = me.preferredFormat;
   if (me.aiConfidence) form.aiConfidence.value = me.aiConfidence;
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
   if (me.availability?.hours) form.hours.value = me.availability.hours;
   form.timezone.value = me.availability?.timezone || "";
+  form.windows.value = me.availability?.windows || "";
+  form.deliveryFormat.value = me.deliveryFormat || "";
+  form.preferredLanguage.value = me.preferredLanguage || "";
   form.matchNote.value = me.matchNote || "";
   form.consentAck.checked = !!me.consentAck;
 
@@ -538,6 +542,9 @@ function openBecomeMentorRoleModal() {
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
   if (me.availability?.hours) form.hours.value = me.availability.hours;
   form.timezone.value = me.availability?.timezone || "";
+  form.windows.value = me.availability?.windows || "";
+  form.deliveryFormat.value = me.deliveryFormat || "";
+  form.preferredLanguage.value = me.preferredLanguage || "";
   form.consentAck.checked = !!me.consentAck;
   refreshSkillSuggestions(form, "mentorSkillCategory", "mentor-role-suggestions", "offeredSkills");
   openModal("modal-become-mentor-role");
@@ -554,9 +561,13 @@ function openBecomeMenteeRoleModal() {
   form.learningGoals.value = (me.learningGoals || []).join(", ");
   if (me.learningSkillCategory) form.learningSkillCategory.value = me.learningSkillCategory;
   if (me.skillLevel) form.skillLevel.value = me.skillLevel;
+  form.preferredMentorLevel.value = me.preferredMentorLevel || "";
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
   if (me.availability?.hours) form.hours.value = me.availability.hours;
   form.timezone.value = me.availability?.timezone || "";
+  form.windows.value = me.availability?.windows || "";
+  form.deliveryFormat.value = me.deliveryFormat || "";
+  form.preferredLanguage.value = me.preferredLanguage || "";
   form.goalStatement.value = me.goalStatement || "";
   form.consentAck.checked = !!me.consentAck;
   refreshSkillSuggestions(form, "learningSkillCategory", "mentee-role-suggestions", "learningGoals");
@@ -989,10 +1000,13 @@ function openMatchModalFor(candidateId) {
         ? `<p class="muted small">You already have an active journey. You'll need a rematch before starting a new one.</p>`
         : candidateBusy
         ? `<p class="muted small">${candidate.displayName} ${candidate.preferredFormat === "mentor" && candidate.menteeCapacity ? "is at capacity right now" : "already has an active journey right now"}.</p>`
-        : `<label class="match-prep-label">Before you connect: what have you already tried, read, or thought through on your own about this?
+        : `<label class="match-prep-label">Topic for your first conversation
+             <input type="text" id="match-prep-topic" placeholder="e.g. Getting a first enterprise deal narrative right" />
+           </label>
+           <label class="match-prep-label">What have you already tried, read, or thought through on your own about this?
              <textarea id="match-prep-note" rows="2" placeholder="e.g. I've read a beginner's guide and worked through a few practice questions on my own"></textarea>
            </label>
-           <p class="muted small">A little groundwork means the first conversation builds on something, instead of starting from zero. ${candidate.displayName} will see what you share here.</p>
+           <p class="muted small">A little groundwork means the first conversation builds on something, instead of starting from zero. ${candidate.displayName} will see this agenda before you meet.</p>
            <button class="btn btn-primary" id="btn-send-request">Connect now</button>
            <p class="muted small" style="margin-top:6px">This connects you right away, no approval needed. People Development can review it anytime and step in if something looks off.</p>`
     }
@@ -1002,14 +1016,21 @@ function openMatchModalFor(candidateId) {
   const sendBtn = $("#btn-send-request");
   if (sendBtn) {
     sendBtn.addEventListener("click", () => {
+      const topicEl = $("#match-prep-topic");
       const noteEl = $("#match-prep-note");
+      const prepTopic = (topicEl?.value || "").trim();
       const prepNote = (noteEl?.value || "").trim();
+      if (prepTopic.length < 3) {
+        toast("Add a short topic for your first conversation.", "error");
+        topicEl?.focus();
+        return;
+      }
       if (prepNote.length < 10) {
         toast("Add a quick note on what you've already tried or thought through; a sentence is enough.", "error");
         noteEl?.focus();
         return;
       }
-      sendRequest(candidateId, total, breakdown, prepNote);
+      sendRequest(candidateId, total, breakdown, prepTopic, prepNote);
     });
   }
 }
@@ -1017,7 +1038,7 @@ function openMatchModalFor(candidateId) {
 /** Connections form immediately on request, no admin approval gate. A Super
  * Admin can still review any active connection and end it (no-fault rematch)
  * at any time; that's the guardrail, not a pre-approval step. */
-function sendRequest(candidateId, total, breakdown, prepNote) {
+function sendRequest(candidateId, total, breakdown, prepTopic, prepNote) {
   const candidate = getEmployeeById(candidateId);
   const me = getCurrentUser();
 
@@ -1057,6 +1078,7 @@ function sendRequest(candidateId, total, breakdown, prepNote) {
     reflection: null,
     pausedAt: null,
     pausedDays: 0,
+    prepTopic: prepTopic || "",
     prepNote: prepNote || "",
     prepNoteFromId: CURRENT_USER_ID,
   });
@@ -1106,6 +1128,20 @@ function renderJourneyCleanup() {
       });
   });
   $("#journey-cleanup-list").innerHTML = rows.join("");
+}
+
+/** The agenda a mentee sets before connecting: a topic plus what they've
+ * already looked into, so the first conversation starts from something
+ * instead of "so, what do you want to talk about?" Shown on My Journey and
+ * again when scheduling, so it's never buried after the connect moment. */
+function agendaHTML(journey) {
+  if (!journey.prepTopic && !journey.prepNote) return "";
+  const isMine = journey.prepNoteFromId === CURRENT_USER_ID;
+  const from = getEmployeeById(journey.prepNoteFromId);
+  const who = isMine ? "you" : from?.displayName || "they";
+  return `<strong>First conversation agenda</strong> <span class="muted small">(shared by ${who})</span>${
+    journey.prepTopic ? `<div class="journey-agenda-topic">${journey.prepTopic}</div>` : ""
+  }${journey.prepNote ? `<div>Already looked into: "${journey.prepNote}"</div>` : ""}`;
 }
 
 function renderJourney() {
@@ -1163,15 +1199,9 @@ function renderJourney() {
   }
 
   const prepNoteEl = $("#journey-prep-note");
-  if (journey.prepNote) {
-    const isMine = journey.prepNoteFromId === CURRENT_USER_ID;
-    const from = getEmployeeById(journey.prepNoteFromId);
-    const who = isMine ? "you" : from?.displayName || "they";
-    prepNoteEl.classList.remove("hidden");
-    prepNoteEl.innerHTML = `<strong>Before connecting, ${who} shared:</strong> "${journey.prepNote}"`;
-  } else {
-    prepNoteEl.classList.add("hidden");
-  }
+  const agenda = agendaHTML(journey);
+  prepNoteEl.classList.toggle("hidden", !agenda);
+  prepNoteEl.innerHTML = agenda;
 
   renderUpcomingMeetings(journey);
 
@@ -1431,6 +1461,10 @@ function openScheduleMeetingModal() {
     .map((s, i) => `<option value="${s.key}" ${i === nextStageIndex ? "selected" : ""}>${s.label}</option>`)
     .join("");
   $("#schedule-with-line").textContent = `With ${partner ? partner.displayName : "your partner"}${partner?.email ? ` (${partner.email})` : ""}.`;
+  const agendaNote = $("#schedule-agenda-note");
+  const agenda = agendaHTML(journey);
+  agendaNote.classList.toggle("hidden", !agenda);
+  agendaNote.innerHTML = agenda;
 
   const form = $("#form-schedule-meeting");
   form.reset();
@@ -2486,8 +2520,11 @@ function wireEvents() {
       goalStatement: fd.get("goalStatement").trim(),
       purpose: fd.get("purpose").trim(),
       preferredFormat: fd.get("preferredFormat"),
+      preferredMentorLevel: fd.get("preferredMentorLevel"),
+      deliveryFormat: fd.get("deliveryFormat"),
+      preferredLanguage: fd.get("preferredLanguage"),
       aiConfidence: fd.get("aiConfidence"),
-      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
+      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—", windows: fd.get("windows").trim() },
       matchNote: fd.get("matchNote").trim(),
       photoUrl: pendingPhotoUrl === undefined ? me.photoUrl : pendingPhotoUrl,
     };
@@ -2527,7 +2564,9 @@ function wireEvents() {
         .filter(Boolean)
         .slice(0, 5),
       menteeCapacity: Number(fd.get("menteeCapacity")) || 1,
-      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
+      deliveryFormat: fd.get("deliveryFormat"),
+      preferredLanguage: fd.get("preferredLanguage"),
+      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—", windows: fd.get("windows").trim() },
       consentAck: fd.get("consentAck") === "on",
       preferredFormat: "mentor",
       engagementStatus: me.engagementStatus === "closed" ? "available" : me.engagementStatus,
@@ -2565,7 +2604,10 @@ function wireEvents() {
         .slice(0, 3),
       skillLevel: fd.get("skillLevel"),
       learningSkillCategory: fd.get("learningSkillCategory"),
-      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
+      preferredMentorLevel: fd.get("preferredMentorLevel"),
+      deliveryFormat: fd.get("deliveryFormat"),
+      preferredLanguage: fd.get("preferredLanguage"),
+      availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—", windows: fd.get("windows").trim() },
       goalStatement: fd.get("goalStatement").trim(),
       consentAck: fd.get("consentAck") === "on",
       preferredFormat: "mentee",

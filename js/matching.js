@@ -60,27 +60,71 @@ function formatScore(seeker, candidate) {
   return compatible.includes(candidate.preferredFormat) ? 1 : 0.35;
 }
 
+/** Loose overlap between two "when I'm free" strings (e.g. "Tue/Thu afternoons"
+ * vs. "Mon/Wed mornings") — token-based since these are free text, not a
+ * structured schedule. Neutral when either side hasn't said, a mild penalty
+ * when both have said and share nothing. */
+function windowsOverlapScore(seeker, candidate) {
+  const tokensOf = (str) => new Set(normalizeText(str).split(/[^a-z]+/).filter(Boolean));
+  const a = tokensOf(seeker.availability?.windows);
+  const b = tokensOf(candidate.availability?.windows);
+  if (!a.size || !b.size) return 0.5;
+  const shared = [...a].filter((tok) => b.has(tok)).length;
+  return shared ? Math.min(1, 0.5 + 0.5 * (shared / Math.max(a.size, b.size))) : 0.2;
+}
+
 function availabilityScore(seeker, candidate) {
   if (!seeker.availability || !candidate.availability) return 0.5;
   let score = 0;
 
-  if (seeker.availability.frequency && seeker.availability.frequency === candidate.availability.frequency) score += 0.35;
+  if (seeker.availability.frequency && seeker.availability.frequency === candidate.availability.frequency) score += 0.3;
 
   const seekerHours = Number(seeker.availability.hours) || 0;
   const candidateHours = Number(candidate.availability.hours) || 0;
   if (seekerHours && candidateHours) {
     // Closeness, not exact match — 1hr vs 2hrs should barely dent the score, 1hr vs 10hrs should.
-    score += 0.35 * Math.max(0, 1 - Math.abs(seekerHours - candidateHours) / 9);
+    score += 0.3 * Math.max(0, 1 - Math.abs(seekerHours - candidateHours) / 9);
   } else {
-    score += 0.175;
+    score += 0.15;
   }
 
   const seekerZone = normalizeText(seeker.availability.timezone).split(" ")[0];
   const candidateZone = normalizeText(candidate.availability.timezone).split(" ")[0];
-  if (seekerZone && seekerZone === candidateZone) score += 0.3;
-  else score += 0.12;
+  if (seekerZone && seekerZone === candidateZone) score += 0.25;
+  else score += 0.1;
+
+  score += 0.15 * windowsOverlapScore(seeker, candidate);
 
   return Math.min(1, score);
+}
+
+/** Delivery format (virtual/in-person/hybrid) is a soft preference, not a
+ * hard blocker — a hybrid person can flex to meet either way. */
+function deliveryFormatScore(seeker, candidate) {
+  const a = seeker.deliveryFormat;
+  const b = candidate.deliveryFormat;
+  if (!a || !b) return 0.7;
+  if (a === b) return 1;
+  if (a === "Hybrid" || b === "Hybrid") return 0.75;
+  return 0.3;
+}
+
+function languageScore(seeker, candidate) {
+  const a = seeker.preferredLanguage;
+  const b = candidate.preferredLanguage;
+  if (!a || !b) return 0.7;
+  return a === b ? 1 : 0.3;
+}
+
+/** A mentee's preferred mentor experience level is a nudge, not a filter —
+ * a mentor below the requested level still ranks reasonably, just not top. */
+function mentorLevelScore(seeker, candidate) {
+  const wantedRank = PROGRAM_META.mentorLevelMinRank[seeker.preferredMentorLevel];
+  if (!wantedRank) return 0.7;
+  const candidateRank = PROGRAM_META.careerLevelRank[candidate.careerLevel];
+  if (!candidateRank) return 0.5;
+  if (candidateRank >= wantedRank) return 1;
+  return wantedRank - candidateRank === 1 ? 0.6 : 0.3;
 }
 
 function otherPreferenceScore(seeker, candidate) {
@@ -99,6 +143,9 @@ function computeMatchScore(seeker, candidate) {
     complement: complementScore(seeker, candidate),
     format: formatScore(seeker, candidate),
     availability: availabilityScore(seeker, candidate),
+    deliveryFormat: deliveryFormatScore(seeker, candidate),
+    mentorLevel: mentorLevelScore(seeker, candidate),
+    language: languageScore(seeker, candidate),
     other: otherPreferenceScore(seeker, candidate),
   };
 
@@ -154,6 +201,18 @@ function matchReasons(seeker, candidate, breakdown) {
 
   if (byKey.other === 1 && seeker.matchNote) {
     reasons.push(`Matches a stated preference: "${seeker.matchNote}"`);
+  }
+
+  if (byKey.mentorLevel === 1 && seeker.preferredMentorLevel) {
+    reasons.push("At or above your preferred mentor experience level");
+  }
+
+  if (byKey.deliveryFormat === 1 && seeker.deliveryFormat) {
+    reasons.push(`Both prefer ${seeker.deliveryFormat.toLowerCase()} meetings`);
+  }
+
+  if (byKey.language === 1 && seeker.preferredLanguage) {
+    reasons.push(`Both prefer mentoring in ${seeker.preferredLanguage}`);
   }
 
   if (!reasons.length) {

@@ -441,6 +441,14 @@
         </select>
       </label>
       <label>My goal: one concise, time-bound outcome<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" /></label>
+      <label>Preferred mentor experience level (optional)
+        <select name="preferredMentorLevel">
+          <option value="">No preference</option>
+          <option value="mid">Mid-level (L2–L3)</option>
+          <option value="senior">Senior (L4)</option>
+          <option value="principal">Principal/Director (L5+)</option>
+        </select>
+      </label>
       <label>I can offer (up to 5, comma-separated)<input type="text" name="offeredSkills" placeholder="e.g. Product strategy, Coaching" /></label>
       <label>Category of what I can offer
         <select name="mentorSkillCategory">
@@ -510,7 +518,33 @@
           </select>
         </label>
       </div>
-      <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+      <div class="form-row">
+        <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+        <label>When are you generally free? (optional)<input type="text" name="windows" placeholder="e.g. Tue/Thu afternoons" /></label>
+      </div>
+      <div class="form-row">
+        <label>Preferred meeting format
+          <select name="deliveryFormat">
+            <option value="">No preference</option>
+            <option value="Virtual">Virtual</option>
+            <option value="In-person">In-person</option>
+            <option value="Hybrid">Hybrid</option>
+          </select>
+        </label>
+        <label>Preferred language
+          <select name="preferredLanguage">
+            <option value="">No preference</option>
+            <option>English</option>
+            <option>Hindi</option>
+            <option>Spanish</option>
+            <option>French</option>
+            <option>German</option>
+            <option>Mandarin</option>
+            <option>Portuguese</option>
+            <option>Arabic</option>
+          </select>
+        </label>
+      </div>
       <label>Anything that helps us match you (optional)<input type="text" name="matchNote" placeholder="e.g. Prefer someone outside my function" /></label>
     </div>
     <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand I don't have to participate, that what I share stays confidential, and that if a pairing isn't working for either of us, either person can ask for a new match at any time without having to explain why.</label>
@@ -595,7 +629,33 @@
         </select>
       </label>
     </div>
-    <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+    <div class="form-row">
+      <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+      <label>When are you generally free? (optional)<input type="text" name="windows" placeholder="e.g. Tue/Thu afternoons" /></label>
+    </div>
+    <div class="form-row">
+      <label>Preferred meeting format
+        <select name="deliveryFormat">
+          <option value="">No preference</option>
+          <option value="Virtual">Virtual</option>
+          <option value="In-person">In-person</option>
+          <option value="Hybrid">Hybrid</option>
+        </select>
+      </label>
+      <label>Preferred language
+        <select name="preferredLanguage">
+          <option value="">No preference</option>
+          <option>English</option>
+          <option>Hindi</option>
+          <option>Spanish</option>
+          <option>French</option>
+          <option>German</option>
+          <option>Mandarin</option>
+          <option>Portuguese</option>
+          <option>Arabic</option>
+        </select>
+      </label>
+    </div>
     <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand I don't have to participate, that what I share stays confidential, and that if a pairing isn't working for either of us, either person can ask for a new match at any time without having to explain why.</label>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
@@ -646,6 +706,14 @@
         <option value="Advanced">Advanced</option>
       </select>
     </label>
+    <label>Preferred mentor experience level (optional)
+      <select name="preferredMentorLevel">
+        <option value="">No preference</option>
+        <option value="mid">Mid-level (L2–L3)</option>
+        <option value="senior">Senior (L4)</option>
+        <option value="principal">Principal/Director (L5+)</option>
+      </select>
+    </label>
     <div class="form-row">
       <label>Frequency
         <select name="frequency" required>
@@ -669,7 +737,33 @@
         </select>
       </label>
     </div>
-    <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+    <div class="form-row">
+      <label>Time zone<input type="text" name="timezone" placeholder="e.g. IST (UTC+5:30)" /></label>
+      <label>When are you generally free? (optional)<input type="text" name="windows" placeholder="e.g. Tue/Thu afternoons" /></label>
+    </div>
+    <div class="form-row">
+      <label>Preferred meeting format
+        <select name="deliveryFormat">
+          <option value="">No preference</option>
+          <option value="Virtual">Virtual</option>
+          <option value="In-person">In-person</option>
+          <option value="Hybrid">Hybrid</option>
+        </select>
+      </label>
+      <label>Preferred language
+        <select name="preferredLanguage">
+          <option value="">No preference</option>
+          <option>English</option>
+          <option>Hindi</option>
+          <option>Spanish</option>
+          <option>French</option>
+          <option>German</option>
+          <option>Mandarin</option>
+          <option>Portuguese</option>
+          <option>Arabic</option>
+        </select>
+      </label>
+    </div>
     <label>What is my goal?<input type="text" name="goalStatement" placeholder="e.g. Present forecasts to leadership within 12 weeks" required /></label>
     <label class="checkbox-row"><input type="checkbox" name="consentAck" required /> I understand I don't have to participate, that what I share stays confidential, and that if a pairing isn't working for either of us, either person can ask for a new match at any time without having to explain why.</label>
     <div class="modal-actions">
@@ -753,7 +847,7 @@
 
 <div id="modal-match" class="modal hidden" role="dialog" aria-modal="true">
   <div class="modal-head">
-    <h2>Match score <span class="info-icon" tabindex="0">i<span class="info-tooltip">A blend of goal-and-skill fit (40%), how different a perspective they bring (20%), format fit (15%), availability overlap (15%), and other stated preferences (10%).</span></span></h2>
+    <h2>Match score <span class="info-icon" tabindex="0">i<span class="info-tooltip">A blend of goal-and-skill fit (35%), how different a perspective they bring (15%), role/format fit (10%), availability overlap (15%), meeting format (5%), mentor experience level (5%), language (5%), and other stated preferences (10%).</span></span></h2>
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
   <div id="match-modal-body" class="modal-body"></div>
@@ -785,6 +879,7 @@
   <div class="modal-body">
     <div id="schedule-step-form">
       <p class="muted small" id="schedule-with-line"></p>
+      <div class="journey-note hidden" id="schedule-agenda-note"></div>
       <form id="form-schedule-meeting" class="form-stack">
         <label>Which conversation
           <select name="stage" id="schedule-stage-select" required></select>
