@@ -511,10 +511,10 @@ const DEMO_ACCOUNTS = [
     username: "newuser1",
     password: "Demo@2026",
     id: "demo-new-1",
-    scenario: "A brand-new employee who hasn't set up a profile yet: good for showing the locked-down Home screen, the role tutorial, and the two “I want to become a…” flows.",
+    scenario: "A brand-new program participant: identity comes from SSO/HRIS on day one, same as every other account, so name/department/region are already filled in and locked. Only their Ripple-specific preferences (goals, skills, mentor/mentee choice) are unset — good for showing the locked-down Home screen, the role tutorial, and the two “I want to become a…” flows without ever asking for identity info.",
     employee: {
-      fullName: "", displayName: "", avatarInitials: "", email: "",
-      department: "", division: "", careerLevel: "", tenureBand: "", geography: "",
+      fullName: "Jamie Ruiz", displayName: "J. Ruiz", avatarInitials: "JR", email: "jamie.ruiz@demo.ripple.app",
+      department: "Finance", division: "Finance", careerLevel: "L2: Associate", tenureBand: "0-2 yrs", geography: "APAC",
       learningGoals: [], learningSkillCategory: [], offeredSkills: [], mentorSkillCategory: [], menteeCapacity: null, experience: "", goalStatement: "", purpose: "", skillLevel: "",
       interests: [], preferredFormat: "", deliveryFormat: "", preferredLanguage: "", aiConfidence: "",
       availability: { frequency: "", hours: null, timezone: "", windows: "" },
