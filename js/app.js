@@ -2271,7 +2271,9 @@ function persistEmployeeOverride(emp) {
 function syncEngagementStatus(personId) {
   const person = getEmployeeById(personId);
   if (!person || person.engagementStatus === "paused" || person.engagementStatus === "closed") return;
-  person.engagementStatus = findActiveJourneysFor(personId).length ? "active" : "available";
+  const correctStatus = findActiveJourneysFor(personId).length ? "active" : "available";
+  if (person.engagementStatus === correctStatus) return;
+  person.engagementStatus = correctStatus;
   persistEmployeeOverride(person);
 }
 
@@ -3526,6 +3528,7 @@ async function startApp() {
   ensureJourneysSeeded();
   ensureMeetingsField();
   ensureJourneyRoles();
+  employees.forEach((e) => syncEngagementStatus(e.id));
   renderUserChrome();
   renderHome();
   markActivity();
