@@ -1643,11 +1643,17 @@ function renderJourney() {
  * of both the "log a conversation" and "schedule a conversation" pickers so a
  * pair can't end up with two "Connect" entries or schedule a second "Transfer". */
 const SINGLE_OCCURRENCE_STAGES = new Set(["connect", "transfer"]);
-function availableStagesFor(journey) {
+/** Scheduling and logging need different definitions of "already used."
+ * Scheduling should exclude a stage the moment a meeting for it exists —
+ * you shouldn't be able to book a second Connect meeting. Logging should
+ * only exclude a stage once it's actually been logged — a Connect meeting
+ * that's merely scheduled is exactly the one you're about to log the
+ * outcome of, so it has to stay selectable until then. */
+function availableStagesFor(journey, { forLogging = false } = {}) {
   if (!journey) return PROGRAM_META.stages;
   const usedKeys = new Set([
     ...journey.sessions.map((s) => s.stage),
-    ...(journey.meetings || []).filter((m) => m.status === "scheduled").map((m) => m.stage),
+    ...(forLogging ? [] : (journey.meetings || []).filter((m) => m.status === "scheduled").map((m) => m.stage)),
   ]);
   return PROGRAM_META.stages.filter((s) => !SINGLE_OCCURRENCE_STAGES.has(s.key) || !usedKeys.has(s.key));
 }
@@ -1671,7 +1677,7 @@ function openLogSessionModal() {
   const nextStageIndex = clamp(completed, 0, PROGRAM_META.stages.length - 1);
   const nextStageKey = PROGRAM_META.stages[nextStageIndex].key;
   const select = $("#log-session-stage");
-  select.innerHTML = availableStagesFor(journey)
+  select.innerHTML = availableStagesFor(journey, { forLogging: true })
     .map((s) => `<option value="${s.key}" ${s.key === nextStageKey ? "selected" : ""}>${s.label}${startDate ? ` (${stageDateRange(startDate, s)})` : ""}</option>`)
     .join("");
   const notesEl = $('#form-log-session textarea[name="notes"]');
