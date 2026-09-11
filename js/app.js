@@ -735,6 +735,18 @@ function toggleJourneyPause(journey) {
   renderActiveJourneyCard();
 }
 
+/** Pulse and reflection are answered by each participant separately — a
+ * mentor and mentee can genuinely disagree on how it's going, and averaging
+ * that into one shared answer would hide exactly the signal PD most needs.
+ * Both are stored as { [personId]: {...answers} }, so at most two entries
+ * per journey, one per side. */
+function pulseEntriesFor(journey) {
+  return Object.values(journey.pulse || {});
+}
+function reflectionEntriesFor(journey) {
+  return Object.values(journey.reflection || {});
+}
+
 /** Admin "Needs attention" triage: surfaces what the pulse-check intro
  * promises PD reviews ("to catch issues early") plus relationships that
  * have gone quiet, instead of requiring someone to open every connection
@@ -747,12 +759,13 @@ function pulseAverageScore(pulse) {
 function getAttentionReasons(journey) {
   const reasons = [];
   if (isJourneyPaused(journey)) return reasons; // a pause is an acknowledged break, not a silent problem
-  if (journey.pulse) {
-    const avg = pulseAverageScore(journey.pulse);
-    if (avg !== null && avg <= 2.5) reasons.push(`Pulse check averaged ${avg.toFixed(1)}/5`);
-    if (journey.pulse.continuation === "no") reasons.push("Someone answered “no” to continuing");
-    else if (journey.pulse.continuation === "maybe") reasons.push("Someone answered “maybe” to continuing");
-  }
+  Object.entries(journey.pulse || {}).forEach(([personId, p]) => {
+    const roleLabel = journeyRoleOf(journey, personId) === "mentor" ? "mentor" : "mentee";
+    const avg = pulseAverageScore(p);
+    if (avg !== null && avg <= 2.5) reasons.push(`Pulse check (${roleLabel}) averaged ${avg.toFixed(1)}/5`);
+    if (p.continuation === "no") reasons.push(`The ${roleLabel} answered “no” to continuing`);
+    else if (p.continuation === "maybe") reasons.push(`The ${roleLabel} answered “maybe” to continuing`);
+  });
   const lastSession = journey.sessions.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
   const lastActivityDate = lastSession ? lastSession.date : getJourneyStartDate(journey);
   const daysSince = daysBetween(lastActivityDate, new Date());
@@ -864,8 +877,8 @@ function journeySummaryHTML(journey) {
     : completed === 0
     ? `Schedule your first conversation: ${stage.label.toLowerCase()} is up first.`
     : completed >= 5
-    ? journey.reflection
-      ? "All five conversations logged — reflection submitted."
+    ? journey.reflection?.[CURRENT_USER_ID]
+      ? "All five conversations logged — your reflection is submitted."
       : "All five conversations logged. Complete your final reflection."
     : `Next up: your ${stage.label.toLowerCase()} conversation — not on the calendar yet.`;
 
@@ -1301,6 +1314,149 @@ function agendaHTML(journey) {
   }${journey.prepNote ? `<div>Already looked into: “${journey.prepNote}”</div>` : ""}`;
 }
 
+/** Pinned separately from the conversation log so it doesn't get buried in
+ * a past session's notes — either side can set or update it, no approval
+ * needed, same trust model as the rest of this app. */
+function renderSharedGoal(journey) {
+  const display = $("#shared-goal-display");
+  const form = $("#form-shared-goal");
+  form.classList.add("hidden");
+  display.classList.remove("hidden");
+  if (journey.sharedGoal?.text) {
+    const setBy = getEmployeeById(journey.sharedGoal.setBy);
+    display.innerHTML = `<div class="journey-agenda-topic">${journey.sharedGoal.text}</div><p class="muted small" style="margin-top:6px">Set by ${
+      setBy ? (journey.sharedGoal.setBy === CURRENT_USER_ID ? "you" : setBy.displayName) : "someone"
+    }${journey.sharedGoal.setAt ? `, ${daysAgoLabel(journey.sharedGoal.setAt)}` : ""}</p>`;
+  } else {
+    display.innerHTML = `<p class="empty-state">No shared goal set yet. Agree on one during your Goal conversation, then pin it here.</p>`;
+  }
+}
+
+function renderActionItems(journey) {
+  const list = $("#action-items-list");
+  const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
+  const ownerSelect = $("#action-item-owner-select");
+  ownerSelect.innerHTML = `<option value="${CURRENT_USER_ID}">Me</option>${partner ? `<option value="${partner.id}">${partner.displayName}</option>` : ""}`;
+
+  const items = journey.actionItems || [];
+  if (!items.length) {
+    list.innerHTML = `<p class="empty-state">No action items yet. Add what each of you will do before next time.</p>`;
+    return;
+  }
+  list.innerHTML = items
+    .slice()
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map((item) => {
+      const owner = getEmployeeById(item.ownerId);
+      const ownerName = item.ownerId === CURRENT_USER_ID ? "You" : owner?.displayName || "Partner";
+      return `
+      <div class="session-item">
+        <label class="checkbox-row" style="align-items:flex-start">
+          <input type="checkbox" data-action-item="${item.id}" ${item.done ? "checked" : ""} />
+          <span style="${item.done ? "text-decoration:line-through;opacity:0.6" : ""}">${item.text}</span>
+        </label>
+        <div class="session-item-notes" style="display:flex;justify-content:space-between;align-items:center">
+          <span>${ownerName}</span>
+          <button type="button" class="btn btn-ghost btn-sm" data-action="delete-action-item" data-id="${item.id}">Remove</button>
+        </div>
+      </div>`;
+    })
+    .join("");
+}
+
+/** Distinct from the general LinkedIn Learning/YouTube recommendations on
+ * Home — those are matched to a person's own goals; this is whatever either
+ * side of THIS specific relationship wants to point the other to. */
+function renderPinnedResources(journey) {
+  const list = $("#pinned-resources-list");
+  const items = journey.pinnedResources || [];
+  if (!items.length) {
+    list.innerHTML = `<p class="empty-state">Nothing pinned yet. Add a link either of you wants the other to see.</p>`;
+    return;
+  }
+  list.innerHTML = items
+    .slice()
+    .sort((a, b) => a.addedAt.localeCompare(b.addedAt))
+    .map((r) => {
+      const addedByName = r.addedBy === CURRENT_USER_ID ? "you" : getEmployeeById(r.addedBy)?.displayName || "your partner";
+      const isSafeLink = /^https?:\/\//i.test(r.url || "");
+      return `
+      <div class="session-item">
+        <div class="session-item-head">${isSafeLink ? `<a href="${r.url}" target="_blank" rel="noopener">${r.title} ↗</a>` : r.title}</div>
+        <div class="session-item-notes" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Added by ${addedByName}</span>
+          <button type="button" class="btn btn-ghost btn-sm" data-action="delete-resource" data-id="${r.id}">Remove</button>
+        </div>
+      </div>`;
+    })
+    .join("");
+}
+
+/** A closed-out relationship doesn't leave either person with anything to
+ * keep — this builds a one-page, shareable summary (goal, what was
+ * covered, outcome) and captures it as a PNG the same way the admin
+ * Insights snapshot already does, via html2canvas. Only offered once the
+ * relationship has actually wrapped up, not on every close (a no-fault
+ * rematch isn't a completion worth celebrating). */
+function journeyReachedCompletion(journey) {
+  return journey.formalStatus === "closed" && journey.outcome !== "rematch";
+}
+
+function buildJourneySummaryHTML(journey) {
+  const me = getCurrentUser();
+  const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
+  const startDate = getJourneyStartDate(journey);
+  const sessionRows = journey.sessions
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((s) => {
+      const stage = PROGRAM_META.stages.find((st) => st.key === s.stage);
+      return `<div style="padding:10px 0;border-bottom:1px solid #E5D6FF"><strong style="color:#401E86">${stage ? stage.label : s.stage}</strong> — ${formatDateShort(
+        new Date(`${s.date}T00:00:00`)
+      )}${s.notes ? `<div style="margin-top:2px">${s.notes}</div>` : ""}</div>`;
+    })
+    .join("");
+
+  return `
+    <div id="journey-summary-content" style="width:640px;padding:36px;background:#fff;font-family:Manrope,sans-serif;color:#4B4B4A">
+      <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:#8012FF;font-weight:700">Ripple · Mentorship completion summary</div>
+      <h1 style="color:#401E86;margin:8px 0 4px;font-size:1.5rem">${me.displayName} &amp; ${partner ? partner.displayName : "—"}</h1>
+      <p style="color:#6E6E6D;margin:0 0 20px">${journey.relationshipType} · started ${formatDateShort(new Date(`${startDate}T00:00:00`))} · ${
+    journey.sessions.length
+  } conversation${journey.sessions.length === 1 ? "" : "s"} logged</p>
+      ${journey.sharedGoal?.text ? `<p><strong>Shared goal:</strong> ${journey.sharedGoal.text}</p>` : ""}
+      <h2 style="font-size:1rem;color:#401E86;margin-top:20px">Conversations</h2>
+      ${sessionRows || "<p>No conversations logged.</p>"}
+      <p style="margin-top:20px;color:#6E6E6D">Outcome: ${OUTCOME_LABELS[journey.outcome] || "Continuing informally"}</p>
+    </div>`;
+}
+
+function exportJourneySummary(journey) {
+  if (typeof html2canvas === "undefined") {
+    toast("Snapshot library didn't load. Check your connection and try again.", "error");
+    return;
+  }
+  const area = $("#journey-summary-area");
+  area.innerHTML = buildJourneySummaryHTML(journey);
+  html2canvas(document.getElementById("journey-summary-content"), { backgroundColor: "#ffffff", scale: 2 })
+    .then((canvas) => {
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Ripple-completion-${(partner?.displayName || "summary").replace(/\s+/g, "-")}-${reportDateStamp()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        area.innerHTML = "";
+        toast("Completion summary downloaded.", "success");
+      });
+    })
+    .catch((err) => toast(`Snapshot failed: ${err.message}`, "error"));
+}
+
 /** The switcher only appears once there's an actual choice to make — one
  * active journey behaves exactly like it always has, no pill row. */
 function renderJourneySwitcher(allJourneys, selected) {
@@ -1316,9 +1472,10 @@ function renderJourneySwitcher(allJourneys, selected) {
       const partner = getEmployeeById(getPartnerId(j, CURRENT_USER_ID));
       const role = journeyRoleOf(j, CURRENT_USER_ID);
       const verb = role === "mentor" ? "Mentoring" : role === "mentee" ? "Being mentored by" : "With";
+      const completed = j.sessions.filter((s) => s.completed).length;
       return `<button type="button" class="switch-pill ${j.id === selected.id ? "active" : ""}" data-action="select-journey" data-id="${j.id}">${verb} ${
         partner ? partner.displayName : "?"
-      }</button>`;
+      } <span class="switch-pill-badge">${completed}/5</span></button>`;
     })
     .join("");
 }
@@ -1382,6 +1539,9 @@ function renderJourney() {
   prepNoteEl.classList.toggle("hidden", !agenda);
   prepNoteEl.innerHTML = agenda;
 
+  renderSharedGoal(journey);
+  renderActionItems(journey);
+  renderPinnedResources(journey);
   renderUpcomingMeetings(journey);
 
   $("#stage-tracker").innerHTML = PROGRAM_META.stages
@@ -1391,7 +1551,13 @@ function renderJourney() {
       // (see pulseEligible below) — flagging it here too, not just in the
       // pulse-check status line further down the page, since testers didn't
       // expect a milestone that isn't shown anywhere on the timeline.
-      const pulseNote = i === 1 ? `<div class="stage-milestone">${journey.pulse ? "✓ Pulse check submitted" : "Midpoint pulse check unlocks after this"}</div>` : "";
+      const pulseSubmittedCount = pulseEntriesFor(journey).length;
+      const pulseNote =
+        i === 1
+          ? `<div class="stage-milestone">${
+              pulseSubmittedCount === 2 ? "✓ Pulse check submitted by both" : pulseSubmittedCount === 1 ? "✓ Pulse check submitted by one side" : "Midpoint pulse check unlocks after this"
+            }</div>`
+          : "";
       return `
       <div class="stage-step ${state}">
         <div class="stage-dot">${i < completed ? "✓" : i + 1}</div>
@@ -1408,27 +1574,40 @@ function renderJourney() {
     ? journey.sessions
         .slice()
         .sort((a, b) => a.date.localeCompare(b.date))
-        .map(
-          (s) => `
+        .map((s) => {
+          const loggedByName = s.loggedBy ? getEmployeeById(s.loggedBy)?.displayName : null;
+          return `
       <div class="session-item">
         <div class="session-item-head"><span>${PROGRAM_META.stages.find((st) => st.key === s.stage)?.label || s.stage}</span><span class="muted small">${daysAgoLabel(s.date)}</span></div>
         ${s.notes ? `<div class="session-item-notes">${s.notes}</div>` : ""}
-      </div>`
-        )
+        ${loggedByName ? `<div class="muted small" style="margin-top:4px">Logged by ${loggedByName}</div>` : ""}
+      </div>`;
+        })
         .join("")
     : `<p class="empty-state">No sessions logged yet. Log your first conversation once you've met.</p>`;
 
   const pulseEligible = completed >= 2;
   const pulseBtn = $("#btn-open-pulse");
   const pulseStatus = $("#pulse-status");
-  if (journey.pulse) {
-    pulseStatus.textContent = `Submitted${journey.pulse.submittedAt ? ` ${daysAgoLabel(journey.pulse.submittedAt)}` : ""}. You can update it any time.`;
-    pulseBtn.textContent = "Update pulse check";
-    pulseBtn.disabled = false;
-  } else if (!pulseEligible) {
+  const myPulse = journey.pulse?.[CURRENT_USER_ID];
+  const partnerPulse = partner ? journey.pulse?.[partner.id] : null;
+  const partnerName = partner ? partner.displayName : "your partner";
+  if (!pulseEligible) {
     pulseStatus.textContent = `Unlocks after your 2nd conversation (${completed} of 2 logged so far).`;
     pulseBtn.textContent = "Complete pulse check";
     pulseBtn.disabled = true;
+  } else if (myPulse && partnerPulse) {
+    pulseStatus.textContent = "Both of you have submitted. You can update yours any time.";
+    pulseBtn.textContent = "Update pulse check";
+    pulseBtn.disabled = false;
+  } else if (myPulse) {
+    pulseStatus.textContent = `You've submitted. Waiting on ${partnerName}.`;
+    pulseBtn.textContent = "Update pulse check";
+    pulseBtn.disabled = false;
+  } else if (partnerPulse) {
+    pulseStatus.textContent = `${partnerName} has submitted theirs — add your own view.`;
+    pulseBtn.textContent = "Complete pulse check";
+    pulseBtn.disabled = false;
   } else {
     pulseStatus.textContent = "Ready whenever you are.";
     pulseBtn.textContent = "Complete pulse check";
@@ -1438,11 +1617,19 @@ function renderJourney() {
   const reflectionBtn = $("#btn-open-reflection");
   const reflectionStatus = $("#reflection-status");
   reflectionBtn.disabled = completed < 4;
-  if (journey.reflection) {
-    reflectionStatus.textContent = `Submitted${journey.reflection.submittedAt ? ` ${daysAgoLabel(journey.reflection.submittedAt)}` : ""}. You chose to ${OUTCOME_LABELS[journey.outcome] || "continue"}.`;
-    reflectionBtn.textContent = "View final reflection";
-  } else if (completed < 4) {
+  const myReflection = journey.reflection?.[CURRENT_USER_ID];
+  const partnerReflection = partner ? journey.reflection?.[partner.id] : null;
+  if (completed < 4) {
     reflectionStatus.textContent = `${completed} of 4 conversations logged — ${4 - completed} more to unlock.`;
+    reflectionBtn.textContent = "Complete final reflection";
+  } else if (myReflection && partnerReflection) {
+    reflectionStatus.textContent = `Both of you have submitted. Outcome: ${OUTCOME_LABELS[journey.outcome] || "continue"}.`;
+    reflectionBtn.textContent = "View final reflection";
+  } else if (myReflection) {
+    reflectionStatus.textContent = `You've submitted (chose to ${OUTCOME_LABELS[journey.outcome] || "continue"}). Waiting on ${partnerName}.`;
+    reflectionBtn.textContent = "View final reflection";
+  } else if (partnerReflection) {
+    reflectionStatus.textContent = `${partnerName} has submitted theirs — add your own.`;
     reflectionBtn.textContent = "Complete final reflection";
   } else {
     reflectionStatus.textContent = "Unlocked, ready when you are.";
@@ -1571,6 +1758,7 @@ function renderUpcomingMeetings(journey) {
     return `
       <div class="session-item">
         <div class="session-item-head"><span>${stage ? stage.label : m.stage} conversation</span><span class="muted small">${meetingTimeLabel(m.startISO)}</span></div>
+        ${m.agendaTopic ? `<div class="session-item-notes"><strong>Agenda:</strong> ${m.agendaTopic}</div>` : ""}
         <div class="session-item-notes">
           ${isPast ? "This time has passed. Log it in your conversation log, or cancel it below." : "Invite sent to both calendars."}
           ${!isPast && hasLink ? ` · <a href="${m.meetingLink}" target="_blank" rel="noopener">Join video call ↗</a>` : ""}
@@ -1755,34 +1943,53 @@ function openScheduleMeetingModal() {
 function openPulseModal() {
   const journey = getSelectedJourney();
   const form = $("#form-pulse");
-  if (journey?.pulse) {
-    form.q1.value = journey.pulse.q1;
-    form.q2.value = journey.pulse.q2;
-    form.q3.value = journey.pulse.q3;
-    form.q4.value = journey.pulse.q4;
-    form.continuation.value = journey.pulse.continuation;
-    form.openText.value = journey.pulse.openText || "";
+  const mine = journey?.pulse?.[CURRENT_USER_ID];
+  if (mine) {
+    form.q1.value = mine.q1;
+    form.q2.value = mine.q2;
+    form.q3.value = mine.q3;
+    form.q4.value = mine.q4;
+    form.continuation.value = mine.continuation;
+    form.openText.value = mine.openText || "";
   } else {
     form.reset();
   }
+  const partner = journey ? getEmployeeById(getPartnerId(journey, CURRENT_USER_ID)) : null;
+  const partnerSubmitted = !!(partner && journey?.pulse?.[partner.id]);
+  $("#pulse-partner-note").textContent = partnerSubmitted
+    ? `${partner.displayName} has already submitted their own pulse check — this is your own private answer, not a shared one.`
+    : "";
   openModal("modal-pulse");
 }
 
 function openReflectionModal() {
   const journey = getSelectedJourney();
   const form = $("#form-reflection");
-  if (journey?.reflection) {
-    const r = journey.reflection;
-    form.setOutToLearn.value = r.setOutToLearn;
-    form.whatLearned.value = r.whatLearned;
-    form.whatPartnerLearned.value = r.whatPartnerLearned || "";
-    form.appliedInWorkplace.checked = !!r.appliedInWorkplace;
-    form.wouldContinue.value = r.wouldContinue;
-    form.wouldRecommend.value = r.wouldRecommend;
-    form.whatToChange.value = r.whatToChange || "";
-    form.nextStep.value = journey.outcome || "continue";
+  const mine = journey?.reflection?.[CURRENT_USER_ID];
+  if (mine) {
+    form.setOutToLearn.value = mine.setOutToLearn;
+    form.whatLearned.value = mine.whatLearned;
+    form.whatPartnerLearned.value = mine.whatPartnerLearned || "";
+    form.appliedInWorkplace.checked = !!mine.appliedInWorkplace;
+    form.wouldContinue.value = mine.wouldContinue;
+    form.wouldRecommend.value = mine.wouldRecommend;
+    form.whatToChange.value = mine.whatToChange || "";
+    form.nextStep.value = mine.nextStep || "continue";
   } else {
     form.reset();
+  }
+  const partner = journey ? getEmployeeById(getPartnerId(journey, CURRENT_USER_ID)) : null;
+  const partnerReflection = partner ? journey?.reflection?.[partner.id] : null;
+  const partnerView = $("#reflection-partner-view");
+  if (partnerReflection) {
+    partnerView.classList.remove("hidden");
+    partnerView.innerHTML = `<strong>${partner.displayName}'s reflection</strong>
+      <div>What they set out to learn: “${partnerReflection.setOutToLearn}”</div>
+      <div>What they learned: “${partnerReflection.whatLearned}”</div>
+      ${partnerReflection.whatPartnerLearned ? `<div>What they contributed/shared: “${partnerReflection.whatPartnerLearned}”</div>` : ""}`;
+  } else {
+    partnerView.classList.add("hidden");
+    partnerView.innerHTML = "";
   }
   openModal("modal-reflection");
 }
@@ -1794,8 +2001,8 @@ function kpiValue(key) {
   const totalEmployees = employees.length || 1;
   const cohortAssumed = (PROGRAM_META.cohortTarget.min + PROGRAM_META.cohortTarget.max) / 2;
   const allSessions = journeys.reduce((sum, j) => sum + j.sessions.length, 0);
-  const reflections = journeys.map((j) => j.reflection).filter(Boolean);
-  const pulses = journeys.map((j) => j.pulse).filter(Boolean);
+  const reflections = journeys.flatMap(reflectionEntriesFor);
+  const pulses = journeys.flatMap(pulseEntriesFor);
 
   switch (key) {
     case "profiles":
@@ -2553,9 +2760,9 @@ function ensureJourneysSeeded() {
       formalStatus: "active",
       startDate: "2026-07-09",
       sessions: [
-        { id: "s1", stage: "connect", date: "2026-07-09", notes: "Built trust, agreed on a bi-weekly cadence.", completed: true },
-        { id: "s2", stage: "goal", date: "2026-07-21", notes: "Set “present forecasts to leadership” as the goal.", completed: true },
-        { id: "s3", stage: "challenge", date: "2026-08-04", notes: "Walked through a real leadership deck together.", completed: true },
+        { id: "s1", stage: "connect", date: "2026-07-09", notes: "Built trust, agreed on a bi-weekly cadence.", completed: true, loggedBy: "demo-mentee-2" },
+        { id: "s2", stage: "goal", date: "2026-07-21", notes: "Set “present forecasts to leadership” as the goal.", completed: true, loggedBy: "demo-mentee-2" },
+        { id: "s3", stage: "challenge", date: "2026-08-04", notes: "Walked through a real leadership deck together.", completed: true, loggedBy: "e-meyer" },
       ],
       meetings: [
         { id: "m-seed-1", uid: "m-seed-1@gainforward.rategain.com", stage: "apply", startISO: "2026-08-29T15:00:00.000Z", durationMins: 45, status: "scheduled", sequence: 0, organizerId: "demo-mentee-2" },
@@ -2574,10 +2781,13 @@ function ensureJourneysSeeded() {
       relationshipType: "1:1 Mentoring",
       formalStatus: "active",
       startDate: "2026-08-19",
-      sessions: [{ id: "s4", stage: "connect", date: "2026-08-19", notes: "Introductions and agreed a bi-weekly cadence.", completed: true }],
+      sessions: [{ id: "s4", stage: "connect", date: "2026-08-19", notes: "Introductions and agreed a bi-weekly cadence.", completed: true, loggedBy: "demo-mentor-1" }],
       meetings: [],
       pulse: null,
       reflection: null,
+      sharedGoal: { text: "Ship a first production ML model with real deployment experience.", setBy: "e-castillo", setAt: "2026-08-19" },
+      actionItems: [{ id: "act-seed-1", text: "Send Priya the current model's deployment doc", ownerId: "e-castillo", done: true, createdAt: "2026-08-19T00:00:00.000Z" }],
+      pinnedResources: [{ id: "res-seed-1", title: "Our team's ML deployment checklist", url: "https://example.com/deployment-checklist", addedBy: "demo-mentor-1", addedAt: "2026-08-19T00:00:00.000Z" }],
     },
     {
       id: "j-seed-3",
@@ -2840,6 +3050,34 @@ function wireEvents() {
         panel.classList.toggle("hidden");
         break;
       }
+      case "edit-shared-goal": {
+        const journey = getSelectedJourney();
+        const form = $("#form-shared-goal");
+        form.text.value = journey?.sharedGoal?.text || "";
+        form.classList.remove("hidden");
+        $("#shared-goal-display").classList.add("hidden");
+        form.text.focus();
+        break;
+      }
+      case "cancel-shared-goal":
+        renderSharedGoal(getSelectedJourney());
+        break;
+      case "delete-action-item": {
+        const journey = getSelectedJourney();
+        if (!journey?.actionItems) break;
+        journey.actionItems = journey.actionItems.filter((i) => i.id !== el.dataset.id);
+        savePersisted(STORAGE.journeys, journeys);
+        renderActionItems(journey);
+        break;
+      }
+      case "delete-resource": {
+        const journey = getSelectedJourney();
+        if (!journey?.pinnedResources) break;
+        journey.pinnedResources = journey.pinnedResources.filter((r) => r.id !== el.dataset.id);
+        savePersisted(STORAGE.journeys, journeys);
+        renderPinnedResources(journey);
+        break;
+      }
     }
   });
 
@@ -3043,7 +3281,7 @@ function wireEvents() {
     if (!journey) return;
     const fd = new FormData(e.target);
     const stage = fd.get("stage");
-    journey.sessions.push({ id: uid("s"), stage, date: fd.get("date"), notes: fd.get("notes").trim(), completed: true });
+    journey.sessions.push({ id: uid("s"), stage, date: fd.get("date"), notes: fd.get("notes").trim(), completed: true, loggedBy: CURRENT_USER_ID });
     const matchingMeeting = (journey.meetings || []).find((m) => m.stage === stage && m.status === "scheduled" && new Date(m.startISO) <= new Date());
     if (matchingMeeting) matchingMeeting.status = "completed";
     savePersisted(STORAGE.journeys, journeys);
@@ -3052,6 +3290,58 @@ function wireEvents() {
     closeAllModals();
     renderJourney();
     renderHome();
+  });
+
+  $("#form-shared-goal").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const journey = getSelectedJourney();
+    if (!journey) return;
+    const fd = new FormData(e.target);
+    const text = fd.get("text").trim();
+    journey.sharedGoal = text ? { text, setBy: CURRENT_USER_ID, setAt: new Date().toISOString().slice(0, 10) } : null;
+    savePersisted(STORAGE.journeys, journeys);
+    toast(text ? "Shared goal saved." : "Shared goal cleared.", "success");
+    renderSharedGoal(journey);
+  });
+
+  $("#form-add-action-item").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const journey = getSelectedJourney();
+    if (!journey) return;
+    const fd = new FormData(e.target);
+    const text = fd.get("text").trim();
+    if (!text) return;
+    journey.actionItems = journey.actionItems || [];
+    journey.actionItems.push({ id: uid("act"), text, ownerId: fd.get("ownerId"), done: false, createdAt: new Date().toISOString() });
+    savePersisted(STORAGE.journeys, journeys);
+    e.target.reset();
+    renderActionItems(journey);
+  });
+
+  $("#action-items-list").addEventListener("change", (e) => {
+    const box = e.target.closest("[data-action-item]");
+    if (!box) return;
+    const journey = getSelectedJourney();
+    const item = journey?.actionItems?.find((i) => i.id === box.dataset.actionItem);
+    if (!item) return;
+    item.done = box.checked;
+    savePersisted(STORAGE.journeys, journeys);
+    renderActionItems(journey);
+  });
+
+  $("#form-add-resource").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const journey = getSelectedJourney();
+    if (!journey) return;
+    const fd = new FormData(e.target);
+    const title = fd.get("title").trim();
+    const url = fd.get("url").trim();
+    if (!title || !url) return;
+    journey.pinnedResources = journey.pinnedResources || [];
+    journey.pinnedResources.push({ id: uid("res"), title, url, addedBy: CURRENT_USER_ID, addedAt: new Date().toISOString() });
+    savePersisted(STORAGE.journeys, journeys);
+    e.target.reset();
+    renderPinnedResources(journey);
   });
 
   $("#form-schedule-meeting").addEventListener("submit", (e) => {
@@ -3074,7 +3364,8 @@ function wireEvents() {
     const meetingId = uid("meet");
     const calUid = `${meetingId}@gainforward.rategain.com`;
     const title = `Ripple: ${stage ? stage.label : stageKey} conversation`;
-    const description = `${stage ? stage.detail : ""}\n\nScheduled from Ripple: ${journey.relationshipType}.`;
+    const agendaTopic = fd.get("agendaTopic").trim();
+    const description = `${stage ? stage.detail : ""}${agendaTopic ? `\n\nAgenda: ${agendaTopic}` : ""}\n\nScheduled from Ripple: ${journey.relationshipType}.`;
     const meetingLink = fd.get("meetingLink").trim();
     const location = meetingLink || "No video link added — confirm one with your partner separately.";
     const attendees = [
@@ -3098,7 +3389,18 @@ function wireEvents() {
     });
 
     journey.meetings = journey.meetings || [];
-    journey.meetings.push({ id: meetingId, uid: calUid, stage: stageKey, startISO: start.toISOString(), durationMins, status: "scheduled", sequence: 0, organizerId: CURRENT_USER_ID, meetingLink: meetingLink || "" });
+    journey.meetings.push({
+      id: meetingId,
+      uid: calUid,
+      stage: stageKey,
+      startISO: start.toISOString(),
+      durationMins,
+      status: "scheduled",
+      sequence: 0,
+      organizerId: CURRENT_USER_ID,
+      meetingLink: meetingLink || "",
+      agendaTopic: agendaTopic || "",
+    });
     savePersisted(STORAGE.journeys, journeys);
 
     pendingInvite = {
@@ -3135,7 +3437,8 @@ function wireEvents() {
     const journey = getSelectedJourney();
     if (!journey) return;
     const fd = new FormData(e.target);
-    journey.pulse = {
+    if (!journey.pulse) journey.pulse = {};
+    journey.pulse[CURRENT_USER_ID] = {
       q1: fd.get("q1"),
       q2: fd.get("q2"),
       q3: fd.get("q3"),
@@ -3145,7 +3448,7 @@ function wireEvents() {
       submittedAt: new Date().toISOString().slice(0, 10),
     };
     savePersisted(STORAGE.journeys, journeys);
-    toast("Pulse check submitted.", "success");
+    toast("Pulse check submitted. Your partner only sees whether you've submitted, not your answers.", "success");
     closeAllModals();
     renderJourney();
   });
@@ -3155,7 +3458,9 @@ function wireEvents() {
     const journey = getSelectedJourney();
     if (!journey) return;
     const fd = new FormData(e.target);
-    journey.reflection = {
+    const nextStep = fd.get("nextStep");
+    if (!journey.reflection) journey.reflection = {};
+    journey.reflection[CURRENT_USER_ID] = {
       setOutToLearn: fd.get("setOutToLearn").trim(),
       whatLearned: fd.get("whatLearned").trim(),
       whatPartnerLearned: fd.get("whatPartnerLearned").trim(),
@@ -3163,14 +3468,21 @@ function wireEvents() {
       wouldContinue: fd.get("wouldContinue"),
       wouldRecommend: fd.get("wouldRecommend"),
       whatToChange: fd.get("whatToChange").trim(),
+      nextStep,
       submittedAt: new Date().toISOString().slice(0, 10),
     };
-    const nextStep = fd.get("nextStep");
-    journey.outcome = nextStep;
+    // Either side choosing to end it is enough to close the relationship —
+    // waiting for both to agree would let one person be kept in a formal
+    // partnership the other has already checked out of.
+    const allNextSteps = Object.values(journey.reflection).map((r) => r.nextStep);
+    const endingSteps = allNextSteps.filter((s) => s && s !== "continue");
     let cancelledCount = 0;
-    if (nextStep !== "continue") {
+    let justClosed = false;
+    if (endingSteps.length) {
+      justClosed = journey.formalStatus !== "closed";
+      journey.outcome = endingSteps.includes("end") ? "end" : endingSteps[0];
       journey.formalStatus = "closed";
-      cancelledCount = cancelUpcomingMeetings(journey, `This relationship closed (${OUTCOME_LABELS[nextStep] || nextStep}) before this conversation happened.`);
+      cancelledCount = cancelUpcomingMeetings(journey, `This relationship closed (${OUTCOME_LABELS[journey.outcome] || journey.outcome}) before this conversation happened.`);
       syncEngagementStatus(journey.participantA);
       syncEngagementStatus(journey.participantB);
     }
@@ -3181,6 +3493,10 @@ function wireEvents() {
         : "Final reflection submitted. Thank you for closing the loop.",
       "success"
     );
+    // Once a journey closes it drops out of My Journey entirely (that view
+    // only ever shows open journeys), so this is the one reliable moment to
+    // hand over a keepsake — there's no "view it later" otherwise.
+    if (justClosed && journeyReachedCompletion(journey)) exportJourneySummary(journey);
     closeAllModals();
     renderJourney();
     renderHome();

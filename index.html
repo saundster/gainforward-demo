@@ -220,6 +220,44 @@
         <div class="stage-tracker" id="stage-tracker"></div>
       </div>
 
+      <div class="home-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Shared goal</h2>
+            <button class="btn btn-secondary btn-sm" id="btn-edit-shared-goal" data-action="edit-shared-goal">Edit goal</button>
+          </div>
+          <div id="shared-goal-display"></div>
+          <form id="form-shared-goal" class="hidden">
+            <textarea name="text" rows="2" placeholder="What are you working toward together? Set this once you've agreed on it."></textarea>
+            <div class="modal-actions" style="margin-top:8px">
+              <button type="button" class="btn btn-ghost btn-sm" data-action="cancel-shared-goal">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm">Save goal</button>
+            </div>
+          </form>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Action items</h2></div>
+          <p class="muted small">What each of you will do before the next conversation.</p>
+          <div id="action-items-list" class="session-log"></div>
+          <form id="form-add-action-item" class="inline-form" style="display:flex; gap:10px; align-items:flex-end; margin-top:10px; flex-wrap:wrap">
+            <label style="flex:1; min-width:140px">Next step<input type="text" name="text" placeholder="e.g. Draft the outline" required /></label>
+            <label>Owner<select name="ownerId" id="action-item-owner-select"></select></label>
+            <button type="submit" class="btn btn-primary btn-sm">Add</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Shared resources</h2></div>
+        <p class="muted small">Links either of you wants to point the other to — specific to this relationship, not the general course library.</p>
+        <div id="pinned-resources-list" class="session-log"></div>
+        <form id="form-add-resource" class="inline-form" style="display:flex; gap:10px; align-items:flex-end; margin-top:10px; flex-wrap:wrap">
+          <label style="flex:1; min-width:140px">Title<input type="text" name="title" placeholder="e.g. Our team's onboarding doc" required /></label>
+          <label style="flex:1; min-width:140px">Link<input type="url" name="url" placeholder="https://..." required /></label>
+          <button type="submit" class="btn btn-primary btn-sm">Add</button>
+        </form>
+      </div>
+
       <div class="panel">
         <div class="panel-head">
           <h2>Upcoming meetings</h2>
@@ -254,6 +292,7 @@
         </div>
       </div>
     </div>
+    <div id="journey-summary-area" class="offscreen-capture"></div>
   </section>
 
   <!-- ===================== INSIGHTS ===================== -->
@@ -844,6 +883,7 @@
         <label>Which conversation
           <select name="stage" id="schedule-stage-select" required></select>
         </label>
+        <label>Agenda for this conversation (optional)<input type="text" name="agendaTopic" placeholder="e.g. Review the deployment plan draft" /></label>
         <div class="form-row">
           <label>Date<input type="date" name="date" required /></label>
           <label>Time<input type="time" name="time" required /></label>
@@ -885,6 +925,7 @@
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
   <p class="muted small modal-body-lead">People Development reviews these to catch issues early, not to grade you or your partner.</p>
+  <p class="muted small" id="pulse-partner-note"></p>
   <form id="form-pulse" class="modal-body">
     <label>This mentoring partnership feels productive
       <select name="q1">
@@ -944,6 +985,7 @@
     <button class="modal-close" data-action="close-modal">✕</button>
   </div>
   <p class="muted small modal-body-lead">Your partner sees your answers to the first three questions, so you can close the loop together. The rest goes to People Development only.</p>
+  <div id="reflection-partner-view" class="journey-note hidden"></div>
   <form id="form-reflection" class="modal-body">
     <label>What did you set out to learn?<textarea name="setOutToLearn" rows="2" required></textarea></label>
     <label>What did you actually learn?<textarea name="whatLearned" rows="2" required></textarea></label>

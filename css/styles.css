@@ -242,6 +242,14 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 }
 .switch-pill.active { background: var(--rg-purple); border-color: var(--rg-purple); color: #fff; }
 .switch-pill:focus-visible { outline: 2px solid var(--rg-purple); outline-offset: 2px; }
+.switch-pill-badge {
+  font-family: var(--font); font-size: 0.68rem; font-weight: 700; opacity: 0.75;
+  background: rgba(0, 0, 0, 0.08); padding: 1px 6px; border-radius: 999px; margin-left: 2px;
+}
+.switch-pill.active .switch-pill-badge { background: rgba(255, 255, 255, 0.25); }
+/* Rendered off-screen (not display:none, so html2canvas can still lay it
+ * out and capture it) rather than shown in the normal page flow. */
+.offscreen-capture { position: fixed; left: -9999px; top: 0; }
 
 .growth-row { display: flex; flex-direction: column; gap: 5px; padding: 12px 0; border-bottom: 1px solid var(--rg-lavender-100); }
 .growth-row:last-child { border-bottom: none; padding-bottom: 0; }
@@ -394,6 +402,11 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .journey-note { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.82rem; line-height: 1.5; padding: 12px 14px; border-radius: var(--radius-sm); margin: -8px 0 18px; }
 .journey-note strong { color: var(--rg-purple-deep); }
 .journey-agenda-topic { font-weight: 700; color: var(--rg-purple-deep); margin: 4px 0 2px; }
+.inline-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; font-weight: 600; color: var(--rg-gray-dark); }
+.inline-form input, .inline-form select, .inline-form textarea, #form-shared-goal textarea {
+  font-family: var(--font); font-weight: 400; padding: 9px 11px; border-radius: var(--radius-sm);
+  border: 1px solid var(--rg-lavender-200); font-size: 0.88rem; color: var(--rg-gray-dark); width: 100%;
+}
 .privacy-note { background: var(--rg-lavender-bg); color: var(--rg-purple-deep); font-size: 0.76rem; padding: 8px 12px; border-radius: var(--radius-sm); margin: -6px 0 0; }
 
 /* ---------- Reports / export ---------- */
