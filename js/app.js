@@ -158,36 +158,67 @@ function logAdminAction(message, actorId) {
 function isJourneyOpen(j) {
   return j.formalStatus !== "closed";
 }
-function findActiveJourneyFor(userId) {
-  return journeys.find((j) => isJourneyOpen(j) && (j.participantA === userId || j.participantB === userId));
-}
 function findActiveJourneysFor(userId) {
   return journeys.filter((j) => isJourneyOpen(j) && (j.participantA === userId || j.participantB === userId));
+}
+/** Which of the current user's active journeys My Journey should show right
+ * now. Respects whatever the switcher was last set to, as long as that
+ * journey is still active; otherwise falls back to the newest one instead
+ * of silently guessing "the first" (journeys are pushed in creation order,
+ * so the last entry is the newest). */
+function resolveSelectedJourney(allJourneys) {
+  if (!allJourneys.length) {
+    selectedJourneyId = null;
+    return null;
+  }
+  let journey = selectedJourneyId ? allJourneys.find((j) => j.id === selectedJourneyId) : null;
+  if (!journey) journey = allJourneys[allJourneys.length - 1];
+  selectedJourneyId = journey.id;
+  return journey;
+}
+/** Shorthand for "whichever journey My Journey currently has selected" —
+ * every action that operates on "your" journey (logging a session,
+ * scheduling, pulse, reflection, pause) should act on that one specifically,
+ * not just whichever active journey happens to be found first. */
+function getSelectedJourney() {
+  return resolveSelectedJourney(findActiveJourneysFor(CURRENT_USER_ID));
 }
 function getPartnerId(journey, userId) {
   return journey.participantA === userId ? journey.participantB : journey.participantA;
 }
-/** Journeys don't store "who's the mentor" directly — each person's own
- * preferredFormat already says it, so derive the pairing's roles from that
- * instead of adding a redundant field that could drift out of sync. */
-function journeyRoleLabel(me, partner) {
-  if (me.preferredFormat === "mentor" && partner?.preferredFormat === "mentee") return "You're mentoring";
-  if (me.preferredFormat === "mentee" && partner?.preferredFormat === "mentor") return "You're being mentored by";
+/** Which role each side plays is decided once, when the journey forms, and
+ * stored on the journey itself (roleOfA/roleOfB) — not re-derived from a
+ * person's current profile, which can change later and shouldn't
+ * retroactively reinterpret an existing relationship. Also what makes dual
+ * role possible: the same person can be roleOfA "mentor" on one journey and
+ * roleOfB "mentee" on another, at the same time. */
+function journeyRoleOf(journey, userId) {
+  if (journey.participantA === userId) return journey.roleOfA || null;
+  if (journey.participantB === userId) return journey.roleOfB || null;
+  return null;
+}
+function journeyRoleLabel(journey, userId) {
+  const role = journeyRoleOf(journey, userId);
+  if (role === "mentor") return "You're mentoring";
+  if (role === "mentee") return "You're being mentored by";
   return "With";
 }
 /** Mentors can hold multiple concurrent connections up to their stated capacity;
  * everyone else (mentees, peers, reverse) is still capped at one at a time.
  * A person an admin has paused or closed out isn't open to new matches
  * regardless of how much headroom their capacity would otherwise allow. */
-function isAtCapacity(userId) {
+/** Capacity is tracked per role, not per person: being someone's mentee
+ * doesn't use up a person's own capacity as a mentor, and vice versa — the
+ * same person can hold up to menteeCapacity mentor-side journeys and, quite
+ * separately, up to one mentee-side journey at a time. `role` is whichever
+ * side this person would fill in the connection being considered. */
+function isAtCapacity(userId, role) {
   const person = getEmployeeById(userId);
   if (!person) return true;
   if (person.engagementStatus === "paused" || person.engagementStatus === "closed") return true;
-  const activeCount = findActiveJourneysFor(userId).length;
-  if (person.preferredFormat === "mentor" && person.menteeCapacity) {
-    return activeCount >= person.menteeCapacity;
-  }
-  return activeCount >= 1;
+  const sideCount = findActiveJourneysFor(userId).filter((j) => journeyRoleOf(j, userId) === role).length;
+  if (role === "mentor" && person.menteeCapacity) return sideCount >= person.menteeCapacity;
+  return sideCount >= 1;
 }
 function hasOpenJourneyBetween(idA, idB) {
   return journeys.some((j) => isJourneyOpen(j) && ((j.participantA === idA && j.participantB === idB) || (j.participantA === idB && j.participantB === idA)));
@@ -213,6 +244,11 @@ function openModal(id) {
   $(`#${id}`).classList.remove("hidden");
 }
 let isOnboarding = false;
+
+/** Which of the current user's (possibly several) active journeys My Journey
+ * is currently showing. Null means "pick the most sensible default" — see
+ * resolveSelectedJourney(). */
+let selectedJourneyId = null;
 
 /** Generic yes/cancel confirmation, reused for any destructive action
  * (right now just ending a relationship) instead of a one-off modal each time. */
@@ -284,6 +320,8 @@ function openProfileModal({ onboarding }) {
   form.goalStatement.value = me.goalStatement || "";
   form.purpose.value = me.purpose || "";
   if (me.preferredFormat) form.preferredFormat.value = me.preferredFormat;
+  const currentRoles = personRoleLabels(me);
+  $("#current-roles-note").textContent = currentRoles.length ? `You're currently: ${currentRoles.join(" + ")}.` : "";
   if (me.aiConfidence) form.aiConfidence.value = me.aiConfidence;
   if (me.availability?.frequency) form.frequency.value = me.availability.frequency;
   if (me.availability?.hours) form.hours.value = me.availability.hours;
@@ -629,7 +667,7 @@ function renderTopMentors() {
   const list = $("#top-mentors-list");
   const me = getCurrentUser();
   const mentors = employees
-    .filter((e) => e.id !== CURRENT_USER_ID && e.preferredFormat === "mentor")
+    .filter((e) => e.id !== CURRENT_USER_ID && e.isMentor)
     .map((e) => ({ employee: e, score: computeMatchScore(me, e).total }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 4);
@@ -802,25 +840,11 @@ function sendBulkNudge(recipients, subject, body) {
   renderNudgeLog();
 }
 
-function renderActiveJourneyCard() {
-  const card = $("#active-journey-card");
-  const journey = findActiveJourneyFor(CURRENT_USER_ID);
-  if (!journey) {
-    const me = getCurrentUser();
-    const lookingFor = me.preferredFormat === "mentor" ? "mentee" : me.preferredFormat === "mentee" ? "mentor" : null;
-    card.innerHTML = lookingFor
-      ? `<p class="muted small">No active journey yet. Head to the Directory to find a ${lookingFor}.</p>
-      <button class="btn btn-primary btn-sm" data-action="goto-directory">Find a ${lookingFor}</button>`
-      : `<p class="muted small">No active journey yet. Become a mentor or mentee to get matched.</p>
-      <div class="row-actions">
-        <button class="btn btn-secondary btn-sm" data-action="open-become-mentor-role">Become a mentor</button>
-        <button class="btn btn-secondary btn-sm" data-action="open-become-mentee-role">Become a mentee</button>
-      </div>`;
-    return;
-  }
-  const me = getCurrentUser();
+/** One journey's summary card — shared by the single-journey case and each
+ * entry in the multi-journey / dual-role split below. */
+function journeySummaryHTML(journey) {
   const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
-  const roleLabel = journeyRoleLabel(me, partner);
+  const roleLabel = journeyRoleLabel(journey, CURRENT_USER_ID);
   const completed = journey.sessions.filter((s) => s.completed).length;
   const progress = clamp(completed / 5, 0, 1);
   const stageIndex = clamp(completed, 0, PROGRAM_META.stages.length - 1);
@@ -845,7 +869,7 @@ function renderActiveJourneyCard() {
       : "All five conversations logged. Complete your final reflection."
     : `Next up: your ${stage.label.toLowerCase()} conversation — not on the calendar yet.`;
 
-  card.innerHTML = `
+  return `
     <div class="journey-summary">
       <div>
         <div class="journey-partner">${roleLabel} ${partner ? partner.displayName : "—"}</div>
@@ -855,14 +879,51 @@ function renderActiveJourneyCard() {
       <div class="progress-label"><span>${completed} of 5 conversations</span><span>${pct(progress)}</span></div>
       ${lastSession ? `<div class="muted small">Last session: ${daysAgoLabel(lastSession.date)}</div>` : ""}
       <div class="next-action">${nextAction}</div>
-      <button class="btn btn-secondary btn-sm" data-action="goto-journey">Go to My Journey</button>
+      <button class="btn btn-secondary btn-sm" data-action="goto-journey" data-id="${journey.id}">Go to My Journey</button>
     </div>`;
+}
+
+function renderActiveJourneyCard() {
+  const card = $("#active-journey-card");
+  const me = getCurrentUser();
+  const allJourneys = findActiveJourneysFor(CURRENT_USER_ID);
+
+  if (!allJourneys.length) {
+    const lookingFor = me.isMentor && !me.isMentee ? "mentee" : me.isMentee && !me.isMentor ? "mentor" : null;
+    card.innerHTML = lookingFor
+      ? `<p class="muted small">No active journey yet. Head to the Directory to find a ${lookingFor}.</p>
+      <button class="btn btn-primary btn-sm" data-action="goto-directory">Find a ${lookingFor}</button>`
+      : `<p class="muted small">No active journey yet. Become a mentor or mentee to get matched.</p>
+      <div class="row-actions">
+        <button class="btn btn-secondary btn-sm" data-action="open-become-mentor-role">Become a mentor</button>
+        <button class="btn btn-secondary btn-sm" data-action="open-become-mentee-role">Become a mentee</button>
+      </div>`;
+    return;
+  }
+
+  const mentorSide = allJourneys.filter((j) => journeyRoleOf(j, CURRENT_USER_ID) === "mentor");
+  const menteeSide = allJourneys.filter((j) => journeyRoleOf(j, CURRENT_USER_ID) === "mentee");
+  const other = allJourneys.filter((j) => !mentorSide.includes(j) && !menteeSide.includes(j));
+
+  // Someone holding only one role (still the common case) sees exactly what
+  // this looked like before dual-role existed — no "As a Mentor" label
+  // clutter for a single card. The split only appears once there's an
+  // active journey on both sides to actually split.
+  if (!mentorSide.length || !menteeSide.length) {
+    card.innerHTML = allJourneys.map(journeySummaryHTML).join("");
+    return;
+  }
+
+  card.innerHTML =
+    `<div class="role-block"><div class="role-block-label">As a mentor</div>${mentorSide.map(journeySummaryHTML).join("")}</div>` +
+    `<div class="role-block"><div class="role-block-label">As a mentee</div>${menteeSide.map(journeySummaryHTML).join("")}</div>` +
+    other.map(journeySummaryHTML).join("");
 }
 
 function renderGrowthProfileCard() {
   const card = $("#growth-profile-card");
   const me = getCurrentUser();
-  const journey = findActiveJourneyFor(CURRENT_USER_ID);
+  const journey = getSelectedJourney();
   const completed = journey ? journey.sessions.filter((s) => s.completed).length : 0;
   const progress = journey ? clamp(completed / 5, 0, 1) : 0;
   const hasProfile = (me.learningGoals && me.learningGoals.length) || (me.offeredSkills && me.offeredSkills.length);
@@ -935,7 +996,9 @@ function renderDirectory() {
     if (e.id === CURRENT_USER_ID) return false;
     if (dept && e.department !== dept) return false;
     if (geo && e.geography !== geo) return false;
-    if (format && e.preferredFormat !== format) return false;
+    if (format === "mentor" && !e.isMentor) return false;
+    if (format === "mentee" && !e.isMentee) return false;
+    if ((format === "peer" || format === "reverse") && e.preferredFormat !== format) return false;
     if (search) {
       const haystack = [e.fullName, ...(e.learningGoals || []), ...(e.offeredSkills || [])].join(" ").toLowerCase();
       if (!haystack.includes(search)) return false;
@@ -969,7 +1032,7 @@ function renderDirectory() {
         </div>
         <div class="chip-row">
           <span class="chip chip--status chip--${e.engagementStatus}">${statusLabel(e.engagementStatus)}</span>
-          <span class="chip">${formatLabel(e.preferredFormat)}</span>
+          ${personRoleLabels(e).map((l) => `<span class="chip">${l}</span>`).join("")}
           ${e.rating ? `<span class="chip">★ ${e.rating.toFixed(1)} · ${e.menteeCount} mentees</span>` : ""}
         </div>
         <div class="chip-row">${skillsChips}${extraSkills > 0 ? `<span class="chip chip--skill">+${extraSkills} more</span>` : ""}</div>
@@ -992,108 +1055,162 @@ function formatLabel(format) {
 /* ---------------------------------------------------------------- */
 let matchModalTargetId = null;
 
+/** Which relationship(s) I could actually form with this candidate, and who
+ * fills which role in each. Mentor and mentee are independent per person
+ * now, so a dual-role person can have a viable direction on either side of
+ * a candidate who's also dual-role — Directory shows both rather than
+ * silently picking one. Peer / Reverse mentoring stay single-format,
+ * unchanged, and only apply when neither mentor/mentee direction exists. */
+function resolveConnectionDirections(me, candidate) {
+  const directions = [];
+  if (me.isMentee && candidate.isMentor) directions.push({ role: "mentee", mentee: me, mentor: candidate, relationshipType: "1:1 Mentoring" });
+  if (me.isMentor && candidate.isMentee) directions.push({ role: "mentor", mentee: candidate, mentor: me, relationshipType: "1:1 Mentoring" });
+  if (!directions.length) {
+    const compatible = FORMAT_COMPATIBILITY[me.preferredFormat] || [];
+    if (compatible.includes(candidate.preferredFormat)) {
+      const relationshipType = candidate.preferredFormat === "peer" ? "Peer Learning" : candidate.preferredFormat === "reverse" ? "Reverse Mentoring" : "1:1 Mentoring";
+      directions.push({ role: me.preferredFormat, mentee: me, mentor: candidate, relationshipType, legacy: true });
+    }
+  }
+  return directions;
+}
+
+/** null when the direction is open; otherwise the reason to show instead of
+ * a Connect button. Legacy (peer/reverse) directions keep the original
+ * whole-person capacity check; mentor/mentee directions check each side's
+ * capacity for the specific role they'd be filling. */
+function directionBlockedReason(direction) {
+  const { mentee, mentor, legacy } = direction;
+  if (legacy) {
+    if (isAtCapacity(mentee.id)) return mentee.id === CURRENT_USER_ID ? "You already have an active journey. You'll need a rematch before starting a new one." : `${mentee.displayName} already has an active journey right now.`;
+    if (isAtCapacity(mentor.id)) return mentor.id === CURRENT_USER_ID ? "You already have an active journey. You'll need a rematch before starting a new one." : `${mentor.displayName} already has an active journey right now.`;
+    return null;
+  }
+  if (isAtCapacity(mentee.id, "mentee")) {
+    return mentee.id === CURRENT_USER_ID
+      ? "You already have an active mentee-side journey. You'll need a rematch before starting a new one."
+      : `${mentee.displayName} already has an active mentee-side journey right now.`;
+  }
+  if (isAtCapacity(mentor.id, "mentor")) {
+    return mentor.id === CURRENT_USER_ID ? "You're at capacity as a mentor right now." : `${mentor.displayName} is at capacity as a mentor right now.`;
+  }
+  return null;
+}
+
+function directionBlockHTML(direction, candidate) {
+  const blocked = directionBlockedReason(direction);
+  if (blocked) return `<p class="muted small">${blocked}</p>`;
+  return `<label class="match-prep-label">Topic for your first conversation (optional)
+       <input type="text" class="match-prep-topic" placeholder="e.g. Getting a first enterprise deal narrative right" />
+     </label>
+     <label class="match-prep-label">What have you already tried, read, or thought through on your own about this? (optional)
+       <textarea class="match-prep-note" rows="2" placeholder="e.g. I've read a beginner's guide and worked through a few practice questions on my own"></textarea>
+     </label>
+     <p class="muted small">Not sure yet what to bring? Skip this — you can always work it out on the call. ${candidate.displayName} will see whatever you add here before you meet.</p>
+     <button class="btn btn-primary btn-send-request" data-role="${direction.role}">Connect now</button>
+     <p class="muted small" style="margin-top:6px">This connects you right away, no approval needed. People Development can review it anytime and step in if something looks off.</p>`;
+}
+
 function openMatchModalFor(candidateId) {
   const me = getCurrentUser();
   const candidate = getEmployeeById(candidateId);
   if (!candidate) return;
   matchModalTargetId = candidateId;
 
-  const { total, breakdown } = computeMatchScore(me, candidate);
-  const reasons = matchReasons(me, candidate, breakdown);
   const existing = hasOpenJourneyBetween(CURRENT_USER_ID, candidateId);
-  const candidateBusy = isAtCapacity(candidateId);
-  const meBusy = isAtCapacity(CURRENT_USER_ID);
+  const directions = existing ? [] : resolveConnectionDirections(me, candidate);
 
   const body = $("#match-modal-body");
-  body.innerHTML = `
+  const head = `
     <div class="mentor-row" style="margin-bottom:4px">
       ${avatarHTML(candidate)}
       <div class="mentor-row-info">
         <div class="mentor-row-name">${candidate.displayName}</div>
-        <div class="mentor-row-meta">${candidate.department} · ${candidate.geography} · ${formatLabel(candidate.preferredFormat)}</div>
+        <div class="mentor-row-meta">${candidate.department} · ${candidate.geography} · ${personRoleLabels(candidate).join(" · ")}</div>
       </div>
-    </div>
-    <p class="match-verdict">${scoreVerdict(total)}</p>
-    <p class="muted small" style="margin:2px 0 -2px">Why we think so:</p>
-    <ul class="tip-list">${reasons.map((r) => `<li>${r}</li>`).join("")}</ul>
-    <p class="muted small">Use this as a starting point for a conversation, not a verdict; the reasons above matter more than the number below.</p>
-    <details class="score-details">
-      <summary>Score breakdown</summary>
-      <div class="bar-chart" style="margin-top:10px">
-        ${breakdown
-          .map(
-            (b) => `
-          <div class="bar-row">
-            <span>${b.label}</span>
-            <div class="bar-track"><div class="bar-fill" style="width:${pct(b.score)}"></div></div>
-            <span>${pct(b.score)}</span>
-          </div>`
-          )
-          .join("")}
-      </div>
-    </details>
-    ${
-      existing
-        ? `<p class="muted small">You're already connected. Head to My Journey to get started.</p>`
-        : meBusy
-        ? `<p class="muted small">You already have an active journey. You'll need a rematch before starting a new one.</p>`
-        : candidateBusy
-        ? `<p class="muted small">${candidate.displayName} ${
-            candidate.engagementStatus === "paused"
-              ? "is paused and not taking new connections right now"
-              : candidate.engagementStatus === "closed"
-              ? "isn't taking new connections right now"
-              : candidate.preferredFormat === "mentor" && candidate.menteeCapacity
-              ? "is at capacity right now"
-              : "already has an active journey right now"
-          }.</p>`
-        : `<label class="match-prep-label">Topic for your first conversation (optional)
-             <input type="text" id="match-prep-topic" placeholder="e.g. Getting a first enterprise deal narrative right" />
-           </label>
-           <label class="match-prep-label">What have you already tried, read, or thought through on your own about this? (optional)
-             <textarea id="match-prep-note" rows="2" placeholder="e.g. I've read a beginner's guide and worked through a few practice questions on my own"></textarea>
-           </label>
-           <p class="muted small">Not sure yet what to bring? Skip this — you can always work it out on the call. ${candidate.displayName} will see whatever you add here before you meet.</p>
-           <button class="btn btn-primary" id="btn-send-request">Connect now</button>
-           <p class="muted small" style="margin-top:6px">This connects you right away, no approval needed. People Development can review it anytime and step in if something looks off.</p>`
-    }
-  `;
+    </div>`;
+
+  if (existing) {
+    body.innerHTML = `${head}<p class="muted small">You're already connected. Head to My Journey to get started.</p>`;
+    openModal("modal-match");
+    return;
+  }
+  if (!directions.length) {
+    body.innerHTML = `${head}<p class="muted small">No mutual fit right now — neither of you is currently seeking the role the other holds.</p>`;
+    openModal("modal-match");
+    return;
+  }
+
+  const roleFraming = { mentee: "Connecting as their mentee", mentor: "Connecting as their mentor" };
+  body.innerHTML =
+    head +
+    directions
+      .map((d, i) => {
+        const { total, breakdown } = computeMatchScore(d.mentee, d.mentor);
+        const reasons = matchReasons(d.mentee, d.mentor, breakdown);
+        return `
+        <div class="connection-direction" data-direction-index="${i}">
+        ${directions.length > 1 ? `<div class="role-block-label">${roleFraming[d.role] || formatLabel(d.role)}</div>` : ""}
+        <p class="match-verdict">${scoreVerdict(total)}</p>
+        <p class="muted small" style="margin:2px 0 -2px">Why we think so:</p>
+        <ul class="tip-list">${reasons.map((r) => `<li>${r}</li>`).join("")}</ul>
+        <p class="muted small">Use this as a starting point for a conversation, not a verdict; the reasons above matter more than the number below.</p>
+        <details class="score-details">
+          <summary>Score breakdown</summary>
+          <div class="bar-chart" style="margin-top:10px">
+            ${breakdown
+              .map(
+                (b) => `
+              <div class="bar-row">
+                <span>${b.label}</span>
+                <div class="bar-track"><div class="bar-fill" style="width:${pct(b.score)}"></div></div>
+                <span>${pct(b.score)}</span>
+              </div>`
+              )
+              .join("")}
+          </div>
+        </details>
+        ${directionBlockHTML(d, candidate)}
+        </div>`;
+      })
+      .join('<div style="height:1px;background:var(--rg-lavender-200);margin:18px 0"></div>');
 
   openModal("modal-match");
-  const sendBtn = $("#btn-send-request");
-  if (sendBtn) {
-    sendBtn.addEventListener("click", () => {
-      const topicEl = $("#match-prep-topic");
-      const noteEl = $("#match-prep-note");
+  $all(".btn-send-request").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const container = e.target.closest(".connection-direction");
+      const topicEl = container.querySelector(".match-prep-topic");
+      const noteEl = container.querySelector(".match-prep-note");
       const prepTopic = (topicEl?.value || "").trim();
       const prepNote = (noteEl?.value || "").trim();
-      sendRequest(candidateId, total, breakdown, prepTopic, prepNote);
+      const direction = directions[Number(container.dataset.directionIndex)];
+      sendRequest(direction, prepTopic, prepNote);
     });
-  }
+  });
 }
 
 /** Connections form immediately on request, no admin approval gate. A Super
  * Admin can still review any active connection and end it (no-fault rematch)
- * at any time; that's the guardrail, not a pre-approval step. */
-function sendRequest(candidateId, total, breakdown, prepTopic, prepNote) {
-  const candidate = getEmployeeById(candidateId);
+ * at any time; that's the guardrail, not a pre-approval step. `direction`
+ * (from resolveConnectionDirections) says who's the mentor and who's the
+ * mentee for this specific connection — that's recorded on the journey
+ * itself rather than re-derived from either person's profile later. */
+function sendRequest(direction, prepTopic, prepNote) {
+  const { mentee, mentor, relationshipType } = direction;
+  const candidate = mentee.id === CURRENT_USER_ID ? mentor : mentee;
   const me = getCurrentUser();
+  const { total, breakdown } = computeMatchScore(mentee, mentor);
 
-  const fromBusy = isAtCapacity(CURRENT_USER_ID);
-  const toBusy = isAtCapacity(candidateId);
-  if (fromBusy || toBusy) {
-    const busyName = fromBusy ? me.displayName : candidate.displayName;
-    toast(`${busyName} ${fromBusy ? "would need a rematch before starting a new relationship" : "is at capacity"}.`, "error");
+  const blocked = directionBlockedReason(direction);
+  if (blocked) {
+    toast(blocked, "error");
     return;
   }
-
-  const relationshipType =
-    candidate.preferredFormat === "peer" ? "Peer Learning" : candidate.preferredFormat === "reverse" ? "Reverse Mentoring" : "1:1 Mentoring";
 
   const request = {
     id: uid("req"),
     fromId: CURRENT_USER_ID,
-    toId: candidateId,
+    toId: candidate.id,
     score: total,
     breakdown,
     status: "accepted",
@@ -1104,7 +1221,9 @@ function sendRequest(candidateId, total, breakdown, prepTopic, prepNote) {
   journeys.push({
     id: uid("j"),
     participantA: CURRENT_USER_ID,
-    participantB: candidateId,
+    participantB: candidate.id,
+    roleOfA: CURRENT_USER_ID === mentor.id ? "mentor" : CURRENT_USER_ID === mentee.id ? "mentee" : direction.role,
+    roleOfB: candidate.id === mentor.id ? "mentor" : candidate.id === mentee.id ? "mentee" : direction.role,
     relationshipType,
     formalStatus: "active",
     startDate: new Date().toISOString().slice(0, 10),
@@ -1118,12 +1237,12 @@ function sendRequest(candidateId, total, breakdown, prepTopic, prepNote) {
     prepNote: prepNote || "",
     prepNoteFromId: CURRENT_USER_ID,
   });
-  if (candidate.menteeCount != null) candidate.menteeCount += 1;
+  if (mentor.menteeCount != null) mentor.menteeCount += 1;
 
   savePersisted(STORAGE.requests, requests);
   savePersisted(STORAGE.journeys, journeys);
   syncEngagementStatus(CURRENT_USER_ID);
-  syncEngagementStatus(candidateId);
+  syncEngagementStatus(candidate.id);
   toast(`You're connected with ${candidate.displayName}. Head to My Journey to schedule your first conversation.`, "success");
   closeAllModals();
   renderDirectory();
@@ -1182,12 +1301,36 @@ function agendaHTML(journey) {
   }${journey.prepNote ? `<div>Already looked into: “${journey.prepNote}”</div>` : ""}`;
 }
 
+/** The switcher only appears once there's an actual choice to make — one
+ * active journey behaves exactly like it always has, no pill row. */
+function renderJourneySwitcher(allJourneys, selected) {
+  const el = $("#journey-switcher");
+  if (allJourneys.length < 2) {
+    el.classList.add("hidden");
+    el.innerHTML = "";
+    return;
+  }
+  el.classList.remove("hidden");
+  el.innerHTML = allJourneys
+    .map((j) => {
+      const partner = getEmployeeById(getPartnerId(j, CURRENT_USER_ID));
+      const role = journeyRoleOf(j, CURRENT_USER_ID);
+      const verb = role === "mentor" ? "Mentoring" : role === "mentee" ? "Being mentored by" : "With";
+      return `<button type="button" class="switch-pill ${j.id === selected.id ? "active" : ""}" data-action="select-journey" data-id="${j.id}">${verb} ${
+        partner ? partner.displayName : "?"
+      }</button>`;
+    })
+    .join("");
+}
+
 function renderJourney() {
-  const journey = findActiveJourneyFor(CURRENT_USER_ID);
+  const allJourneys = findActiveJourneysFor(CURRENT_USER_ID);
+  const journey = resolveSelectedJourney(allJourneys);
   const empty = $("#journey-empty");
   const content = $("#journey-content");
 
   if (!journey) {
+    $("#journey-switcher").classList.add("hidden");
     empty.classList.remove("hidden");
     content.classList.add("hidden");
     $("#journey-subtitle").textContent = "Once you're matched, your conversations and progress will show up here.";
@@ -1198,13 +1341,13 @@ function renderJourney() {
     renderJourneyCleanup();
     return;
   }
+  renderJourneySwitcher(allJourneys, journey);
   $("#journey-cleanup").classList.add("hidden");
   empty.classList.add("hidden");
   content.classList.remove("hidden");
 
-  const me = getCurrentUser();
   const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
-  const roleLabel = journeyRoleLabel(me, partner);
+  const roleLabel = journeyRoleLabel(journey, CURRENT_USER_ID);
   const realStartDate = getJourneyStartDate(journey);
   const startDate = getJourneyEffectiveStartDate(journey);
   const completed = journey.sessions.filter((s) => s.completed).length;
@@ -1212,13 +1355,9 @@ function renderJourney() {
   const weekNumber = weekNumberFor(startDate, getJourneyReferenceDate(journey));
   const paused = isJourneyPaused(journey);
 
-  const allMine = findActiveJourneysFor(CURRENT_USER_ID);
-  const extraCount = allMine.length - 1;
-  $("#journey-subtitle").textContent =
-    `${roleLabel} ${partner ? partner.displayName : "your partner"} · Week ${weekNumber} of 12 · started ${formatDateShort(
-      new Date(`${realStartDate}T00:00:00`)
-    )} · wraps up around ${pilotEndDate(startDate)}.` +
-    (extraCount > 0 ? ` You also have ${extraCount} other active mentee${extraCount === 1 ? "" : "s"}; this shows the most recent.` : "");
+  $("#journey-subtitle").textContent = `${roleLabel} ${partner ? partner.displayName : "your partner"} · Week ${weekNumber} of 12 · started ${formatDateShort(
+    new Date(`${realStartDate}T00:00:00`)
+  )} · wraps up around ${pilotEndDate(startDate)}.`;
 
   const pauseBtn = $("#btn-toggle-pause");
   pauseBtn.classList.remove("hidden");
@@ -1339,7 +1478,7 @@ const STAGE_NOTES_PROMPTS = {
 };
 
 function openLogSessionModal() {
-  const journey = findActiveJourneyFor(CURRENT_USER_ID);
+  const journey = getSelectedJourney();
   const startDate = journey ? getJourneyStartDate(journey) : null;
   const completed = journey ? journey.sessions.filter((s) => s.completed).length : 0;
   const nextStageIndex = clamp(completed, 0, PROGRAM_META.stages.length - 1);
@@ -1507,7 +1646,7 @@ function findRelevantJourneyFor(employeeId) {
 function openNudgeModal({ toId }) {
   let recipientId = toId;
   if (!recipientId) {
-    const myJourney = findActiveJourneyFor(CURRENT_USER_ID);
+    const myJourney = getSelectedJourney();
     if (!myJourney) {
       toast("You don't have an active journey to nudge anyone about yet.", "error");
       return;
@@ -1585,7 +1724,7 @@ function renderNudgeLog() {
 let pendingInvite = null;
 
 function openScheduleMeetingModal() {
-  const journey = findActiveJourneyFor(CURRENT_USER_ID);
+  const journey = getSelectedJourney();
   if (!journey) return;
   const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
   const completed = journey.sessions.filter((s) => s.completed).length;
@@ -1614,7 +1753,7 @@ function openScheduleMeetingModal() {
 }
 
 function openPulseModal() {
-  const journey = findActiveJourneyFor(CURRENT_USER_ID);
+  const journey = getSelectedJourney();
   const form = $("#form-pulse");
   if (journey?.pulse) {
     form.q1.value = journey.pulse.q1;
@@ -1630,7 +1769,7 @@ function openPulseModal() {
 }
 
 function openReflectionModal() {
-  const journey = findActiveJourneyFor(CURRENT_USER_ID);
+  const journey = getSelectedJourney();
   const form = $("#form-reflection");
   if (journey?.reflection) {
     const r = journey.reflection;
@@ -1846,7 +1985,9 @@ function renderRoster() {
   const rows = employees.filter((e) => {
     if (dept && e.department !== dept) return false;
     if (geo && e.geography !== geo) return false;
-    if (format && e.preferredFormat !== format) return false;
+    if (format === "mentor" && !e.isMentor) return false;
+    if (format === "mentee" && !e.isMentee) return false;
+    if ((format === "peer" || format === "reverse") && e.preferredFormat !== format) return false;
     if (status && e.engagementStatus !== status) return false;
     if (!search) return true;
     return `${e.fullName} ${e.department}`.toLowerCase().includes(search);
@@ -1861,20 +2002,28 @@ function renderRoster() {
     .map((e) => {
       const allJourneys = findActiveJourneysFor(e.id);
       const journey = allJourneys[0] || null;
-      const partner = journey ? getEmployeeById(getPartnerId(journey, e.id)) : null;
-      const extraCount = allJourneys.length - 1;
+      const partnerCell = allJourneys.length
+        ? allJourneys
+            .map((j) => {
+              const p = getEmployeeById(getPartnerId(j, e.id));
+              const role = journeyRoleOf(j, e.id);
+              const verb = role === "mentor" ? "Mentoring" : role === "mentee" ? "Mentee of" : "With";
+              return `${verb} ${p ? p.displayName : "?"}`;
+            })
+            .join(" · ")
+        : "—";
       return `
       <tr>
         <td>${e.displayName}${e.id === CURRENT_USER_ID ? " (you)" : ""}${roleLabel(e) ? ` <span class="chip chip--${e.adminRole}">${roleLabel(e)}</span>` : ""}</td>
         <td>${e.department}</td>
         <td>${e.geography}</td>
-        <td>${formatLabel(e.preferredFormat)}</td>
+        <td>${personRoleLabels(e).join(" + ")}</td>
         <td>
           <select data-status-for="${e.id}">
             ${["available", "active", "paused", "closed"].map((s) => `<option value="${s}" ${e.engagementStatus === s ? "selected" : ""}>${statusLabel(s)}</option>`).join("")}
           </select>
         </td>
-        <td>${partner ? `${partner.displayName}${extraCount > 0 ? ` <span class="muted small">+${extraCount} more</span>` : ""}` : "—"}</td>
+        <td>${partnerCell}</td>
         <td>
           <div class="row-actions">
             ${e.id !== CURRENT_USER_ID ? `<button class="btn btn-ghost btn-sm" data-action="open-nudge" data-id="${e.id}">Nudge</button>` : ""}
@@ -2225,6 +2374,30 @@ function normalizeSkillCategories(emp) {
   return emp;
 }
 
+/** Mentor and mentee are independent facts about a person, not one exclusive
+ * "preferredFormat" — someone can hold both at once (mentoring on one topic,
+ * being mentored on another). preferredFormat now only carries meaning for
+ * the Peer / Reverse mentoring relationship types, which stay single-format;
+ * anyone who predates this flag gets isMentor/isMentee derived once from
+ * whatever single format they already had, so existing profiles don't need
+ * to be rewritten by hand. */
+function normalizeRoles(emp) {
+  if (emp.isMentor === undefined) emp.isMentor = emp.preferredFormat === "mentor";
+  if (emp.isMentee === undefined) emp.isMentee = emp.preferredFormat === "mentee";
+  return emp;
+}
+
+/** What to show as this person's role chip(s) in Directory/Roster — one chip
+ * per role they actually hold, falling back to the legacy single format for
+ * anyone who's only ever been a Peer or Reverse-mentoring participant. */
+function personRoleLabels(person) {
+  const labels = [];
+  if (person.isMentor) labels.push("Mentor");
+  if (person.isMentee) labels.push("Mentee");
+  if (!labels.length && person.preferredFormat) labels.push(formatLabel(person.preferredFormat));
+  return labels;
+}
+
 async function refreshEmployeeSource() {
   const overrides = loadPersisted(STORAGE.overrides, {});
   const addedEmployees = loadPersisted(STORAGE.addedEmployees, []);
@@ -2232,6 +2405,7 @@ async function refreshEmployeeSource() {
   employees.forEach((e) => {
     if (overrides[e.id]) Object.assign(e, overrides[e.id]);
     normalizeSkillCategories(e);
+    normalizeRoles(e);
   });
   ensureCurrentUser();
   populateFilterDropdowns();
@@ -2248,12 +2422,14 @@ function ensureCurrentUser() {
   DEMO_ACCOUNTS.forEach((account) => {
     employees = employees.filter((e) => e.id !== account.id);
     employees.unshift(
-      normalizeSkillCategories({
-        id: account.id,
-        isCurrentUser: account.id === activeId,
-        ...account.employee,
-        ...(overrides[account.id] || {}),
-      })
+      normalizeRoles(
+        normalizeSkillCategories({
+          id: account.id,
+          isCurrentUser: account.id === activeId,
+          ...account.employee,
+          ...(overrides[account.id] || {}),
+        })
+      )
     );
   });
 
@@ -2280,6 +2456,8 @@ function ensureCurrentUser() {
       purpose: "",
       skillLevel: "",
       preferredFormat: "",
+      isMentor: false,
+      isMentee: false,
       engagementStatus: "available",
       rating: null,
       menteeCount: 0,
@@ -2369,6 +2547,8 @@ function ensureJourneysSeeded() {
       id: "j-seed-1",
       participantA: "demo-mentee-2",
       participantB: "e-meyer",
+      roleOfA: "mentee",
+      roleOfB: "mentor",
       relationshipType: "1:1 Mentoring",
       formalStatus: "active",
       startDate: "2026-07-09",
@@ -2383,6 +2563,36 @@ function ensureJourneysSeeded() {
       pulse: null,
       reflection: null,
     },
+    // Priya (mentor1) is dual-role: mentoring Castillo here, and mentored by
+    // Osei below — a ready-to-demo example of both roles at once.
+    {
+      id: "j-seed-2",
+      participantA: "demo-mentor-1",
+      participantB: "e-castillo",
+      roleOfA: "mentor",
+      roleOfB: "mentee",
+      relationshipType: "1:1 Mentoring",
+      formalStatus: "active",
+      startDate: "2026-08-19",
+      sessions: [{ id: "s4", stage: "connect", date: "2026-08-19", notes: "Introductions and agreed a bi-weekly cadence.", completed: true }],
+      meetings: [],
+      pulse: null,
+      reflection: null,
+    },
+    {
+      id: "j-seed-3",
+      participantA: "e-osei",
+      participantB: "demo-mentor-1",
+      roleOfA: "mentor",
+      roleOfB: "mentee",
+      relationshipType: "1:1 Mentoring",
+      formalStatus: "active",
+      startDate: "2026-09-02",
+      sessions: [],
+      meetings: [],
+      pulse: null,
+      reflection: null,
+    },
   ];
   savePersisted(STORAGE.journeys, journeys);
 }
@@ -2391,6 +2601,19 @@ function ensureJourneysSeeded() {
 function ensureMeetingsField() {
   journeys.forEach((j) => {
     if (!j.meetings) j.meetings = [];
+  });
+}
+
+/** Backfills journeys persisted before roleOfA/roleOfB existed (dual-role
+ * support) — a one-time best guess from whatever role each side currently
+ * holds, same idea as normalizeRoles() for employees. */
+function ensureJourneyRoles() {
+  journeys.forEach((j) => {
+    if (j.roleOfA && j.roleOfB) return;
+    const a = getEmployeeById(j.participantA);
+    const b = getEmployeeById(j.participantB);
+    if (!j.roleOfA) j.roleOfA = (a?.isMentor && "mentor") || (a?.isMentee && "mentee") || a?.preferredFormat || null;
+    if (!j.roleOfB) j.roleOfB = (b?.isMentor && "mentor") || (b?.isMentee && "mentee") || b?.preferredFormat || null;
   });
 }
 
@@ -2485,7 +2708,12 @@ function wireEvents() {
         switchTab("directory");
         break;
       case "goto-journey":
+        if (el.dataset.id) selectedJourneyId = el.dataset.id;
         switchTab("journey");
+        break;
+      case "select-journey":
+        selectedJourneyId = el.dataset.id;
+        renderJourney();
         break;
       case "open-become-mentor-role":
         handleBecomeMentorEntry();
@@ -2560,7 +2788,7 @@ function wireEvents() {
         openPulseModal();
         break;
       case "toggle-pause": {
-        const journey = findActiveJourneyFor(CURRENT_USER_ID);
+        const journey = getSelectedJourney();
         if (journey) toggleJourneyPause(journey);
         break;
       }
@@ -2701,6 +2929,12 @@ function wireEvents() {
       matchNote: fd.get("matchNote").trim(),
       photoUrl: pendingPhotoUrl === undefined ? me.photoUrl : pendingPhotoUrl,
     };
+    // Picking "Mentor" or "Mentee" here adds that role without clearing
+    // whichever one you already held — same additive rule as the dedicated
+    // Become a Mentor / Become a Mentee forms, so this form can't be used to
+    // accidentally erase a role you already have.
+    if (fields.preferredFormat === "mentor") fields.isMentor = true;
+    if (fields.preferredFormat === "mentee") fields.isMentee = true;
 
     saveCurrentUserProfile(fields);
     isOnboarding = false;
@@ -2745,7 +2979,7 @@ function wireEvents() {
       preferredLanguage: fd.get("preferredLanguage"),
       availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
       consentAck: fd.get("consentAck") === "on",
-      preferredFormat: "mentor",
+      isMentor: true,
       engagementStatus: me.engagementStatus === "closed" ? "available" : me.engagementStatus,
       profileComplete: true,
     });
@@ -2790,7 +3024,7 @@ function wireEvents() {
       availability: { ...me.availability, frequency: fd.get("frequency"), hours: Number(fd.get("hours")) || 1, timezone: fd.get("timezone").trim() || "—" },
       goalStatement: fd.get("goalStatement").trim(),
       consentAck: fd.get("consentAck") === "on",
-      preferredFormat: "mentee",
+      isMentee: true,
       engagementStatus: me.engagementStatus === "closed" ? "available" : me.engagementStatus,
       profileComplete: true,
     });
@@ -2805,7 +3039,7 @@ function wireEvents() {
 
   $("#form-log-session").addEventListener("submit", (e) => {
     e.preventDefault();
-    const journey = findActiveJourneyFor(CURRENT_USER_ID);
+    const journey = getSelectedJourney();
     if (!journey) return;
     const fd = new FormData(e.target);
     const stage = fd.get("stage");
@@ -2822,7 +3056,7 @@ function wireEvents() {
 
   $("#form-schedule-meeting").addEventListener("submit", (e) => {
     e.preventDefault();
-    const journey = findActiveJourneyFor(CURRENT_USER_ID);
+    const journey = getSelectedJourney();
     if (!journey) return;
     const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
     const me = getCurrentUser();
@@ -2898,7 +3132,7 @@ function wireEvents() {
 
   $("#form-pulse").addEventListener("submit", (e) => {
     e.preventDefault();
-    const journey = findActiveJourneyFor(CURRENT_USER_ID);
+    const journey = getSelectedJourney();
     if (!journey) return;
     const fd = new FormData(e.target);
     journey.pulse = {
@@ -2918,7 +3152,7 @@ function wireEvents() {
 
   $("#form-reflection").addEventListener("submit", (e) => {
     e.preventDefault();
-    const journey = findActiveJourneyFor(CURRENT_USER_ID);
+    const journey = getSelectedJourney();
     if (!journey) return;
     const fd = new FormData(e.target);
     journey.reflection = {
@@ -2969,6 +3203,7 @@ async function startApp() {
   await refreshEmployeeSource();
   ensureJourneysSeeded();
   ensureMeetingsField();
+  ensureJourneyRoles();
   renderUserChrome();
   renderHome();
   markActivity();

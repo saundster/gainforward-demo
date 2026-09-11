@@ -229,6 +229,19 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
 .progress-fill { height: 100%; background: linear-gradient(90deg, var(--rg-purple-mid), var(--rg-purple)); border-radius: 999px; transition: width 0.3s ease; }
 .progress-label { font-size: 0.78rem; color: var(--rg-gray-muted); display: flex; justify-content: space-between; }
 .next-action { font-size: 0.85rem; background: var(--rg-lavender-bg); border-radius: var(--radius-sm); padding: 8px 10px; margin-top: 6px; }
+.journey-summary + .journey-summary { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--rg-lavender-200); }
+.role-block + .role-block { margin-top: 20px; }
+.role-block-label {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--rg-purple-mid); margin-bottom: 10px;
+}
+.switcher { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.switch-pill {
+  font-family: var(--font); font-size: 0.8rem; font-weight: 600; padding: 7px 14px; border-radius: 999px;
+  border: 1px solid var(--rg-lavender-200); background: #fff; color: var(--rg-gray-muted); cursor: pointer;
+}
+.switch-pill.active { background: var(--rg-purple); border-color: var(--rg-purple); color: #fff; }
+.switch-pill:focus-visible { outline: 2px solid var(--rg-purple); outline-offset: 2px; }
 
 .growth-row { display: flex; flex-direction: column; gap: 5px; padding: 12px 0; border-bottom: 1px solid var(--rg-lavender-100); }
 .growth-row:last-child { border-bottom: none; padding-bottom: 0; }

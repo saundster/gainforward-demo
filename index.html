@@ -199,6 +199,7 @@
         <button class="btn btn-danger-outline btn-sm hidden" id="btn-end-connection" data-action="rematch" data-id="">End connection (rematch)</button>
       </div>
     </div>
+    <div id="journey-switcher" class="switcher hidden"></div>
     <p class="muted" id="journey-subtitle">Once you're matched, your conversations and progress will show up here.</p>
     <div id="journey-pause-banner" class="pause-banner hidden"></div>
     <div id="journey-prep-note" class="journey-note hidden"></div>
@@ -456,8 +457,9 @@
         </select>
       </label>
       <p class="muted small">Your commitment per mentee.</p>
+      <p class="muted small" id="current-roles-note"></p>
       <div class="form-row">
-        <label>Preferred format <span class="info-icon" tabindex="0">i<span class="info-tooltip">Mentor: you guide someone else. Mentee: someone guides you. Peer: two people at a similar level learning from each other, neither guiding. Reverse mentoring: someone earlier in their career teaches you something newer, like a tool or a trend, while you mentor them using your experience.</span></span>
+        <label>Add a role <span class="info-icon" tabindex="0">i<span class="info-tooltip">Mentor: you guide someone else. Mentee: someone guides you. Peer: two people at a similar level learning from each other, neither guiding. Reverse mentoring: someone earlier in their career teaches you something newer, like a tool or a trend, while you mentor them using your experience. Picking Mentor or Mentee here adds that role without removing one you already have — you can be both at once.</span></span>
           <select name="preferredFormat">
             <option value="mentee">Mentee</option>
             <option value="mentor">Mentor</option>

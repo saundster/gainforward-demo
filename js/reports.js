@@ -47,7 +47,7 @@ function buildRosterRows() {
     Name: e.displayName || e.fullName || "—",
     Department: e.department || "—",
     Region: e.geography || "—",
-    Format: formatLabel(e.preferredFormat),
+    Format: personRoleLabels(e).join(" + "),
     Status: statusLabel(e.engagementStatus),
     Rating: e.rating ?? "—",
     Mentees: e.menteeCount ?? 0,
