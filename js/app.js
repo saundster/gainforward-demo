@@ -176,10 +176,13 @@ function journeyRoleLabel(me, partner) {
   return "With";
 }
 /** Mentors can hold multiple concurrent connections up to their stated capacity;
- * everyone else (mentees, peers, reverse) is still capped at one at a time. */
+ * everyone else (mentees, peers, reverse) is still capped at one at a time.
+ * A person an admin has paused or closed out isn't open to new matches
+ * regardless of how much headroom their capacity would otherwise allow. */
 function isAtCapacity(userId) {
   const person = getEmployeeById(userId);
   if (!person) return true;
+  if (person.engagementStatus === "paused" || person.engagementStatus === "closed") return true;
   const activeCount = findActiveJourneysFor(userId).length;
   if (person.preferredFormat === "mentor" && person.menteeCapacity) {
     return activeCount >= person.menteeCapacity;
@@ -1035,7 +1038,15 @@ function openMatchModalFor(candidateId) {
         : meBusy
         ? `<p class="muted small">You already have an active journey. You'll need a rematch before starting a new one.</p>`
         : candidateBusy
-        ? `<p class="muted small">${candidate.displayName} ${candidate.preferredFormat === "mentor" && candidate.menteeCapacity ? "is at capacity right now" : "already has an active journey right now"}.</p>`
+        ? `<p class="muted small">${candidate.displayName} ${
+            candidate.engagementStatus === "paused"
+              ? "is paused and not taking new connections right now"
+              : candidate.engagementStatus === "closed"
+              ? "isn't taking new connections right now"
+              : candidate.preferredFormat === "mentor" && candidate.menteeCapacity
+              ? "is at capacity right now"
+              : "already has an active journey right now"
+          }.</p>`
         : `<label class="match-prep-label">Topic for your first conversation (optional)
              <input type="text" id="match-prep-topic" placeholder="e.g. Getting a first enterprise deal narrative right" />
            </label>
@@ -1085,7 +1096,6 @@ function sendRequest(candidateId, total, breakdown, prepTopic, prepNote) {
     toId: candidateId,
     score: total,
     breakdown,
-    checklist: matchQualityAnswerDefaults(me, candidate),
     status: "accepted",
     createdAt: new Date().toISOString(),
   };
@@ -1112,6 +1122,8 @@ function sendRequest(candidateId, total, breakdown, prepTopic, prepNote) {
 
   savePersisted(STORAGE.requests, requests);
   savePersisted(STORAGE.journeys, journeys);
+  syncEngagementStatus(CURRENT_USER_ID);
+  syncEngagementStatus(candidateId);
   toast(`You're connected with ${candidate.displayName}. Head to My Journey to schedule your first conversation.`, "success");
   closeAllModals();
   renderDirectory();
@@ -1775,9 +1787,19 @@ function renderMatchingQueue() {
       const to = getEmployeeById(j.participantB);
       const req = requests.find((r) => r.fromId === j.participantA && r.toId === j.participantB && r.status === "accepted");
       const scored = req ? { total: req.score, breakdown: req.breakdown } : from && to ? computeMatchScore(from, to) : { total: 0, breakdown: [] };
-      const checklist = req ? req.checklist : from && to ? matchQualityAnswerDefaults(from, to) : [];
+      // Stored on the journey itself, not the originating request — seed/demo
+      // journeys never had a request behind them, so a checklist keyed off
+      // request.id silently failed to save for any of that data. Journeys
+      // always exist by the time this renders, so they're the one place a
+      // checklist can reliably persist for every connection, not just ones
+      // made through "Connect now".
+      if (!j.checklist) {
+        j.checklist = from && to ? matchQualityAnswerDefaults(from, to) : [];
+        savePersisted(STORAGE.journeys, journeys);
+      }
+      const checklist = j.checklist;
       const reasons = from && to ? matchReasons(from, to, scored.breakdown) : [];
-      const checklistKey = req ? req.id : j.id;
+      const checklistKey = j.id;
 
       return `
       <div class="match-item">
@@ -1806,11 +1828,11 @@ function renderMatchingQueue() {
 
   $all("[data-checklist]").forEach((box) => {
     box.addEventListener("change", (e) => {
-      const [reqId, idx] = e.target.dataset.checklist.split(":");
-      const req = requests.find((r) => r.id === reqId);
-      if (!req) return;
-      req.checklist[Number(idx)].checked = e.target.checked;
-      savePersisted(STORAGE.requests, requests);
+      const [journeyId, idx] = e.target.dataset.checklist.split(":");
+      const journey = journeys.find((j) => j.id === journeyId);
+      if (!journey || !journey.checklist) return;
+      journey.checklist[Number(idx)].checked = e.target.checked;
+      savePersisted(STORAGE.journeys, journeys);
     });
   });
 }
@@ -1880,6 +1902,17 @@ function persistEmployeeOverride(emp) {
   savePersisted(STORAGE.overrides, overrides);
 }
 
+/** Keeps the roster's "Active"/"Available" status honest as journeys form
+ * and close, instead of leaving it wherever it happened to be set last.
+ * "Paused" and "Closed" are treated as deliberate admin overrides and are
+ * left alone here — only the active/available bookkeeping is automatic. */
+function syncEngagementStatus(personId) {
+  const person = getEmployeeById(personId);
+  if (!person || person.engagementStatus === "paused" || person.engagementStatus === "closed") return;
+  person.engagementStatus = findActiveJourneysFor(personId).length ? "active" : "available";
+  persistEmployeeOverride(person);
+}
+
 /** Merges submitted profile fields onto the current user, in memory and in localStorage. */
 function saveCurrentUserProfile(fields) {
   const me = getCurrentUser();
@@ -1914,6 +1947,8 @@ function triggerRematch(journeyId) {
   journey.outcome = "rematch";
   const cancelledCount = cancelUpcomingMeetings(journey, "This relationship was rematched before this conversation happened.");
   savePersisted(STORAGE.journeys, journeys);
+  syncEngagementStatus(journey.participantA);
+  syncEngagementStatus(journey.participantB);
   if (isAdminAction) {
     const a = getEmployeeById(journey.participantA);
     const b = getEmployeeById(journey.participantB);
@@ -2177,12 +2212,26 @@ function handleChatQuestion(question) {
 /* ---------------------------------------------------------------- */
 /* Employee source                                                    */
 /* ---------------------------------------------------------------- */
+/** Both skill-category fields moved from a single string to an array of
+ * strings when multi-select shipped. A browser that saved a profile before
+ * that change still has the old string shape sitting in localStorage, which
+ * would otherwise crash goalFitScore's `.some()` the moment that profile
+ * gets scored — normalize it back to an array wherever overrides get merged
+ * in, rather than trusting every downstream reader to guard for it. */
+function normalizeSkillCategories(emp) {
+  ["learningSkillCategory", "mentorSkillCategory"].forEach((key) => {
+    if (typeof emp[key] === "string") emp[key] = emp[key] ? [emp[key]] : [];
+  });
+  return emp;
+}
+
 async function refreshEmployeeSource() {
   const overrides = loadPersisted(STORAGE.overrides, {});
   const addedEmployees = loadPersisted(STORAGE.addedEmployees, []);
   employees = [...SEED_EMPLOYEES, ...addedEmployees];
   employees.forEach((e) => {
     if (overrides[e.id]) Object.assign(e, overrides[e.id]);
+    normalizeSkillCategories(e);
   });
   ensureCurrentUser();
   populateFilterDropdowns();
@@ -2198,12 +2247,14 @@ function ensureCurrentUser() {
 
   DEMO_ACCOUNTS.forEach((account) => {
     employees = employees.filter((e) => e.id !== account.id);
-    employees.unshift({
-      id: account.id,
-      isCurrentUser: account.id === activeId,
-      ...account.employee,
-      ...(overrides[account.id] || {}),
-    });
+    employees.unshift(
+      normalizeSkillCategories({
+        id: account.id,
+        isCurrentUser: account.id === activeId,
+        ...account.employee,
+        ...(overrides[account.id] || {}),
+      })
+    );
   });
 
   let current = employees.find((e) => e.isCurrentUser);
@@ -2886,6 +2937,8 @@ function wireEvents() {
     if (nextStep !== "continue") {
       journey.formalStatus = "closed";
       cancelledCount = cancelUpcomingMeetings(journey, `This relationship closed (${OUTCOME_LABELS[nextStep] || nextStep}) before this conversation happened.`);
+      syncEngagementStatus(journey.participantA);
+      syncEngagementStatus(journey.participantB);
     }
     savePersisted(STORAGE.journeys, journeys);
     toast(
