@@ -853,7 +853,7 @@ function renderAdoptionList() {
       (e) => `
     <div class="session-item">
       <div class="session-item-head">
-        <span>${e.fullName || e.displayName || "Unnamed"}${e.department ? ` · ${e.department}` : ""}</span>
+        <span>${esc(e.fullName || e.displayName || "Unnamed")}${e.department ? ` · ${esc(e.department)}` : ""}</span>
         <button class="btn btn-ghost btn-sm" data-action="open-nudge" data-id="${e.id}">Nudge</button>
       </div>
     </div>`
@@ -1011,8 +1011,8 @@ function renderGrowthProfileCard() {
 function populateFilterDropdowns() {
   const depts = [...new Set(employees.map((e) => e.department))].filter(Boolean).sort();
   const geos = [...new Set(employees.map((e) => e.geography))].filter(Boolean).sort();
-  const deptOptions = `<option value="">All departments</option>` + depts.map((d) => `<option value="${d}">${d}</option>`).join("");
-  const geoOptions = `<option value="">All regions</option>` + geos.map((g) => `<option value="${g}">${g}</option>`).join("");
+  const deptOptions = `<option value="">All departments</option>` + depts.map((d) => `<option value="${esc(d)}">${esc(d)}</option>`).join("");
+  const geoOptions = `<option value="">All regions</option>` + geos.map((g) => `<option value="${esc(g)}">${esc(g)}</option>`).join("");
 
   [$("#filter-department"), $("#roster-filter-department")].forEach((sel) => {
     const current = sel.value;
