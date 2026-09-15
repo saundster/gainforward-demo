@@ -155,7 +155,7 @@ function matchReasons(seeker, candidate, breakdown) {
       const s = normalizeText(skill);
       return seekerGoals.some((g) => s.includes(g) || g.includes(s) || g.split(/\s+/).some((w) => w.length > 3 && s.includes(w)));
     });
-    reasons.push(matchedSkill ? `Has experience in ${matchedSkill}, matching a stated learning goal` : "Some overlap between the stated learning goal and what's offered");
+    reasons.push(matchedSkill ? `Has experience in ${esc(matchedSkill)}, matching a stated learning goal` : "Some overlap between the stated learning goal and what's offered");
   }
 
   if (byKey.complement >= 0.8) {
@@ -176,7 +176,7 @@ function matchReasons(seeker, candidate, breakdown) {
   }
 
   if (byKey.other === 1 && seeker.matchNote) {
-    reasons.push(`Matches a stated preference: “${seeker.matchNote}”`);
+    reasons.push(`Matches a stated preference: “${esc(seeker.matchNote)}”`);
   }
 
   if (byKey.deliveryFormat === 1 && seeker.deliveryFormat) {

@@ -3,6 +3,16 @@
 const $ = (sel, root = document) => root.querySelector(sel);
 const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
+/** Every screen in this app builds markup with template-literal strings
+ * dropped straight into innerHTML — fine for values this code controls, but
+ * anything a person typed (a session note, a shared goal, their own name)
+ * has to go through this first. Without it, something as ordinary as
+ * "follow up with <manager name>" silently vanishes (the browser parses it
+ * as a tag), and a deliberately hostile value could inject real markup. */
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 const STORAGE = {
   requests: "gainforward.requests",
   journeys: "gainforward.journeys",
@@ -354,7 +364,7 @@ function openProfileModal({ onboarding }) {
 /** Renders an avatar as a photo when one's set, falling back to initials. */
 function avatarHTML(person, extraClass = "") {
   const cls = `avatar ${extraClass}`.trim();
-  return person?.photoUrl ? `<img class="${cls}" src="${person.photoUrl}" alt="" />` : `<div class="${cls}">${person?.avatarInitials || "?"}</div>`;
+  return person?.photoUrl ? `<img class="${cls}" src="${esc(person.photoUrl)}" alt="" />` : `<div class="${cls}">${esc(person?.avatarInitials) || "?"}</div>`;
 }
 
 /** Same fallback, but for a fixed element (button/div) whose content we set in place. */
@@ -688,8 +698,8 @@ function renderTopMentors() {
     <div class="mentor-row">
       ${avatarHTML(m)}
       <div class="mentor-row-info">
-        <div class="mentor-row-name">${m.displayName}</div>
-        <div class="mentor-row-meta">${m.department} · ${m.geography} · ${m.menteeCount} mentee${m.menteeCount === 1 ? "" : "s"}</div>
+        <div class="mentor-row-name">${esc(m.displayName)}</div>
+        <div class="mentor-row-meta">${esc(m.department)} · ${esc(m.geography)} · ${m.menteeCount} mentee${m.menteeCount === 1 ? "" : "s"}</div>
       </div>
       ${m.rating ? `<div class="rating">★ ${m.rating.toFixed(1)}</div>` : ""}
       <button class="btn btn-secondary btn-sm" data-action="request-mentor" data-id="${m.id}">View match</button>
@@ -797,7 +807,7 @@ function renderAttentionList() {
       return `
       <div class="match-item">
         <div class="match-item-head">
-          <span class="match-item-pair">${from ? from.displayName : "?"} ↔ ${to ? to.displayName : "?"}</span>
+          <span class="match-item-pair">${from ? esc(from.displayName) : "?"} ↔ ${to ? esc(to.displayName) : "?"}</span>
         </div>
         <ul class="tip-list match-reasons">${reasons.map((r) => `<li>${r}</li>`).join("")}</ul>
         <div class="match-actions">
@@ -890,7 +900,7 @@ function journeySummaryHTML(journey) {
   return `
     <div class="journey-summary">
       <div>
-        <div class="journey-partner">${roleLabel} ${partner ? partner.displayName : "—"}</div>
+        <div class="journey-partner">${roleLabel} ${partner ? esc(partner.displayName) : "—"}</div>
         <div class="journey-type">${journey.relationshipType} · Week ${weekNumber} of 12${paused ? ` <span class="chip chip--paused">Paused</span>` : ""}</div>
       </div>
       <div class="progress-track"><div class="progress-fill" style="width:${pct(progress)}"></div></div>
@@ -959,11 +969,11 @@ function renderGrowthProfileCard() {
   const suggested = recommendLearningContent(me, 1);
 
   card.innerHTML = `
-    ${me.learningGoals?.length ? `<div class="growth-row"><span class="growth-label">Learning</span><span class="growth-value">${me.learningGoals.join(", ")}</span></div>` : ""}
-    ${me.skillLevel ? `<div class="growth-row"><span class="growth-label">Skill level</span><span class="growth-value">${me.skillLevel}</span></div>` : ""}
-    ${me.goalStatement ? `<div class="growth-row"><span class="growth-label">Goal</span><span class="growth-value">${me.goalStatement}</span></div>` : ""}
-    ${me.offeredSkills?.length ? `<div class="growth-row"><span class="growth-label">Offering</span><span class="growth-value">${me.offeredSkills.join(", ")}</span></div>` : ""}
-    ${me.purpose ? `<div class="growth-row"><span class="growth-label">Why I mentor</span><span class="growth-value">${me.purpose}</span></div>` : ""}
+    ${me.learningGoals?.length ? `<div class="growth-row"><span class="growth-label">Learning</span><span class="growth-value">${esc(me.learningGoals.join(", "))}</span></div>` : ""}
+    ${me.skillLevel ? `<div class="growth-row"><span class="growth-label">Skill level</span><span class="growth-value">${esc(me.skillLevel)}</span></div>` : ""}
+    ${me.goalStatement ? `<div class="growth-row"><span class="growth-label">Goal</span><span class="growth-value">${esc(me.goalStatement)}</span></div>` : ""}
+    ${me.offeredSkills?.length ? `<div class="growth-row"><span class="growth-label">Offering</span><span class="growth-value">${esc(me.offeredSkills.join(", "))}</span></div>` : ""}
+    ${me.purpose ? `<div class="growth-row"><span class="growth-label">Why I mentor</span><span class="growth-value">${esc(me.purpose)}</span></div>` : ""}
     ${
       journey
         ? `<div style="margin-top:10px">
@@ -1036,7 +1046,7 @@ function renderDirectory() {
       const allSkills = e.offeredSkills && e.offeredSkills.length ? e.offeredSkills : e.learningGoals || [];
       const skillsChips = allSkills
         .slice(0, 3)
-        .map((s) => `<span class="chip chip--skill">${s}</span>`)
+        .map((s) => `<span class="chip chip--skill">${esc(s)}</span>`)
         .join("");
       const extraSkills = allSkills.length - 3;
       return `
@@ -1044,8 +1054,8 @@ function renderDirectory() {
         <div class="employee-card-head">
           ${avatarHTML(e)}
           <div>
-            <div class="employee-name">${e.displayName}</div>
-            <div class="employee-meta">${e.department} · ${e.geography}</div>
+            <div class="employee-name">${esc(e.displayName)}</div>
+            <div class="employee-meta">${esc(e.department)} · ${esc(e.geography)}</div>
           </div>
         </div>
         <div class="chip-row">
@@ -1117,14 +1127,14 @@ function directionBlockedReason(direction) {
 
 function directionBlockHTML(direction, candidate) {
   const blocked = directionBlockedReason(direction);
-  if (blocked) return `<p class="muted small">${blocked}</p>`;
+  if (blocked) return `<p class="muted small">${esc(blocked)}</p>`;
   return `<label class="match-prep-label">Topic for your first conversation (optional)
        <input type="text" class="match-prep-topic" placeholder="e.g. Getting a first enterprise deal narrative right" />
      </label>
      <label class="match-prep-label">What have you already tried, read, or thought through on your own about this? (optional)
        <textarea class="match-prep-note" rows="2" placeholder="e.g. I've read a beginner's guide and worked through a few practice questions on my own"></textarea>
      </label>
-     <p class="muted small">Not sure yet what to bring? Skip this — you can always work it out on the call. ${candidate.displayName} will see whatever you add here before you meet.</p>
+     <p class="muted small">Not sure yet what to bring? Skip this — you can always work it out on the call. ${esc(candidate.displayName)} will see whatever you add here before you meet.</p>
      <button class="btn btn-primary btn-send-request" data-role="${direction.role}">Connect now</button>
      <p class="muted small" style="margin-top:6px">This connects you right away, no approval needed. People Development can review it anytime and step in if something looks off.</p>`;
 }
@@ -1143,8 +1153,8 @@ function openMatchModalFor(candidateId) {
     <div class="mentor-row" style="margin-bottom:4px">
       ${avatarHTML(candidate)}
       <div class="mentor-row-info">
-        <div class="mentor-row-name">${candidate.displayName}</div>
-        <div class="mentor-row-meta">${candidate.department} · ${candidate.geography} · ${personRoleLabels(candidate).join(" · ")}</div>
+        <div class="mentor-row-name">${esc(candidate.displayName)}</div>
+        <div class="mentor-row-meta">${esc(candidate.department)} · ${esc(candidate.geography)} · ${esc(personRoleLabels(candidate).join(" · "))}</div>
       </div>
     </div>`;
 
@@ -1316,10 +1326,10 @@ function agendaHTML(journey) {
   if (!journey.prepTopic && !journey.prepNote) return "";
   const isMine = journey.prepNoteFromId === CURRENT_USER_ID;
   const from = getEmployeeById(journey.prepNoteFromId);
-  const who = isMine ? "you" : from?.displayName || "they";
+  const who = isMine ? "you" : esc(from?.displayName) || "they";
   return `<strong>First conversation agenda</strong> <span class="muted small">(shared by ${who})</span>${
-    journey.prepTopic ? `<div class="journey-agenda-topic">${journey.prepTopic}</div>` : ""
-  }${journey.prepNote ? `<div>Already looked into: “${journey.prepNote}”</div>` : ""}`;
+    journey.prepTopic ? `<div class="journey-agenda-topic">${esc(journey.prepTopic)}</div>` : ""
+  }${journey.prepNote ? `<div>Already looked into: “${esc(journey.prepNote)}”</div>` : ""}`;
 }
 
 /** Pinned separately from the conversation log so it doesn't get buried in
@@ -1332,8 +1342,8 @@ function renderSharedGoal(journey) {
   display.classList.remove("hidden");
   if (journey.sharedGoal?.text) {
     const setBy = getEmployeeById(journey.sharedGoal.setBy);
-    display.innerHTML = `<div class="journey-agenda-topic">${journey.sharedGoal.text}</div><p class="muted small" style="margin-top:6px">Set by ${
-      setBy ? (journey.sharedGoal.setBy === CURRENT_USER_ID ? "you" : setBy.displayName) : "someone"
+    display.innerHTML = `<div class="journey-agenda-topic">${esc(journey.sharedGoal.text)}</div><p class="muted small" style="margin-top:6px">Set by ${
+      setBy ? (journey.sharedGoal.setBy === CURRENT_USER_ID ? "you" : esc(setBy.displayName)) : "someone"
     }${journey.sharedGoal.setAt ? `, ${daysAgoLabel(journey.sharedGoal.setAt)}` : ""}</p>`;
   } else {
     display.innerHTML = `<p class="empty-state">No shared goal set yet. Agree on one during your Goal conversation, then pin it here.</p>`;
@@ -1344,7 +1354,7 @@ function renderActionItems(journey) {
   const list = $("#action-items-list");
   const partner = getEmployeeById(getPartnerId(journey, CURRENT_USER_ID));
   const ownerSelect = $("#action-item-owner-select");
-  ownerSelect.innerHTML = `<option value="${CURRENT_USER_ID}">Me</option>${partner ? `<option value="${partner.id}">${partner.displayName}</option>` : ""}`;
+  ownerSelect.innerHTML = `<option value="${CURRENT_USER_ID}">Me</option>${partner ? `<option value="${partner.id}">${esc(partner.displayName)}</option>` : ""}`;
 
   const items = journey.actionItems || [];
   if (!items.length) {
@@ -1356,12 +1366,12 @@ function renderActionItems(journey) {
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
     .map((item) => {
       const owner = getEmployeeById(item.ownerId);
-      const ownerName = item.ownerId === CURRENT_USER_ID ? "You" : owner?.displayName || "Partner";
+      const ownerName = item.ownerId === CURRENT_USER_ID ? "You" : esc(owner?.displayName) || "Partner";
       return `
       <div class="session-item">
         <label class="checkbox-row" style="align-items:flex-start">
           <input type="checkbox" data-action-item="${item.id}" ${item.done ? "checked" : ""} />
-          <span style="${item.done ? "text-decoration:line-through;opacity:0.6" : ""}">${item.text}</span>
+          <span style="${item.done ? "text-decoration:line-through;opacity:0.6" : ""}">${esc(item.text)}</span>
         </label>
         <div class="session-item-notes" style="display:flex;justify-content:space-between;align-items:center">
           <span>${ownerName}</span>
@@ -1386,11 +1396,11 @@ function renderPinnedResources(journey) {
     .slice()
     .sort((a, b) => a.addedAt.localeCompare(b.addedAt))
     .map((r) => {
-      const addedByName = r.addedBy === CURRENT_USER_ID ? "you" : getEmployeeById(r.addedBy)?.displayName || "your partner";
+      const addedByName = r.addedBy === CURRENT_USER_ID ? "you" : esc(getEmployeeById(r.addedBy)?.displayName) || "your partner";
       const isSafeLink = /^https?:\/\//i.test(r.url || "");
       return `
       <div class="session-item">
-        <div class="session-item-head">${isSafeLink ? `<a href="${r.url}" target="_blank" rel="noopener">${r.title} ↗</a>` : r.title}</div>
+        <div class="session-item-head">${isSafeLink ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)} ↗</a>` : esc(r.title)}</div>
         <div class="session-item-notes" style="display:flex;justify-content:space-between;align-items:center">
           <span>Added by ${addedByName}</span>
           <button type="button" class="btn btn-ghost btn-sm" data-action="delete-resource" data-id="${r.id}">Remove</button>
@@ -1419,20 +1429,20 @@ function buildJourneySummaryHTML(journey) {
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((s) => {
       const stage = PROGRAM_META.stages.find((st) => st.key === s.stage);
-      return `<div style="padding:10px 0;border-bottom:1px solid #E5D6FF"><strong style="color:#401E86">${stage ? stage.label : s.stage}</strong> — ${formatDateShort(
+      return `<div style="padding:10px 0;border-bottom:1px solid #E5D6FF"><strong style="color:#401E86">${stage ? stage.label : esc(s.stage)}</strong> — ${formatDateShort(
         new Date(`${s.date}T00:00:00`)
-      )}${s.notes ? `<div style="margin-top:2px">${s.notes}</div>` : ""}</div>`;
+      )}${s.notes ? `<div style="margin-top:2px">${esc(s.notes)}</div>` : ""}</div>`;
     })
     .join("");
 
   return `
     <div id="journey-summary-content" style="width:640px;padding:36px;background:#fff;font-family:Manrope,sans-serif;color:#4B4B4A">
       <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:#8012FF;font-weight:700">Ripple · Mentorship completion summary</div>
-      <h1 style="color:#401E86;margin:8px 0 4px;font-size:1.5rem">${me.displayName} &amp; ${partner ? partner.displayName : "—"}</h1>
-      <p style="color:#6E6E6D;margin:0 0 20px">${journey.relationshipType} · started ${formatDateShort(new Date(`${startDate}T00:00:00`))} · ${
+      <h1 style="color:#401E86;margin:8px 0 4px;font-size:1.5rem">${esc(me.displayName)} &amp; ${partner ? esc(partner.displayName) : "—"}</h1>
+      <p style="color:#6E6E6D;margin:0 0 20px">${esc(journey.relationshipType)} · started ${formatDateShort(new Date(`${startDate}T00:00:00`))} · ${
     journey.sessions.length
   } conversation${journey.sessions.length === 1 ? "" : "s"} logged</p>
-      ${journey.sharedGoal?.text ? `<p><strong>Shared goal:</strong> ${journey.sharedGoal.text}</p>` : ""}
+      ${journey.sharedGoal?.text ? `<p><strong>Shared goal:</strong> ${esc(journey.sharedGoal.text)}</p>` : ""}
       <h2 style="font-size:1rem;color:#401E86;margin-top:20px">Conversations</h2>
       ${sessionRows || "<p>No conversations logged.</p>"}
       <p style="margin-top:20px;color:#6E6E6D">Outcome: ${OUTCOME_LABELS[journey.outcome] || "Continuing informally"}</p>
@@ -1482,7 +1492,7 @@ function renderJourneySwitcher(allJourneys, selected) {
       const verb = role === "mentor" ? "Mentoring" : role === "mentee" ? "Being mentored by" : "With";
       const completed = j.sessions.filter((s) => s.completed).length;
       return `<button type="button" class="switch-pill ${j.id === selected.id ? "active" : ""}" data-action="select-journey" data-id="${j.id}">${verb} ${
-        partner ? partner.displayName : "?"
+        partner ? esc(partner.displayName) : "?"
       } <span class="switch-pill-badge">${completed}/5</span></button>`;
     })
     .join("");
@@ -1583,11 +1593,11 @@ function renderJourney() {
         .slice()
         .sort((a, b) => a.date.localeCompare(b.date))
         .map((s) => {
-          const loggedByName = s.loggedBy ? getEmployeeById(s.loggedBy)?.displayName : null;
+          const loggedByName = s.loggedBy ? esc(getEmployeeById(s.loggedBy)?.displayName) : null;
           return `
       <div class="session-item">
-        <div class="session-item-head"><span>${PROGRAM_META.stages.find((st) => st.key === s.stage)?.label || s.stage}</span><span class="muted small">${daysAgoLabel(s.date)}</span></div>
-        ${s.notes ? `<div class="session-item-notes">${s.notes}</div>` : ""}
+        <div class="session-item-head"><span>${PROGRAM_META.stages.find((st) => st.key === s.stage)?.label || esc(s.stage)}</span><span class="muted small">${daysAgoLabel(s.date)}</span></div>
+        ${s.notes ? `<div class="session-item-notes">${esc(s.notes)}</div>` : ""}
         ${loggedByName ? `<div class="muted small" style="margin-top:4px">Logged by ${loggedByName}</div>` : ""}
       </div>`;
         })
@@ -1771,12 +1781,12 @@ function renderUpcomingMeetings(journey) {
     const hasLink = m.meetingLink && /^https?:\/\//i.test(m.meetingLink);
     return `
       <div class="session-item">
-        <div class="session-item-head"><span>${stage ? stage.label : m.stage} conversation</span><span class="muted small">${meetingTimeLabel(m.startISO)}</span></div>
-        ${m.agendaTopic ? `<div class="session-item-notes"><strong>Agenda:</strong> ${m.agendaTopic}</div>` : ""}
+        <div class="session-item-head"><span>${stage ? stage.label : esc(m.stage)} conversation</span><span class="muted small">${meetingTimeLabel(m.startISO)}</span></div>
+        ${m.agendaTopic ? `<div class="session-item-notes"><strong>Agenda:</strong> ${esc(m.agendaTopic)}</div>` : ""}
         <div class="session-item-notes">
           ${isPast ? "This time has passed. Log it in your conversation log, or cancel it below." : "Invite sent to both calendars."}
-          ${!isPast && hasLink ? ` · <a href="${m.meetingLink}" target="_blank" rel="noopener">Join video call ↗</a>` : ""}
-          ${!isPast && m.meetingLink && !hasLink ? ` · Meeting link: ${m.meetingLink}` : ""}
+          ${!isPast && hasLink ? ` · <a href="${esc(m.meetingLink)}" target="_blank" rel="noopener">Join video call ↗</a>` : ""}
+          ${!isPast && m.meetingLink && !hasLink ? ` · Meeting link: ${esc(m.meetingLink)}` : ""}
         </div>
         <div class="match-actions" style="margin-top:8px">
           <button class="btn btn-danger-outline btn-sm" data-action="cancel-meeting" data-id="${m.id}">Cancel meeting</button>
@@ -1997,10 +2007,10 @@ function openReflectionModal() {
   const partnerView = $("#reflection-partner-view");
   if (partnerReflection) {
     partnerView.classList.remove("hidden");
-    partnerView.innerHTML = `<strong>${partner.displayName}'s reflection</strong>
-      <div>What they set out to learn: “${partnerReflection.setOutToLearn}”</div>
-      <div>What they learned: “${partnerReflection.whatLearned}”</div>
-      ${partnerReflection.whatPartnerLearned ? `<div>What they contributed/shared: “${partnerReflection.whatPartnerLearned}”</div>` : ""}`;
+    partnerView.innerHTML = `<strong>${esc(partner.displayName)}'s reflection</strong>
+      <div>What they set out to learn: “${esc(partnerReflection.setOutToLearn)}”</div>
+      <div>What they learned: “${esc(partnerReflection.whatLearned)}”</div>
+      ${partnerReflection.whatPartnerLearned ? `<div>What they contributed/shared: “${esc(partnerReflection.whatPartnerLearned)}”</div>` : ""}`;
   } else {
     partnerView.classList.add("hidden");
     partnerView.innerHTML = "";
@@ -2164,7 +2174,7 @@ function renderMatchingQueue() {
       return `
       <div class="match-item">
         <div class="match-item-head">
-          <span class="match-item-pair">${from ? from.displayName : "?"} ↔ ${to ? to.displayName : "?"}</span>
+          <span class="match-item-pair">${from ? esc(from.displayName) : "?"} ↔ ${to ? esc(to.displayName) : "?"}</span>
           <span class="match-score-badge" title="${scoreVerdict(scored.total)}">${scored.total}% · ${scoreVerdict(scored.total)}</span>
         </div>
         <ul class="tip-list match-reasons">${reasons.map((rs) => `<li>${rs}</li>`).join("")}</ul>
@@ -2229,16 +2239,16 @@ function renderRoster() {
               const p = getEmployeeById(getPartnerId(j, e.id));
               const role = journeyRoleOf(j, e.id);
               const verb = role === "mentor" ? "Mentoring" : role === "mentee" ? "Mentee of" : "With";
-              return `${verb} ${p ? p.displayName : "?"}`;
+              return `${verb} ${p ? esc(p.displayName) : "?"}`;
             })
             .join(" · ")
         : "—";
       return `
       <tr>
-        <td>${e.displayName}${e.id === CURRENT_USER_ID ? " (you)" : ""}${roleLabel(e) ? ` <span class="chip chip--${e.adminRole}">${roleLabel(e)}</span>` : ""}</td>
-        <td>${e.department}</td>
-        <td>${e.geography}</td>
-        <td>${personRoleLabels(e).join(" + ")}</td>
+        <td>${esc(e.displayName)}${e.id === CURRENT_USER_ID ? " (you)" : ""}${roleLabel(e) ? ` <span class="chip chip--${e.adminRole}">${esc(roleLabel(e))}</span>` : ""}</td>
+        <td>${esc(e.department)}</td>
+        <td>${esc(e.geography)}</td>
+        <td>${esc(personRoleLabels(e).join(" + "))}</td>
         <td>
           <select data-status-for="${e.id}">
             ${["available", "active", "paused", "closed"].map((s) => `<option value="${s}" ${e.engagementStatus === s ? "selected" : ""}>${statusLabel(s)}</option>`).join("")}
