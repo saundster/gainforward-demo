@@ -216,9 +216,14 @@ function isAtCapacity(userId, role) {
   const person = getEmployeeById(userId);
   if (!person) return true;
   if (person.engagementStatus === "paused" || person.engagementStatus === "closed") return true;
-  const sideCount = findActiveJourneysFor(userId).filter((j) => journeyRoleOf(j, userId) === role).length;
-  if (role === "mentor" && person.menteeCapacity) return sideCount >= person.menteeCapacity;
-  return sideCount >= 1;
+  // No role given (the Peer/Reverse legacy path) means "count every active
+  // journey regardless of role" — filtering by `role` here would compare
+  // against undefined, which no journey's stored role ever equals, so it
+  // silently counted zero and let peer/reverse people bypass capacity
+  // entirely. Role-specific (mentor/mentee) capacity is unaffected.
+  const relevant = role ? findActiveJourneysFor(userId).filter((j) => journeyRoleOf(j, userId) === role) : findActiveJourneysFor(userId);
+  if (role === "mentor" && person.menteeCapacity) return relevant.length >= person.menteeCapacity;
+  return relevant.length >= 1;
 }
 function hasOpenJourneyBetween(idA, idB) {
   return journeys.some((j) => isJourneyOpen(j) && ((j.participantA === idA && j.participantB === idB) || (j.participantA === idB && j.participantB === idA)));
@@ -1235,8 +1240,11 @@ function sendRequest(direction, prepTopic, prepNote) {
     id: uid("j"),
     participantA: CURRENT_USER_ID,
     participantB: candidate.id,
-    roleOfA: CURRENT_USER_ID === mentor.id ? "mentor" : CURRENT_USER_ID === mentee.id ? "mentee" : direction.role,
-    roleOfB: candidate.id === mentor.id ? "mentor" : candidate.id === mentee.id ? "mentee" : direction.role,
+    // Peer/Reverse (legacy) relationships are symmetric — neither side is
+    // "the mentor" or "the mentee" — so both get direction.role (e.g. "peer")
+    // rather than being forced into a mentor/mentee label that wouldn't be true.
+    roleOfA: direction.legacy ? direction.role : CURRENT_USER_ID === mentor.id ? "mentor" : "mentee",
+    roleOfB: direction.legacy ? direction.role : candidate.id === mentor.id ? "mentor" : "mentee",
     relationshipType,
     formalStatus: "active",
     startDate: new Date().toISOString().slice(0, 10),
