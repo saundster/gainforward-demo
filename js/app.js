@@ -2541,7 +2541,14 @@ function answerChatQuestion(question) {
       best = entry;
     }
   });
-  return bestScore > 0 ? best : null;
+  // A single incidental secondary-word hit (worth 1 point) isn't enough to
+  // confidently answer — e.g. a query that's mostly gibberish but happens to
+  // contain one common word from some entry's long-form text. Require
+  // either a real primary-phrase hit (3 points) or several secondary
+  // words in common, so unmatched questions honestly fall through to
+  // "I don't have a good answer for that yet" instead of a confident but
+  // unrelated answer.
+  return bestScore >= 3 ? best : null;
 }
 
 const CHAT_SUGGESTIONS = [
