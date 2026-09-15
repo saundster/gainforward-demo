@@ -833,9 +833,126 @@ const SKILL_CATEGORIES = [
   },
 ];
 
-/* Flattened, deduped skill list across all categories, used to power
-   type-as-you-go autocomplete on the skill/goal text fields. */
-const ALL_SKILL_EXAMPLES = [...new Set(SKILL_CATEGORIES.flatMap((c) => c.examples))];
+/* Technical Skills, broken out by job family so the suggestion chips reflect
+   what someone in that kind of role would actually offer, instead of one
+   generic list for everybody. Families are keyed off RateGain's real
+   Division/Department/Sub-Department/Designation taxonomy and checked in
+   order — list the more specific families first (e.g. DevOps before the
+   general Engineering bucket, People & Culture before Engineering so
+   "People Development" doesn't get caught by the word "Development") since
+   the first family whose keyword appears in the person's department wins. */
+const TECHNICAL_SKILL_FAMILIES = [
+  {
+    match: ["devops", "site reliability", "sre"],
+    skills: ["CI/CD pipeline design", "Infrastructure as code", "Kubernetes & container orchestration", "Incident response & on-call practices", "Observability & monitoring", "Cloud infrastructure (AWS/Azure/GCP)"],
+  },
+  {
+    match: ["database administration", "dba"],
+    skills: ["Database performance tuning", "Backup & disaster recovery", "Query optimization", "Data modeling", "High-availability architecture"],
+  },
+  {
+    match: ["network & security", "information security", "security compliance", "infosec"],
+    skills: ["Network security architecture", "Identity & access management", "Security incident response", "Vulnerability management", "Compliance auditing (SOC 2 / ISO 27001)"],
+  },
+  {
+    match: ["system operations"],
+    skills: ["System monitoring & alerting", "Capacity planning", "Patch & release management", "Incident triage"],
+  },
+  {
+    match: ["quality assurance", "quality analyst", "quality engineer", "software quality", "quality"],
+    skills: ["Test automation frameworks", "Test case design", "Regression testing strategy", "Defect triage & root-cause analysis", "Quality metrics & reporting"],
+  },
+  {
+    match: ["data science", "science & optimization", "machine learning", "ai & ml", "applied science", "data insights", "data analyst", "data analytics"],
+    skills: ["ML model deployment", "A/B testing & experimentation design", "Statistical modeling", "Data pipeline engineering", "Demand & paid-media optimization"],
+  },
+  {
+    match: ["people & culture", "people operations", "people development", "talent acquisition", "human resources", "workplace experience", "organizational development", "recruitment", "ta operations"],
+    skills: ["HRIS systems administration", "Talent sourcing & ATS tools", "Workforce analytics", "Learning & development program design", "Organizational design frameworks"],
+  },
+  {
+    match: ["revenue management"],
+    skills: ["Revenue forecasting", "Pricing strategy modeling", "Demand forecasting", "Yield / rate optimization", "Executive & board-level communication"],
+  },
+  {
+    match: ["engineering", "development", "software", "technology"],
+    skills: ["Software architecture & system design", "API design", "Distributed systems", "Code review practices", "CI/CD pipelines"],
+  },
+  {
+    match: ["product"],
+    skills: ["Product roadmap prioritization", "Discovery & user research frameworks", "Product analytics & A/B testing", "UX/UI design tooling (Figma)", "Go-to-market planning"],
+  },
+  {
+    match: ["professional services"],
+    skills: ["Client-facing creative & content delivery", "Project & program coordination", "Design & content production tools", "Service delivery process management"],
+  },
+  {
+    match: ["creative", "copywriting", "videograph", "photograph", "social & content", "visual"],
+    skills: ["Adobe Creative Suite (Photoshop / Premiere / InDesign)", "Content & copywriting strategy", "Video & motion design", "Brand campaign development", "Social content calendar management"],
+  },
+  {
+    match: ["monitoring & analytics", "community monitor"],
+    skills: ["Social listening & brand monitoring tools", "Sentiment analysis", "Crisis / escalation response protocols", "Analytics dashboarding"],
+  },
+  {
+    match: ["client services", "customer success", "customer experience", "customer onboarding", "service delivery", "program delivery", "implementation"],
+    skills: ["CRM & customer health scoring (Salesforce / Gainsight)", "Onboarding playbook design", "Renewal & expansion strategy", "Escalation management", "QBR & account planning"],
+  },
+  {
+    match: ["revenue", "sales", "pre sales", "enterprise accounts", "inside sales", "sales development", "sales enablement"],
+    skills: ["CRM pipeline management (Salesforce)", "Sales / revenue forecasting", "Solution demos & pre-sales engineering", "Deal structuring & negotiation", "Account-based selling"],
+  },
+  {
+    match: ["martech"],
+    skills: ["Marketing technology stack administration", "Campaign automation platforms", "MarTech integrations & APIs", "Attribution & analytics tooling"],
+  },
+  {
+    match: ["marketing", "ad operations", "campaign"],
+    skills: ["Marketing automation platforms", "SEO / SEM & paid campaign management", "Campaign analytics & attribution", "Product positioning & messaging", "Web / landing page optimization"],
+  },
+  {
+    match: ["application support", "it operations", "information technology", "desktop support", "service desk"],
+    skills: ["Application troubleshooting & root-cause analysis", "ITSM ticketing & SLA management", "System configuration & patching", "End-user support tooling"],
+  },
+  {
+    match: ["legal & compliance", "data privacy", "legal"],
+    skills: ["Contract review & negotiation", "Regulatory compliance (GDPR / data privacy)", "Risk assessment", "Policy drafting"],
+  },
+  {
+    match: ["finance", "financial", "taxation", "account payable", "accounts payable", "account receivable", "accounts receivable", "payroll", "procurement", "collections"],
+    skills: ["Financial modeling & forecasting", "ERP systems (SAP / Oracle / NetSuite)", "FP&A reporting", "Tax & regulatory compliance", "Budget variance analysis"],
+  },
+  {
+    match: ["operations"],
+    skills: ["Process optimization & automation", "Cross-functional operations reporting", "SLA & escalation management", "Operational dashboarding & analytics"],
+  },
+  {
+    match: ["program management", "project management", "technical program management"],
+    skills: ["Cross-functional program planning", "Roadmap execution tracking", "Risk & dependency management", "Agile / Scrum delivery frameworks"],
+  },
+  {
+    match: ["founder", "corporate strategy", "general management", "strategy & operations", "business growth"],
+    skills: ["Business strategy frameworks", "P&L management", "Market & competitive analysis", "Strategic planning & execution"],
+  },
+];
+
+/** Looks up the Technical Skills suggestion pool for a given department
+ * string, role-specific skills first, padded out with the generic list so
+ * there's always a full set to show. Falls back to the generic list alone
+ * when the department doesn't match any known job family (e.g. it's empty,
+ * still being typed, or doesn't map to anything in the taxonomy above). */
+function technicalSkillsForDepartment(departmentText) {
+  const generic = SKILL_CATEGORIES.find((c) => c.key === "Technical Skills").examples;
+  const text = (departmentText || "").toLowerCase();
+  const family = TECHNICAL_SKILL_FAMILIES.find((f) => f.match.some((kw) => text.includes(kw)));
+  if (!family) return generic;
+  return [...family.skills, ...generic.filter((s) => !family.skills.includes(s))];
+}
+
+/* Flattened, deduped skill list across all categories (plus every
+   role-specific technical skill above), used to power type-as-you-go
+   autocomplete on the skill/goal text fields. */
+const ALL_SKILL_EXAMPLES = [...new Set([...SKILL_CATEGORIES.flatMap((c) => c.examples), ...TECHNICAL_SKILL_FAMILIES.flatMap((f) => f.skills)])];
 
 /* Role tutorials — shown once, before a first-time user builds their
    profile, so they know what they're signing up for before they answer

@@ -472,8 +472,12 @@ function handleBecomeMenteeEntry() {
  * the Skills Directory article, filters out what's already typed in, and
  * lets a click append the suggestion to the field instead of typing it.
  * `categories` can be more than one now that the picker allows multiple —
- * the suggestion pool is just the union of whichever categories are checked. */
-function renderSkillSuggestions(container, categories, inputEl) {
+ * the suggestion pool is just the union of whichever categories are checked.
+ * For "Technical Skills" specifically, the pool is role-aware: it's built
+ * from `departmentText` (whatever's currently in the form's Department
+ * field) via technicalSkillsForDepartment(), so a Customer Success person
+ * and an Engineer checking the same box see different, relevant chips. */
+function renderSkillSuggestions(container, categories, inputEl, departmentText) {
   const cats = SKILL_CATEGORIES.filter((c) => (categories || []).includes(c.key));
   if (!cats.length) {
     container.classList.add("hidden");
@@ -481,7 +485,7 @@ function renderSkillSuggestions(container, categories, inputEl) {
     return;
   }
   const current = (inputEl.value || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  const pool = [...new Set(cats.flatMap((c) => c.examples))];
+  const pool = [...new Set(cats.flatMap((c) => (c.key === "Technical Skills" ? technicalSkillsForDepartment(departmentText) : c.examples)))];
   const suggestions = pool.filter((s) => !current.includes(s.toLowerCase())).slice(0, 6);
   if (!suggestions.length) {
     container.classList.add("hidden");
@@ -491,13 +495,13 @@ function renderSkillSuggestions(container, categories, inputEl) {
   container.classList.remove("hidden");
   container.innerHTML =
     `<span class="skill-suggestions-label">Suggestions:</span>` +
-    suggestions.map((s) => `<button type="button" class="skill-chip" data-skill="${s}">+ ${s}</button>`).join("");
+    suggestions.map((s) => `<button type="button" class="skill-chip" data-skill="${esc(s)}">+ ${esc(s)}</button>`).join("");
   container.querySelectorAll(".skill-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       const existing = (inputEl.value || "").split(",").map((s) => s.trim()).filter(Boolean);
       existing.push(chip.dataset.skill);
       inputEl.value = existing.join(", ");
-      renderSkillSuggestions(container, categories, inputEl);
+      renderSkillSuggestions(container, categories, inputEl, departmentText);
     });
   });
 }
@@ -505,15 +509,22 @@ function renderSkillSuggestions(container, categories, inputEl) {
 /** Wires a skill-category checkbox group to its suggestion strip so checking
  * a category (or opening the modal with some already checked) refreshes the
  * chips for whichever text field that category feeds. Also attaches a
- * type-as-you-go autocomplete to the same text field. */
+ * type-as-you-go autocomplete to the same text field. Re-reads the form's
+ * own Department field live (falling back to the signed-in person's saved
+ * department) so the Technical Skills chips update as someone types their
+ * department in, not just once when the modal first opened. */
 function wireSkillSuggestions(formEl, groupName, containerId, targetName) {
   const boxes = formEl.querySelectorAll(`input[name="${groupName}"]`);
   const container = document.getElementById(containerId);
   const input = formEl.querySelector(`[name="${targetName}"]`);
+  const deptField = formEl.querySelector('[name="department"]');
   if (!boxes.length || !container || !input) return;
   const checkedValues = () => Array.from(boxes).filter((b) => b.checked).map((b) => b.value);
-  boxes.forEach((box) => box.addEventListener("change", () => renderSkillSuggestions(container, checkedValues(), input)));
-  attachSkillTypeahead(input, () => renderSkillSuggestions(container, checkedValues(), input));
+  const currentDept = () => deptField?.value || getCurrentUser().department || "";
+  const rerender = () => renderSkillSuggestions(container, checkedValues(), input, currentDept());
+  boxes.forEach((box) => box.addEventListener("change", rerender));
+  deptField?.addEventListener("input", rerender);
+  attachSkillTypeahead(input, rerender);
 }
 
 /** Type-as-you-go autocomplete for a comma-separated skill/goal field: as
@@ -570,9 +581,10 @@ function refreshSkillSuggestions(formEl, groupName, containerId, targetName) {
   const boxes = formEl.querySelectorAll(`input[name="${groupName}"]`);
   const container = document.getElementById(containerId);
   const input = formEl.querySelector(`[name="${targetName}"]`);
+  const deptField = formEl.querySelector('[name="department"]');
   if (!boxes.length || !container || !input) return;
   const checked = Array.from(boxes).filter((b) => b.checked).map((b) => b.value);
-  renderSkillSuggestions(container, checked, input);
+  renderSkillSuggestions(container, checked, input, deptField?.value || getCurrentUser().department || "");
 }
 
 /** Checks whichever boxes in a checkbox group match the given values, and
