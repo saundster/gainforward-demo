@@ -1,0 +1,239 @@
+/* Ripple: matching engine.
+   Implements the weighted scoring rubric from SOP Section 17 (Matching
+   Architecture) so the Directory and Admin > Matching Queue views can show
+   a real, explainable score instead of a random number. */
+
+const FORMAT_COMPATIBILITY = {
+  mentee: ["mentor"],
+  mentor: ["mentee"],
+  peer: ["peer"],
+  reverse: ["reverse"],
+};
+
+function normalizeText(value) {
+  return (value || "").toLowerCase().trim();
+}
+
+function keywordOverlapScore(listA, listB) {
+  if (!listA?.length || !listB?.length) return 0;
+  const a = listA.map(normalizeText);
+  const b = listB.map(normalizeText);
+  let hits = 0;
+  a.forEach((goal) => {
+    const goalWords = goal.split(/\s+/).filter((w) => w.length > 3);
+    const matched = b.some((skill) => {
+      if (skill.includes(goal) || goal.includes(skill)) return true;
+      return goalWords.some((w) => skill.includes(w));
+    });
+    if (matched) hits += 1;
+  });
+  return Math.min(1, hits / a.length);
+}
+
+/**
+ * Blends free-text goal/skill overlap with the structured skill-category
+ * checkboxes (Technical / Behavioural / Leadership / Career Development /
+ * Hobbies & Interests). Category is the coarse, reliable commonality; free
+ * text is specific but fuzzy — together they're a much more accurate "do
+ * these two actually line up" signal than either alone. Both sides can now
+ * hold more than one category (someone mentoring across two areas, say), so
+ * this checks for any shared category rather than an exact match.
+ */
+function goalFitScore(seeker, candidate) {
+  const textScore = keywordOverlapScore(seeker.learningGoals, candidate.offeredSkills);
+  const seekerCategories = seeker.learningSkillCategory || [];
+  const candidateCategories = candidate.mentorSkillCategory || [];
+
+  if (!seekerCategories.length || !candidateCategories.length) return textScore;
+  const sharesCategory = seekerCategories.some((c) => candidateCategories.includes(c));
+  if (sharesCategory) return Math.max(textScore, 0.75);
+  return textScore * 0.7;
+}
+
+function complementScore(seeker, candidate) {
+  let score = 0.5;
+  if (seeker.department !== candidate.department) score += 0.3;
+  if (seeker.geography !== candidate.geography) score += 0.1;
+  if (seeker.careerLevel !== candidate.careerLevel) score += 0.1;
+  return Math.min(1, score);
+}
+
+function formatScore(seeker, candidate) {
+  const compatible = FORMAT_COMPATIBILITY[seeker.preferredFormat] || [];
+  return compatible.includes(candidate.preferredFormat) ? 1 : 0.35;
+}
+
+function availabilityScore(seeker, candidate) {
+  if (!seeker.availability || !candidate.availability) return 0.5;
+  let score = 0;
+
+  if (seeker.availability.frequency && seeker.availability.frequency === candidate.availability.frequency) score += 0.35;
+
+  const seekerHours = Number(seeker.availability.hours) || 0;
+  const candidateHours = Number(candidate.availability.hours) || 0;
+  if (seekerHours && candidateHours) {
+    // Closeness, not exact match — 1hr vs 2hrs should barely dent the score, 1hr vs 10hrs should.
+    score += 0.35 * Math.max(0, 1 - Math.abs(seekerHours - candidateHours) / 9);
+  } else {
+    score += 0.175;
+  }
+
+  const seekerZone = normalizeText(seeker.availability.timezone).split(" ")[0];
+  const candidateZone = normalizeText(candidate.availability.timezone).split(" ")[0];
+  if (seekerZone && seekerZone === candidateZone) score += 0.3;
+  else score += 0.12;
+
+  return Math.min(1, score);
+}
+
+/** Delivery format (virtual/in-person/hybrid) is a soft preference, not a
+ * hard blocker — a hybrid person can flex to meet either way. */
+function deliveryFormatScore(seeker, candidate) {
+  const a = seeker.deliveryFormat;
+  const b = candidate.deliveryFormat;
+  if (!a || !b) return 0.7;
+  if (a === b) return 1;
+  if (a === "Hybrid" || b === "Hybrid") return 0.75;
+  return 0.3;
+}
+
+function languageScore(seeker, candidate) {
+  const a = seeker.preferredLanguage;
+  const b = candidate.preferredLanguage;
+  if (!a || !b) return 0.7;
+  return a === b ? 1 : 0.3;
+}
+
+function otherPreferenceScore(seeker, candidate) {
+  const note = normalizeText(seeker.matchNote);
+  if (!note) return 0.7;
+  if (note.includes("outside my function") && seeker.department !== candidate.department) return 1;
+  if (note.includes("another") && note.includes(normalizeText(candidate.department))) return 1;
+  return 0.6;
+}
+
+/** Returns { total (0-100), breakdown: [{key,label,weight,score}] } */
+function computeMatchScore(seeker, candidate) {
+  const weights = PROGRAM_META.matchWeights;
+  const rawScores = {
+    goal: goalFitScore(seeker, candidate),
+    complement: complementScore(seeker, candidate),
+    format: formatScore(seeker, candidate),
+    availability: availabilityScore(seeker, candidate),
+    deliveryFormat: deliveryFormatScore(seeker, candidate),
+    language: languageScore(seeker, candidate),
+    other: otherPreferenceScore(seeker, candidate),
+  };
+
+  let total = 0;
+  const breakdown = weights.map((w) => {
+    const score = rawScores[w.key] ?? 0;
+    total += score * w.weight;
+    return { ...w, score };
+  });
+
+  return { total: Math.round(total * 100), breakdown };
+}
+
+/**
+ * Translates the numeric breakdown into plain-language reasons a person can
+ * actually evaluate — a raw percentage looks precise but isn't self-explaining.
+ * Returns up to 4 short strings, most-relevant first.
+ */
+function matchReasons(seeker, candidate, breakdown) {
+  const reasons = [];
+  const byKey = Object.fromEntries(breakdown.map((b) => [b.key, b.score]));
+
+  const sharedCategories = (seeker.learningSkillCategory || []).filter((c) => (candidate.mentorSkillCategory || []).includes(c));
+  if (sharedCategories.length) {
+    reasons.push(`Both focused on ${sharedCategories.join(" and ")}`);
+  }
+
+  if (byKey.goal >= 0.34) {
+    const seekerGoals = (seeker.learningGoals || []).map(normalizeText);
+    const matchedSkill = candidate.offeredSkills?.find((skill) => {
+      const s = normalizeText(skill);
+      return seekerGoals.some((g) => s.includes(g) || g.includes(s) || g.split(/\s+/).some((w) => w.length > 3 && s.includes(w)));
+    });
+    reasons.push(matchedSkill ? `Has experience in ${esc(matchedSkill)}, matching a stated learning goal` : "Some overlap between the stated learning goal and what's offered");
+  }
+
+  if (byKey.complement >= 0.8) {
+    const diffs = [];
+    if (seeker.department !== candidate.department) diffs.push("a different function");
+    if (seeker.geography !== candidate.geography) diffs.push("a different region");
+    reasons.push(diffs.length ? `Brings ${diffs.join(" and ")} — a perspective outside your own immediate circle` : "Brings a different perspective than your immediate team");
+  }
+
+  if (byKey.format === 1) {
+    reasons.push(`Looking for the same kind of relationship (${candidate.preferredFormat === "mentee" ? "mentor ↔ mentee" : candidate.preferredFormat})`);
+  }
+
+  if (byKey.availability >= 0.9) {
+    reasons.push("Compatible cadence, hours, and time zone");
+  } else if (byKey.availability >= 0.5) {
+    reasons.push("Broadly compatible availability, though not a perfect overlap");
+  }
+
+  if (byKey.other === 1 && seeker.matchNote) {
+    reasons.push(`Matches a stated preference: “${esc(seeker.matchNote)}”`);
+  }
+
+  if (byKey.deliveryFormat === 1 && seeker.deliveryFormat) {
+    reasons.push(`Both prefer ${seeker.deliveryFormat.toLowerCase()} meetings`);
+  }
+
+  if (byKey.language === 1 && seeker.preferredLanguage) {
+    reasons.push(`Both prefer mentoring in ${seeker.preferredLanguage}`);
+  }
+
+  if (!reasons.length) {
+    reasons.push("Limited overlap with what you're looking for today: worth a look if you're open to a stretch");
+  }
+
+  return reasons.slice(0, 4);
+}
+
+function matchQualityAnswerDefaults(seeker, candidate) {
+  // Pre-fills the objective checklist items PD can verify programmatically;
+  // subjective items (e.g. "explain in one sentence why they should meet")
+  // are always left for a human reviewer to confirm.
+  return PROGRAM_META.matchChecklist.map((question, index) => {
+    if (question.toLowerCase().includes("conflict of interest")) {
+      return { question, checked: seeker.department !== candidate.department, autofilled: true };
+    }
+    if (question.toLowerCase().includes("format")) {
+      return { question, checked: formatScore(seeker, candidate) === 1, autofilled: true };
+    }
+    return { question, checked: false, autofilled: false };
+  });
+}
+
+/**
+ * Pre-suggests learning content for a topic that's new to someone, from the
+ * curated LEARNING_CONTENT library (real LinkedIn Learning courses, plus a
+ * YouTube pick for hybrid learning) — reuses the same keyword-overlap logic
+ * as mentor/mentee matching, scored against the person's own stated
+ * learningGoals and learningSkillCategory. Never returns anything tagged as
+ * Hindi-language content, by policy, regardless of how good the topic match is.
+ */
+function recommendLearningContent(person, limit = 2) {
+  const goals = person?.learningGoals || [];
+  if (!goals.length) return [];
+
+  const isAllowedLanguage = (entry) => entry.linkedin?.language !== "Hindi" && entry.youtube?.language !== "Hindi";
+
+  const scored = LEARNING_CONTENT.filter(isAllowedLanguage)
+    .map((entry) => {
+      const textScore = keywordOverlapScore(goals, entry.topicKeywords);
+      // The category only ever breaks a tie between two already-relevant
+      // picks — it never qualifies a topic on its own, so "Leadership
+      // Skills" doesn't drag in an unrelated leadership course.
+      const categoryBonus = textScore > 0 && (person.learningSkillCategory || []).includes(entry.skillCategory) ? 0.2 : 0;
+      return { entry, score: textScore + categoryBonus };
+    })
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  return scored.slice(0, limit).map((s) => s.entry);
+}

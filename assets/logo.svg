@@ -1,0 +1,13 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ripple logo">
+  <defs>
+    <linearGradient id="ck-grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8E6EFA"/>
+      <stop offset="1" stop-color="#401E86"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="32" fill="url(#ck-grad)"/>
+  <circle cx="27" cy="38" r="21" fill="none" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="1.6"/>
+  <circle cx="27" cy="38" r="14.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.8"/>
+  <circle cx="27" cy="38" r="8.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="2"/>
+  <circle cx="27" cy="38" r="3.4" fill="#FFFFFF"/>
+</svg>
