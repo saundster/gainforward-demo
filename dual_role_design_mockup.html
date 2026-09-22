@@ -1,0 +1,186 @@
+<title>Journey Switcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rg-purple:#8012FF; --rg-purple-deep:#401E86; --rg-purple-mid:#6D1EE0;
+    --rg-gray-dark:#4B4B4A; --rg-gray-muted:#6E6E6D;
+    --rg-lavender-bg:#F4EEFF; --rg-lavender-100:#ECE1FF; --rg-lavender-200:#E5D6FF;
+    --rg-white:#FFFFFF; --rg-success:#4FAE68;
+    --page-bg:#FBF9FF; --ink:#2B2340; --annotation:#B8451F; --annotation-bg:#FFF2EA; --annotation-border:#F4C9AE;
+    --shadow-card:0 1px 2px rgba(64,30,134,.06), 0 8px 24px rgba(64,30,134,.08);
+    color-scheme: light;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--page-bg);color:var(--ink);font-family:"Manrope",-apple-system,"Segoe UI",sans-serif;padding:40px 20px 64px;}
+  .wrap{max-width:1120px;margin:0 auto;}
+
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--rg-purple);font-weight:500;}
+  h1{font-size:1.9rem;font-weight:800;color:var(--rg-purple-deep);margin:8px 0 10px;text-wrap:balance;}
+  .lede{color:var(--rg-gray-muted);font-size:.98rem;line-height:1.6;max-width:70ch;margin:0 0 36px;}
+  .lede strong{color:var(--ink);font-weight:700;}
+
+  .section-label{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--rg-gray-muted);margin:0 0 14px;display:flex;align-items:center;gap:10px;}
+  .section-label::after{content:"";flex:1;height:1px;background:var(--rg-lavender-200);}
+
+  .panels{display:grid;grid-template-columns:1fr;gap:40px;margin-bottom:48px;}
+
+  .device{border:1px solid var(--rg-lavender-200);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card);background:#fff;}
+  .device-bar{background:var(--rg-lavender-bg);padding:10px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--rg-lavender-200);}
+  .device-bar .dot{width:8px;height:8px;border-radius:50%;background:var(--rg-lavender-200);}
+  .device-bar .url{margin-left:10px;font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--rg-gray-muted);}
+  .device-body{padding:0;}
+
+  /* --- app chrome replica --- */
+  .app-nav{display:flex;align-items:center;gap:22px;padding:14px 22px;border-bottom:1px solid var(--rg-lavender-100);}
+  .app-brand{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--rg-purple-deep);font-size:1rem;}
+  .app-brand .mark{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#B48CFF,var(--rg-purple-deep));}
+  .app-tab{font-size:.84rem;color:var(--rg-gray-muted);padding:6px 12px;border-radius:999px;}
+  .app-tab.active{background:var(--rg-lavender-bg);color:var(--rg-purple-deep);font-weight:700;}
+  .app-avatar{margin-left:auto;width:30px;height:30px;border-radius:50%;background:var(--rg-purple-deep);color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;}
+
+  .app-page{padding:22px;background:linear-gradient(180deg,var(--rg-lavender-bg) 0%, #fff 150px);}
+  .greeting{font-size:1.2rem;font-weight:800;color:var(--rg-purple-deep);margin:0 0 4px;}
+  .greeting-sub{color:var(--rg-gray-muted);font-size:.82rem;margin:0 0 20px;}
+
+  .role-block{margin-bottom:18px;}
+  .role-block-label{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.07em;text-transform:uppercase;color:var(--rg-purple-mid);font-weight:600;margin-bottom:8px;}
+  .journey-card{background:#fff;border:1px solid var(--rg-lavender-200);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow-card);}
+  .journey-partner{font-weight:700;color:var(--ink);font-size:.92rem;}
+  .journey-meta{font-size:.76rem;color:var(--rg-gray-muted);margin:2px 0 10px;}
+  .progress-track{height:6px;border-radius:999px;background:var(--rg-lavender-100);overflow:hidden;}
+  .progress-fill{height:100%;background:var(--rg-purple);}
+  .progress-label{display:flex;justify-content:space-between;font-size:.7rem;color:var(--rg-gray-muted);margin-top:5px;}
+  .go-link{display:inline-block;margin-top:12px;font-size:.78rem;font-weight:700;color:#fff;background:var(--rg-purple);padding:6px 13px;border-radius:999px;}
+
+  /* --- switcher --- */
+  .switcher{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .switch-pill{font-size:.78rem;font-weight:600;padding:8px 14px;border-radius:999px;border:1px solid var(--rg-lavender-200);background:#fff;color:var(--rg-gray-muted);}
+  .switch-pill.active{background:var(--rg-purple);border-color:var(--rg-purple);color:#fff;}
+
+  .journey-header{font-size:1.05rem;font-weight:800;color:var(--rg-purple-deep);margin:0 0 2px;}
+  .journey-subline{font-size:.78rem;color:var(--rg-gray-muted);margin:0 0 16px;}
+  .stage-row{display:flex;gap:6px;margin-bottom:16px;}
+  .stage-pip{flex:1;text-align:center;font-size:.62rem;font-weight:700;color:var(--rg-gray-muted);}
+  .stage-pip .dot{width:22px;height:22px;border-radius:50%;background:var(--rg-lavender-100);color:var(--rg-purple-deep);display:flex;align-items:center;justify-content:center;margin:0 auto 4px;font-size:.68rem;}
+  .stage-pip.done .dot{background:var(--rg-purple);color:#fff;}
+  .stage-pip.now .dot{background:var(--rg-purple-deep);color:#fff;box-shadow:0 0 0 3px var(--rg-lavender-100);}
+  .mini-panel{background:var(--rg-lavender-bg);border-radius:10px;padding:10px 12px;font-size:.76rem;color:var(--ink);}
+
+  /* --- annotation callouts --- */
+  .callout{position:relative;margin-top:14px;background:var(--annotation-bg);border:1px solid var(--annotation-border);border-radius:10px;padding:10px 13px;font-size:.78rem;line-height:1.5;color:#7A3011;}
+  .callout b{color:var(--annotation);}
+
+  .panel-caption{font-size:.82rem;color:var(--rg-gray-muted);margin-top:14px;line-height:1.55;max-width:60ch;}
+  .panel-caption b{color:var(--ink);}
+  .panel-title{font-weight:800;color:var(--rg-purple-deep);font-size:1rem;margin-bottom:12px;}
+
+  .notes{background:#fff;border:1px solid var(--rg-lavender-200);border-radius:16px;padding:26px 28px;box-shadow:var(--shadow-card);}
+  .notes h2{font-size:1.05rem;margin:0 0 14px;}
+  .notes ul{margin:0;padding-left:20px;font-size:.86rem;line-height:1.7;color:var(--rg-gray-dark);}
+  .notes li{margin-bottom:8px;}
+  .notes li b{color:var(--ink);}
+
+  @media (min-width:900px){
+    .panels{grid-template-columns:1fr 1fr;align-items:start;}
+  }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Design proposal · not yet built</div>
+  <h1>Seeing both roles in one account</h1>
+  <p class="lede">How Priya sees her world when she's <strong>mentoring M. Castillo</strong> and simultaneously <strong>being mentored by J. Alonso</strong> — one active journey per role, both visible, both reachable. Annotated in orange are the pieces that don't exist in the app today.</p>
+
+  <div class="panels">
+    <div>
+      <div class="panel-title">Home — active journeys split by role</div>
+      <div class="device">
+        <div class="device-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">gainforward-demo.vercel.app</span></div>
+        <div class="device-body">
+          <div class="app-nav">
+            <div class="app-brand"><span class="mark"></span>Ripple</div>
+            <div class="app-tab active">Home</div>
+            <div class="app-tab">Directory</div>
+            <div class="app-tab">My Journey</div>
+            <div class="app-avatar">PN</div>
+          </div>
+          <div class="app-page">
+            <div class="greeting">Good evening, Priya.</div>
+            <div class="greeting-sub">Everyone has something to learn. Everyone has something to contribute.</div>
+
+            <div class="role-block">
+              <div class="role-block-label">As a mentor</div>
+              <div class="journey-card">
+                <div class="journey-partner">Mentoring M. Castillo</div>
+                <div class="journey-meta">1:1 Mentoring · Week 3 of 12 · Connect stage</div>
+                <div class="progress-track"><div class="progress-fill" style="width:20%"></div></div>
+                <div class="progress-label"><span>1 of 5 conversations</span><span>20%</span></div>
+                <a class="go-link">Go to My Journey</a>
+              </div>
+            </div>
+
+            <div class="role-block">
+              <div class="role-block-label">As a mentee</div>
+              <div class="journey-card">
+                <div class="journey-partner">Being mentored by J. Alonso</div>
+                <div class="journey-meta">1:1 Mentoring · Week 1 of 12 · Goal stage</div>
+                <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+                <div class="progress-label"><span>0 of 5 conversations</span><span>0%</span></div>
+                <a class="go-link">Go to My Journey</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout"><b>New:</b> today this is one single card showing whichever journey <code>findActiveJourneyFor()</code> happens to pick first. Splitting it by role means both relationships are visible the moment you land on Home, not just the one the code guessed you wanted.</div>
+    </div>
+
+    <div>
+      <div class="panel-title">My Journey — switch between active relationships</div>
+      <div class="device">
+        <div class="device-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">gainforward-demo.vercel.app/#journey</span></div>
+        <div class="device-body">
+          <div class="app-nav">
+            <div class="app-brand"><span class="mark"></span>Ripple</div>
+            <div class="app-tab">Home</div>
+            <div class="app-tab">Directory</div>
+            <div class="app-tab active">My Journey</div>
+            <div class="app-avatar">PN</div>
+          </div>
+          <div class="app-page">
+            <div class="switcher">
+              <div class="switch-pill active">Mentoring M. Castillo</div>
+              <div class="switch-pill">Being mentored by J. Alonso</div>
+            </div>
+
+            <div class="journey-header">You're mentoring M. Castillo</div>
+            <div class="journey-subline">Week 3 of 12 · started Sep 10 · wraps up around Dec 3</div>
+
+            <div class="stage-row">
+              <div class="stage-pip done"><div class="dot">✓</div>Connect</div>
+              <div class="stage-pip now"><div class="dot">2</div>Goal</div>
+              <div class="stage-pip"><div class="dot">3</div>Challenge</div>
+              <div class="stage-pip"><div class="dot">4</div>Apply</div>
+              <div class="stage-pip"><div class="dot">5</div>Transfer</div>
+            </div>
+
+            <div class="mini-panel">Next up: schedule your goal conversation — not on the calendar yet.</div>
+          </div>
+        </div>
+      </div>
+      <div class="callout"><b>New:</b> the pill row only appears when there's more than one active journey (already possible today for a mentor with several mentees, not just dual-role). Clicking a pill swaps everything below — stage tracker, log, upcoming meetings — to that journey. Today there's no switcher at all; a second journey is mentioned in one sentence of subtext and otherwise invisible.</div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h2>What has to change under the hood</h2>
+    <ul>
+      <li><b>Role becomes two independent flags, not one field.</b> <code>preferredFormat</code> is currently a single string that each signup form overwrites — becoming a mentee today silently erases mentor status. Track <code>isMentor</code> / <code>isMentee</code> separately so completing one never clears the other.</li>
+      <li><b>A journey records its own roles at creation time.</b> Rather than asking "what's this person's current preferredFormat" every time (which can drift after the fact), each journey stores who was mentor and who was mentee the moment it formed.</li>
+      <li><b>Capacity splits by role.</b> Mentor-side capacity (<code>menteeCapacity</code>) and the 1-active-mentee-relationship-at-a-time rule are tracked independently, so being mentored doesn't eat into your own capacity as a mentor.</li>
+      <li><b>Matching becomes direction-aware.</b> Directory needs to know which role you're currently filling ("looking for a mentor" vs. "looking for a mentee") to score and filter candidates correctly — a dual-role person's card shows a chip for each role they hold.</li>
+      <li><b>Every screen keyed to "the" journey gets keyed to "the selected" journey.</b> ~15 places in the code call a function that assumes exactly one active journey; those all move to reading whichever journey the switcher currently has selected.</li>
+    </ul>
+  </div>
+</div>
