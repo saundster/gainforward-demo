@@ -114,6 +114,6 @@ frontend sits in front of it.
   cancellation builder, and the nudge `mailto:` composer
 - `js/app.js` — all UI logic, state, and persistence
 - `assets/logo.svg` — the Ripple mark (also used as the favicon)
-- `docs/GainForward Participant Questionnaire.md` — the profile-setup
+- `docs/Ripple Participant Questionnaire.md` — the profile-setup
   questionnaire mentors and mentees complete; the onboarding form and "My
   profile" screen are built directly from these fields

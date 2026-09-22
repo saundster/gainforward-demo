@@ -1,8 +1,8 @@
-# GainForward — Participant Profile Questionnaire
+# Ripple — Participant Profile Questionnaire
 
 *RateGain Mentorship & Peer Learning Ecosystem — pilot*
 
-This is the profile every participant completes to join GainForward — once at
+This is the profile every participant completes to join Ripple — once at
 sign-up (about 5–7 minutes), and any time after that to update. There is one
 form for everyone: mentors and mentees answer the same questions. What
 differs is emphasis — a mentor leans on "what you can offer," a mentee on
@@ -11,7 +11,7 @@ track. This mirrors the pilot's skill-first design: expertise and curiosity
 matter more than title or tenure.
 
 *In the product, this is the mandatory setup screen shown the first time
-someone opens GainForward, and the "My profile" screen from then on.*
+someone opens Ripple, and the "My profile" screen from then on.*
 
 ---
 
