@@ -685,9 +685,47 @@ function renderHome() {
   const me = getCurrentUser();
   const firstName = me.fullName && me.fullName !== "You" ? me.fullName.split(" ")[0] : "";
   $("#home-greeting").textContent = firstName ? `${greetingPrefix()}, ${firstName}. What would you like to do?` : "What would you like to do?";
+  renderPendingRequestsCard();
   renderTopMentors();
   renderActiveJourneyCard();
   renderGrowthProfileCard();
+}
+
+/** Incoming connection requests waiting on this person's Accept/Decline —
+ * hidden entirely when there are none, so it doesn't clutter Home for the
+ * common case of nobody currently waiting on a response. */
+function renderPendingRequestsCard() {
+  const panel = $("#pending-requests-panel");
+  const card = $("#pending-requests-card");
+  const incoming = requests.filter((r) => r.status === "pending" && r.toId === CURRENT_USER_ID);
+
+  if (!incoming.length) {
+    panel.classList.add("hidden");
+    card.innerHTML = "";
+    return;
+  }
+
+  panel.classList.remove("hidden");
+  card.innerHTML = incoming
+    .map((r) => {
+      const requester = getEmployeeById(r.fromId);
+      if (!requester) return "";
+      const roleLabel = r.legacy ? formatLabel(r.role) : r.mentorId === r.fromId ? "as your mentor" : "as your mentee";
+      return `
+      <div class="mentor-row">
+        ${avatarHTML(requester)}
+        <div class="mentor-row-info">
+          <div class="mentor-row-name">${esc(requester.displayName)}</div>
+          <div class="mentor-row-meta">Wants to connect ${esc(roleLabel)} · ${Math.round(r.score)}% match</div>
+          ${r.prepTopic ? `<div class="muted small">Topic: ${esc(r.prepTopic)}</div>` : ""}
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-primary btn-sm" data-action="accept-request" data-id="${r.id}">Accept</button>
+          <button class="btn btn-secondary btn-sm" data-action="decline-request" data-id="${r.id}">Decline</button>
+        </div>
+      </div>`;
+    })
+    .join("");
 }
 
 function renderTopMentors() {
@@ -1147,8 +1185,8 @@ function directionBlockHTML(direction, candidate) {
        <textarea class="match-prep-note" rows="2" placeholder="e.g. I've read a beginner's guide and worked through a few practice questions on my own"></textarea>
      </label>
      <p class="muted small">Not sure yet what to bring? Skip this — you can always work it out on the call. ${esc(candidate.displayName)} will see whatever you add here before you meet.</p>
-     <button class="btn btn-primary btn-send-request" data-role="${direction.role}">Connect now</button>
-     <p class="muted small" style="margin-top:6px">This connects you right away, no approval needed. People Development can review it anytime and step in if something looks off.</p>`;
+     <button class="btn btn-primary btn-send-request" data-role="${direction.role}">Send request</button>
+     <p class="muted small" style="margin-top:6px">${esc(candidate.displayName)} will need to accept before you're connected. You'll see the status here or in the Directory.</p>`;
 }
 
 function openMatchModalFor(candidateId) {
@@ -1158,7 +1196,9 @@ function openMatchModalFor(candidateId) {
   matchModalTargetId = candidateId;
 
   const existing = hasOpenJourneyBetween(CURRENT_USER_ID, candidateId);
-  const directions = existing ? [] : resolveConnectionDirections(me, candidate);
+  const pendingFromMe = requests.find((r) => r.status === "pending" && r.fromId === CURRENT_USER_ID && r.toId === candidateId);
+  const pendingFromThem = requests.find((r) => r.status === "pending" && r.fromId === candidateId && r.toId === CURRENT_USER_ID);
+  const directions = existing || pendingFromMe || pendingFromThem ? [] : resolveConnectionDirections(me, candidate);
 
   const body = $("#match-modal-body");
   const head = `
@@ -1172,6 +1212,21 @@ function openMatchModalFor(candidateId) {
 
   if (existing) {
     body.innerHTML = `${head}<p class="muted small">You're already connected. Head to My Journey to get started.</p>`;
+    openModal("modal-match");
+    return;
+  }
+  if (pendingFromMe) {
+    body.innerHTML = `${head}<p class="muted small">You already asked to connect with ${esc(candidate.displayName)} — waiting for them to accept or decline.</p>`;
+    openModal("modal-match");
+    return;
+  }
+  if (pendingFromThem) {
+    body.innerHTML = `${head}
+      <p class="muted small">${esc(candidate.displayName)} asked to connect with you.</p>
+      <div class="row-actions">
+        <button class="btn btn-primary btn-sm" data-action="accept-request" data-id="${pendingFromThem.id}">Accept</button>
+        <button class="btn btn-secondary btn-sm" data-action="decline-request" data-id="${pendingFromThem.id}">Decline</button>
+      </div>`;
     openModal("modal-match");
     return;
   }
@@ -1229,16 +1284,15 @@ function openMatchModalFor(candidateId) {
   });
 }
 
-/** Connections form immediately on request, no admin approval gate. A Super
- * Admin can still review any active connection and end it (no-fault rematch)
- * at any time; that's the guardrail, not a pre-approval step. `direction`
- * (from resolveConnectionDirections) says who's the mentor and who's the
- * mentee for this specific connection — that's recorded on the journey
- * itself rather than re-derived from either person's profile later. */
+/** Sends a real request — nothing forms until the recipient accepts (see
+ * respondToRequest). `direction` (from resolveConnectionDirections) says
+ * who'd be the mentor and who'd be the mentee for this specific connection;
+ * that's recorded on the request now so it can be replayed unchanged onto
+ * the journey at accept time, rather than re-derived from either person's
+ * profile later (profiles can change between request and response). */
 function sendRequest(direction, prepTopic, prepNote) {
-  const { mentee, mentor, relationshipType } = direction;
+  const { mentee, mentor, relationshipType, legacy, role } = direction;
   const candidate = mentee.id === CURRENT_USER_ID ? mentor : mentee;
-  const me = getCurrentUser();
   const { total, breakdown } = computeMatchScore(mentee, mentor);
 
   const blocked = directionBlockedReason(direction);
@@ -1251,23 +1305,65 @@ function sendRequest(direction, prepTopic, prepNote) {
     id: uid("req"),
     fromId: CURRENT_USER_ID,
     toId: candidate.id,
+    mentorId: mentor.id,
+    menteeId: mentee.id,
+    relationshipType,
+    legacy: !!legacy,
+    role,
     score: total,
     breakdown,
-    status: "accepted",
+    prepTopic: prepTopic || "",
+    prepNote: prepNote || "",
+    status: "pending",
     createdAt: new Date().toISOString(),
   };
   requests.push(request);
+  savePersisted(STORAGE.requests, requests);
+
+  toast(`Request sent to ${candidate.displayName}. They'll need to accept it before you're connected.`, "success");
+  closeAllModals();
+  renderDirectory();
+  renderHome();
+}
+
+/** Accepting forms the journey exactly as sendRequest used to do it
+ * immediately; declining just closes out the request. Capacity is
+ * re-checked here (not just at request time) since either side's
+ * capacity can change in between — someone might fill their last mentee
+ * slot from another request before this one gets answered. */
+function respondToRequest(requestId, accept) {
+  const request = requests.find((r) => r.id === requestId);
+  if (!request || request.status !== "pending") return;
+
+  const requester = getEmployeeById(request.fromId);
+
+  if (!accept) {
+    request.status = "declined";
+    request.decidedAt = new Date().toISOString();
+    savePersisted(STORAGE.requests, requests);
+    toast(`Declined ${requester?.displayName || "the request"}.`, "success");
+    closeAllModals();
+    renderDirectory();
+    renderHome();
+    return;
+  }
+
+  const mentor = getEmployeeById(request.mentorId);
+  const mentee = getEmployeeById(request.menteeId);
+  const direction = { mentee, mentor, role: request.role, relationshipType: request.relationshipType, legacy: request.legacy };
+  const blocked = directionBlockedReason(direction);
+  if (blocked) {
+    toast(blocked, "error");
+    return;
+  }
 
   journeys.push({
     id: uid("j"),
-    participantA: CURRENT_USER_ID,
-    participantB: candidate.id,
-    // Peer/Reverse (legacy) relationships are symmetric — neither side is
-    // "the mentor" or "the mentee" — so both get direction.role (e.g. "peer")
-    // rather than being forced into a mentor/mentee label that wouldn't be true.
-    roleOfA: direction.legacy ? direction.role : CURRENT_USER_ID === mentor.id ? "mentor" : "mentee",
-    roleOfB: direction.legacy ? direction.role : candidate.id === mentor.id ? "mentor" : "mentee",
-    relationshipType,
+    participantA: request.fromId,
+    participantB: request.toId,
+    roleOfA: request.legacy ? request.role : request.fromId === mentor.id ? "mentor" : "mentee",
+    roleOfB: request.legacy ? request.role : request.toId === mentor.id ? "mentor" : "mentee",
+    relationshipType: request.relationshipType,
     formalStatus: "active",
     startDate: new Date().toISOString().slice(0, 10),
     sessions: [],
@@ -1276,17 +1372,20 @@ function sendRequest(direction, prepTopic, prepNote) {
     reflection: null,
     pausedAt: null,
     pausedDays: 0,
-    prepTopic: prepTopic || "",
-    prepNote: prepNote || "",
-    prepNoteFromId: CURRENT_USER_ID,
+    prepTopic: request.prepTopic || "",
+    prepNote: request.prepNote || "",
+    prepNoteFromId: request.fromId,
   });
   if (mentor.menteeCount != null) mentor.menteeCount += 1;
 
+  request.status = "accepted";
+  request.decidedAt = new Date().toISOString();
+
   savePersisted(STORAGE.requests, requests);
   savePersisted(STORAGE.journeys, journeys);
-  syncEngagementStatus(CURRENT_USER_ID);
-  syncEngagementStatus(candidate.id);
-  toast(`You're connected with ${candidate.displayName}. Head to My Journey to schedule your first conversation.`, "success");
+  syncEngagementStatus(request.fromId);
+  syncEngagementStatus(request.toId);
+  toast(`You're connected with ${requester?.displayName || "them"}. Head to My Journey to schedule your first conversation.`, "success");
   closeAllModals();
   renderDirectory();
   renderHome();
@@ -3026,6 +3125,12 @@ function wireEvents() {
         break;
       case "request-mentor":
         openMatchModalFor(el.dataset.id);
+        break;
+      case "accept-request":
+        respondToRequest(el.dataset.id, true);
+        break;
+      case "decline-request":
+        respondToRequest(el.dataset.id, false);
         break;
       case "open-log-session":
         openLogSessionModal();
